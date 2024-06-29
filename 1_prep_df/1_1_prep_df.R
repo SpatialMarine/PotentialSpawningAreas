@@ -18,7 +18,7 @@ data <- data %>%
 names(data)
 
 # merge Raja rows
-data <- data %>%
+data1 <- data %>%
   group_by(code, Genus) %>%
   summarise(
     Sp = NA,
@@ -34,11 +34,11 @@ data <- data %>%
   )
 
 # View the updated dataframe
-head(data)
+head(data1)
 
 # Check that all rows are twice (Scyliorhinus and Raja)
 # Group by code and count occurrences
-code_counts <- data %>%
+code_counts <- data1 %>%
   group_by(code) %>%
   summarise(count = n()) #Some are three times (have eggs from 2 Raja spp)
 
@@ -69,6 +69,7 @@ expand_rows <- function(df, unique_genus) {
       new_row <- current_rows[1, ]
       new_row$Sp <- genus
       new_row$Genus <- genus
+      new_row$presence_absence <- 0
       new_row$N <- 0
       new_row$N_km2 <- 0
 
@@ -85,45 +86,17 @@ expand_rows <- function(df, unique_genus) {
 }
 
 # Apply the function to presCat_updated
-data <- expand_rows(data, unique_genus)
-names(data)
+data2 <- expand_rows(data1, unique_genus)
+names(data2)
 
 # Check that all rows are twice (Scyliorhinus and Raja)
 # Group by code and count occurrences
-code_counts <- presCat_expanded %>%
-  group_by(code) %>%
-  summarise(count = n()) #Some are three times (have eggs from 2 Raja spp)
-
-# merge Raja rows
-presCat_merged <- presCat_expanded %>%
-  group_by(code, Genus) %>%
-  summarise(
-    Species = first(Species),
-    lat = first(lat),
-    lon = first(lon),
-    Region = first(Region),
-    season = first(season),
-    depth = first(depth),
-    NetHorizontalOpenening = first(NetHorizontalOpenening),
-    Swept_area_km2 = first(Swept_area_km2),
-    N = sum(N),
-    N_km2 = sum(N_km2),
-    Kg = sum(Kg),
-    Kg_km2 = sum(Kg_km2),
-    .groups = 'drop'  # Ensure the result is not grouped
-  )
-
-# View the updated dataframe
-head(presCat_merged)
-
-# Check that all rows are twice (Scyliorhinus and Raja)
-# Group by code and count occurrences
-code_counts <- data %>%
+code_counts <- data2 %>%
   group_by(code) %>%
   summarise(count = n()) #Some are three times (have eggs from 2 Raja spp)
 
 # Save dataframe
-write.csv2(data, "temp/pres_absECEME.csv", row.names = FALSE)
+write.csv2(data2, "temp/pres_absECEME.csv", row.names = FALSE)
 
 # 2.) ICM ----------------------------------------------------------------------
 
@@ -236,13 +209,17 @@ presCat_merged <- presCat_expanded %>%
   )
 
 # View the updated dataframe
-head(presCat_merged)
+names(presCat_merged)
 
 # Check that all rows are twice (Scyliorhinus and Raja)
 # Group by code and count occurrences
 code_counts <- presCat_merged %>%
   group_by(code) %>%
   summarise(count = n()) #Some are three times (have eggs from 2 Raja spp)
+
+# Add a presence_absence column
+presCat_merged <- presCat_merged %>%
+  mutate(presence_absence = ifelse(N != 0, 1, 0))
 
 # Save dataframe
 write.csv2(presCat_merged, "temp/pres_absCat.csv", row.names = FALSE)
