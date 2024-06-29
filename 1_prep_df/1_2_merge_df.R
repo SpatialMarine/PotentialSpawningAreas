@@ -44,3 +44,5 @@ code_counts <- merged_data %>%
   group_by(code) %>%
   summarise(count = n()) 
 
+# Save dataframe
+write.csv2(merged_data, "temp/pres_absData.csv", row.names = FALSE)
