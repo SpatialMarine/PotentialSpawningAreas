@@ -47,7 +47,7 @@ new_days <- vector()
 # loop through each value in the dataframe
 for (j in 1:nrow(Days_df)) {
   # Concatenate the date with the time string
-  new_value <- paste0(Days_df$Days[j], " 12:00:00")
+  new_value <- paste0(Days_df$Days[j], " 11:00:00")
   # Append the new value to the vector
   new_days <- c(new_days, new_value)
 }
@@ -70,7 +70,7 @@ cm <- import("copernicusmarine")
 
 # log in in your CMEMS user (you should have another script with this info)
 cm$login(username, password)
-
+y
 # 3) Download data -------------------------------------------------------------
 # Define the time subset you want:
 df <- Days_df 
@@ -85,7 +85,11 @@ if (!dir.exists(destination_folder)) dir.create(destination_folder, recursive = 
 t <- Sys.time()
 for(i in 1:nrow(cat)){ 
   
-  print(paste("Processing product", i))
+  # Calculate remaining products
+  remaining_products <- nrow(cat) - i
+  
+  # Print the current product and remaining products
+  print(paste("Processing product", i, "of", nrow(cat), "-", remaining_products, "remaining"))
   
   # Create the folder for each product if it doesn't exist already 
   dir_path <- file.path(destination_folder, cat$service[i], cat$layer[i])
@@ -94,7 +98,11 @@ for(i in 1:nrow(cat)){
   
   #If you need a folder per each date:
   for(j in 1:nrow(df)){
-    print(paste("Processing date", j))
+    # Calculate remaining dates
+    remaining_dates <- nrow(df) - j
+    
+    # Print the current date and remaining dates
+    print(paste("Processing date", j, "of", nrow(df), "-", remaining_dates, "remaining"))
     
     # Create folders for different dates inside the variable folders
     date_dir <- file.path(dir_path, df$Year[j], df$Month[j], df$Day[j])
@@ -123,3 +131,14 @@ for(i in 1:nrow(cat)){
 }
 Sys.time() - t 
 beep()
+
+
+# Check it all with an example: 
+nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
+nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
+nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
+
+sbt_reanalysis <- brick("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
+time <- getZ(sbt_reanalysis)
+time_seconds <- time * 60  # Convert minutes to seconds
+days <- as.POSIXct(time_seconds, origin = "1900-01-01", tz = "UTC")
