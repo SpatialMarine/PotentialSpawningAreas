@@ -114,15 +114,39 @@ distances <- sapply(1:nrow(study_locations), function(i) {
   min_distance_to_feature(study_locations[i, ], cropped_canyons)
 })
 
+beep()
+
 # Add distances to the data frame
 data$distance_to_canyons <- distances / 1000  # Convert to kilometers
 
 
-
 # 1.5) Fans
-fans <- raster("input/global_seafloor_features/use/fans.tif")
+fans <- st_read("input/global_seafloor_features/fans.shp")
 fans
-plot(fans)
+
+# Clean the geometries
+fans_valid <- st_make_valid(fans)
+fans_valid
+
+# crop to the Mediterranean extent
+mediterranean_bbox <- st_bbox(c(xmin = -6.25, xmax = 36.25, ymin = 30.0, ymax = 46.0), crs = st_crs(4326))
+mediterranean_extent <- st_as_sfc(mediterranean_bbox)
+cropped_fans <- st_intersection(fans_valid, mediterranean_extent)
+cropped_fans
+
+# Convert all geometries in cropped_canyons to MULTIPOLYGON
+cropped_fans <- st_cast(cropped_fans, "MULTIPOLYGON")
+plot(st_geometry(cropped_fans))
+
+# Calculate distances for each study location
+distances <- sapply(1:nrow(study_locations), function(i) {
+  min_distance_to_feature(study_locations[i, ], cropped_fans)
+})
+
+beep()
+
+# Add distances to the data frame
+data$distance_to_fans <- distances / 1000  # Convert to kilometers
 
 # Save dataframe
-write.csv2(data, "temp/env_data.csv", row.names = FALSE)
+write.csv2(data, "temp/data_2D_dist.csv", row.names = FALSE)
