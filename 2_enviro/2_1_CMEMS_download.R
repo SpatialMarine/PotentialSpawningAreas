@@ -134,11 +134,22 @@ beep()
 
 
 # Check it all with an example: 
+library(ncdf4)
+library(raster)
+
+# 2D
 nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
 nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
 nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
-
 sbt_reanalysis <- brick("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
 time <- getZ(sbt_reanalysis)
 time_seconds <- time * 60  # Convert minutes to seconds
 days <- as.POSIXct(time_seconds, origin = "1900-01-01", tz = "UTC")
+
+# 3D
+nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_BGC_006_008/med-ogs-bio-rean-d/2020/06/18/NPPV_Reanalysis_2020-06-18.nc")
+nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
+nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
+ncdepth <- nc$dim$depth$vals
+nctime <- nc$dim$time$vals
+ncday <- as.POSIXct(nctime, origin = "1970-01-01", tz = "UTC") 
