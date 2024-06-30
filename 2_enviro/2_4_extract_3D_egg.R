@@ -7,8 +7,7 @@
 #-------------------------------------------------------------------------------
 
 #Load data
-setwd(output_data)
-data <- read.csv("env_data.csv", sep = ";") #remember having date format in your .csv
+data <- read.csv("temp/data_2D_dist.csv", sep = ";") #remember having date format in your .csv
 summary(data)
 head(data)
 
@@ -17,19 +16,27 @@ head(data)
 data$date <- as.Date(data$date) #if your time scale has not hours
 data$lon <- as.numeric(gsub(",", ".", data$lon))
 data$lat <- as.numeric(gsub(",", ".", data$lat))
-colnames(data)[colnames(data) == "bathy"] <- "depth"
 data$depth <- as.numeric(gsub(",", ".", data$depth))
 range(data$date)
 range(data$lon)
 range(data$lat)
 range(data$depth)
 
+# Add a new column with the year information
+data <- data %>%
+  mutate(Year = format(date, "%Y"),
+         Month = format(date, "%m"),
+         Day = format(date, "%d"))
+head(data)
+
 #open catalog
 catalog <- read.csv("input/Catalog_CMEMS.csv", sep=";")
-head(catalog)
+cat <- catalog %>%
+  filter(dimensions %in% c("3D"))
+head(cat)
 
-#productid=7
-#repo <- paste0(output_data, "/cmems")
+#productid=2
+#repo <- paste0(input_data, "/cmems")
 
 # create new extract function
 #--------------------------------------------------------------------------------------
@@ -66,12 +73,12 @@ cmems3dmat <- function(lon, lat, date, productid, repo, maxZ){
   library(dplyr)
   
   # Get information and variable name for a given product
-  product_info <- filter(catalog, id_product == productid)
+  product_info <- filter(cat, id_product == productid)
   var <- as.character(product_info$variable)
   
   # get all product files
   # product_files <- list.files(paste(repo, product_info$product1, product_info$product2, sep="/"), full.names=TRUE, recursive=TRUE)
-  product_files <- list.files(paste(repo, product_info$service, product_info$layer, sep="/"), full.names=TRUE, recursive=TRUE)
+  product_files <- list.files(paste(repo, product_info$service, product_info$layer, cat$var_name, sep="/"), full.names=TRUE, recursive=TRUE) #data$Year[j], data$Month[j], data$Day[j],
   
   # select first file and get dimensions
   ncfile <- product_files[1]

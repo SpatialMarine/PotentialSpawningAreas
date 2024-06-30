@@ -71,12 +71,13 @@ cm <- import("copernicusmarine")
 # log in in your CMEMS user (you should have another script with this info)
 cm$login(username, password)
 y
+
 # 3) Download data -------------------------------------------------------------
 # Define the time subset you want:
 df <- Days_df 
 
 # Define the catalog subset you want:
-cat <- catalog  
+cat <- catalog
 
 # Define the name of the file and the destination
 destination_folder <- paste0(input_data, "/cmems")
@@ -92,7 +93,7 @@ for(i in 1:nrow(cat)){
   print(paste("Processing product", i, "of", nrow(cat), "-", remaining_products, "remaining"))
   
   # Create the folder for each product if it doesn't exist already 
-  dir_path <- file.path(destination_folder, cat$service[i], cat$layer[i])
+  dir_path <- file.path(destination_folder, cat$service[i], cat$layer[i], cat$var_name[i])
   if (!file.exists(dir_path)) {
     dir.create(dir_path, recursive = TRUE)}
   
@@ -138,16 +139,16 @@ library(ncdf4)
 library(raster)
 
 # 2D
-nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
+nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/SBT_Reanalysis/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
 nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
 nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
-sbt_reanalysis <- brick("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
+sbt_reanalysis <- brick("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/SBT_Reanalysis/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
 time <- getZ(sbt_reanalysis)
 time_seconds <- time * 60  # Convert minutes to seconds
 days <- as.POSIXct(time_seconds, origin = "1900-01-01", tz = "UTC")
 
 # 3D
-nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_BGC_006_008/med-ogs-bio-rean-d/2020/06/18/NPPV_Reanalysis_2020-06-18.nc")
+nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_BGC_006_008/med-ogs-bio-rean-d/NPPV_Reanalysis/2020/06/18/NPPV_Reanalysis_2020-06-18.nc")
 nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
 nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
 ncdepth <- nc$dim$depth$vals

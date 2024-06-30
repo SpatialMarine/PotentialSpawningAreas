@@ -83,7 +83,7 @@ extracted_data_list <- list()
 # Loop through each layer in the 'cat' data frame
 for (i in 1:nrow(cat)) {
   # Set the directory path for the current layer
-  nc_directory <- file.path("input/cmems", cat$service[i], cat$layer[i])
+  nc_directory <- file.path("input/cmems", cat$service[i], cat$layer[i], cat$var_name[i])
   
   # Get a list of all .nc files in the directory and subdirectories
   nc_files <- list.files(nc_directory, pattern = "\\.nc$", recursive = TRUE, full.names = TRUE)

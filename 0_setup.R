@@ -26,6 +26,3 @@ username <- paste(readLines(f, warn = FALSE), collapse = "")
 
 if(cpu == "david") f <- "C:/Users/david/OneDrive/Escritorio/chondrichthyan_habitat/psw.txt"
 password <- paste(readLines(f, warn = FALSE), collapse = "")
-
-# 4. Add SML paths
-if(cpu == "david") SML_dir <- "C:/Users/david/SML Dropbox/data/carto"

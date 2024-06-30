@@ -5,6 +5,7 @@
 #-------------------------------------------------------------------------------
 # 2.3. Calculate distances from features to study points
 #-------------------------------------------------------------------------------
+# MEJORAR NO PASAR POR TIERRA
 
 library(geosphere)
 library(sf)
