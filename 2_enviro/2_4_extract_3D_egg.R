@@ -30,22 +30,6 @@ data <- data %>%
          Day = format(date, "%d"))
 head(data)
 
-# add mins and secs:
-# initialize an empty vector to store the new values
-new_days <- vector()
-# loop through each value in the dataframe
-for (j in 1:nrow(data)) {
-  # Concatenate the date with the time string
-  new_value <- paste0(data$date[j], " 11:00:00")
-  # Append the new value to the vector
-  new_days <- c(new_days, new_value)
-}
-# Convert to POSIXct without the timezone
-new_days_posix <- as.POSIXct(new_days, format="%Y-%m-%d %H:%M:%S", tz="UTC")
-# Convert back to character strings without timezone information (format required for cm$subset function)
-data$date_time <- format(new_days_posix, format="%Y-%m-%d %H:%M:%S")
-head(data)
-
 #open catalog
 catalog <- read.csv("input/Catalog_CMEMS.csv", sep=";")
 cat <- catalog %>%
@@ -56,7 +40,7 @@ head(cat)
 # Extract your own data
 #--------------------------------------------------------------------------------------
 # Repository to folder where netCDFs are:
-repo <- paste0(input_data, "/cmems") #You will have to reorganise your netCDFs within subfolders named as: "product_1" and "product_2" as in catalog.
+repo <- paste0(input_data, "/cmems") 
 
 # Iterate over each productid in 'cat' dataframe
 for (pid in unique(cat$id_product)) {

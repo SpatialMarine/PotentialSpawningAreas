@@ -10,6 +10,22 @@ library(ncdf4)
 
 data <- read.csv2("temp/pres_absData.csv", sep = ";")
 
+# add mins and secs:
+# initialize an empty vector to store the new values
+new_days <- vector()
+# loop through each value in the dataframe
+for (j in 1:nrow(data)) {
+  # Concatenate the date with the time string
+  new_value <- paste0(data$date[j], " 11:00:00")
+  # Append the new value to the vector
+  new_days <- c(new_days, new_value)
+}
+# Convert to POSIXct without the timezone
+new_days_posix <- as.POSIXct(new_days, format="%Y-%m-%d %H:%M:%S", tz="UTC")
+# Convert back to character strings without timezone information (format required for cm$subset function)
+data$date_time <- format(new_days_posix, format="%Y-%m-%d %H:%M:%S")
+head(data)
+
 # use same temporal resolution (day) and numeric for lon and lat
 data$date <- as.Date(data$date) #if your time scale has not hours
 data$lon <- as.numeric(data$lon)
@@ -46,85 +62,31 @@ slope <- raster("input/emodnet/slope/slope.tif")
 slope
 
 data$slope <- raster::extract(slope, cbind(data$lon, data$lat)) 
-View(data)
+head(data)
 
-# 2) Generate function to extract data  ------------------------------------------------------------
-
-# set extract function
-extractTSR <- function(x, y, t){
-  
-  # get time from raster
-  xtime <- raster::getZ(x)
-  
-  # match point time with raster
-  # returns index from multilayer
-  idx <- match(t, xtime)
-  
-  # extract data for all points from all layers
-  ex <- raster::extract(x, y)
-  
-  # for each data point, select the data for idx
-  dat <- ex[cbind(1:length(t), idx)]
-  return(dat)
-}
-
-# 3) Extract data from dynamic 2D variables-------------------------------------
+# 2) Extract data from dynamic 2D variables-------------------------------------
 catalog <- read.csv2("input/Catalog_CMEMS.csv", sep=";")
 head(catalog)
 cat <- catalog %>%
   filter(var_name %in% c("SBT_Reanalysis"))
 
+
 # The only 2D variable is SBT (med-cmcc-tem-rean-d)
 # make a loop to (1) open each file ".nc" (2) configure time format and (3) extract data
 
-# Initialize an empty list to store extracted data
-extracted_data_list <- list()
+# Repository to folder where netCDFs are:
+repo <- paste0(input_data, "/cmems") 
 
-# Loop through each layer in the 'cat' data frame
-for (i in 1:nrow(cat)) {
-  # Set the directory path for the current layer
-  nc_directory <- file.path("input/cmems", cat$service[i], cat$layer[i], cat$var_name[i])
-  
-  # Get a list of all .nc files in the directory and subdirectories
-  nc_files <- list.files(nc_directory, pattern = "\\.nc$", recursive = TRUE, full.names = TRUE)
-  
-  # Initialize a list to store the extracted data
-  extracted_data_list <- vector("list", length = nrow(data))
-  
-  # Loop through each file and process
-  for (j in seq_along(nc_files)) {
-    
-    # Open the NetCDF file as a raster brick
-    sbt_reanalysis <- brick(nc_files[j])
-    
-    # Configure the time format (assuming time is in minutes since 1900-01-01)
-    time <- getZ(sbt_reanalysis)
-    time_seconds <- time * 60  # Convert minutes to seconds
-    days <- as.POSIXct(time_seconds, origin = "1900-01-01", tz = "UTC")
-    
-    # Extract data using the provided function
-    extracted_data <- extractTSR(x = sbt_reanalysis, y = cbind(data$lon, data$lat), t = data$time)
-    
-    # Store extracted data along with corresponding dates
-    extracted_data_list[[j]] <- data.frame(date = days, Value = extracted_data)
-    
-    # Print the progress
-    print(paste("Processed file:", nc_files[j], "for", cat$layer[i]))
-    
-    # Close the file (raster package manages this automatically, but you can ensure resources are freed)
-    rm(sbt_reanalysis)
-    gc()  # Garbage collection to free up memory
-  }
-  
-  # Combine extracted data from all files into a single data frame
-  combined_data <- do.call(rbind, extracted_data_list)
-  
-  # Merge with the main dataset 'data' based on dates
-  data <- merge(data, combined_data, by = "date", all.x = TRUE)
-  
-  # Rename the merged column appropriately
-  colnames(data)[ncol(data)] <- cat$var_name[i]
+# Iterate over each productid in 'cat' dataframe
+for (pid in unique(cat$id_product)) {
+  # Filter data corresponding to current productid
+  subset_data <- subset(cat, id_product == pid)
+
+data <- cmems2d(lon=data$lon, lat=data$lat, date=data$date, productid=pid, repo=repo, data=data)
+# Print or save any necessary output or results
+print(paste("Processed productid:", pid))
 }
+head(data)
 
 # Save dataframe
 write.csv2(data, "temp/env_data.csv", row.names = FALSE)

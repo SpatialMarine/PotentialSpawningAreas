@@ -29,11 +29,11 @@ mounts
 mediterranean_bbox <- st_bbox(c(xmin = -6.25, xmax = 36.25, ymin = 30.0, ymax = 46.0), crs = st_crs(4326))
 mediterranean_extent <- st_as_sfc(mediterranean_bbox)
 cropped_mounts <- st_intersection(mounts, mediterranean_extent)
-plot(st_geometry(cropped_mounts))
+#plot(st_geometry(cropped_mounts))
 cropped_mounts
 
 # Function to calculate minimum distance to seamounts
-min_distance_to_feature <- function(location, feature) {
+min_distance_to_point_feature <- function(location, feature) {
   #location: a single study location represented as an sf object.
   #seamounts: a collection of features also represented as an sf object.
   # Get coordinates of the location
@@ -50,12 +50,12 @@ min_distance_to_feature <- function(location, feature) {
 
 # Create a data frame with your study locations and convert it to an sf object
 study_locations <- st_as_sf(data, coords = c("lon", "lat"), crs = 4326)
-plot(st_geometry(study_locations))
+#plot(st_geometry(study_locations))
 study_locations
 
 # Calculate distances for each study location
 distances <- sapply(1:nrow(study_locations), function(i) {
-  min_distance_to_feature(study_locations[i, ], cropped_mounts)
+  min_distance_to_point_feature(study_locations[i, ], cropped_mounts)
 })
 
 # Add distances to the data frame
@@ -78,10 +78,10 @@ cropped_canyons
 
 # Convert all geometries in cropped_canyons to MULTIPOLYGON
 cropped_canyons <- st_cast(cropped_canyons, "MULTIPOLYGON")
-plot(st_geometry(cropped_canyons))
+#plot(st_geometry(cropped_canyons))
 
 # Function to calculate minimum distance to features
-min_distance_to_feature <- function(location, features) {
+min_distance_to_poly_feature <- function(location, features) {
   # Get coordinates of the location
   loc_coords <- st_coordinates(location)
   loc_coords <- loc_coords[, c("X", "Y")]  # Extract X and Y coordinates
@@ -112,7 +112,7 @@ study_locations
 
 # Calculate distances for each study location
 distances <- sapply(1:nrow(study_locations), function(i) {
-  min_distance_to_feature(study_locations[i, ], cropped_canyons)
+  min_distance_to_poly_feature(study_locations[i, ], cropped_canyons)
 })
 
 beep()
@@ -137,7 +137,7 @@ cropped_fans
 
 # Convert all geometries in cropped_canyons to MULTIPOLYGON
 cropped_fans <- st_cast(cropped_fans, "MULTIPOLYGON")
-plot(st_geometry(cropped_fans))
+#plot(st_geometry(cropped_fans))
 
 # Calculate distances for each study location
 distances <- sapply(1:nrow(study_locations), function(i) {
