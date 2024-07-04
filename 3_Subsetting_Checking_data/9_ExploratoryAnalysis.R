@@ -1,80 +1,24 @@
-#---------------------------------------------------------------------------------------------------
-# Exploratory data analysis
-#---------------------------------------------------------------------------------------------------
-sp_code <- "Gme" #Sca, Gme, Esp, Tma
+# ------------------------------------------------------------------------------
+
+# Title:
+
+#-------------------------------------------------------------------------------
+# 3.4. Exploratory data analysis
+#-------------------------------------------------------------------------------
+
+genus <- "Scyliorhinus" #Raja
 
 #Load data
-wd<- paste0(output_data, "/data_subsets")
-setwd(wd)
-data <- read.csv("Gmelastomus.csv", sep = ";") #Scanicula #Gmelastomus #Espinax #Tmarmorata
+file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
+data <- read.csv2(file)
+
 names(data)
-head(data)
-
-#Set categorical predictors as categories:
-data <- data %>% 
-  mutate(Haul_N = factor(data$Haul_N),
-         Alive_Dead = factor(Alive_Dead, c(0, 1)),
-         Sex = factor(Sex, c(0, 1)),
-         subs = factor(subs, c(1:2)),
-         Season = factor(Season, c(1:4)),
-         Maturity = factor(Maturity, c(0:1)),
-         Pregnancy = factor(Pregnancy, c(0:1)),
-         Abortion = factor(Abortion, c(0:1)))
-
-#Set categorical predictors as categories:
-data <- data %>%
-  mutate(TL = as.numeric(gsub(",", ".", TL)),  # Convert comma decimal to dot decimal
-         DW = as.numeric(gsub(",", ".", DW)),
-         lon = as.numeric(gsub(",", ".", lon)),
-         lat = as.numeric(gsub(",", ".", lat)),
-         Cloud.cover = as.numeric(gsub(",", ".", Cloud.cover)),
-         MinsExposedtoAir = as.numeric(gsub(",", ".", MinsExposedtoAir)),
-         Average_speed = as.numeric(gsub(",", ".", Average_speed)),
-         TotalBiomassHaul = as.numeric(gsub(",", ".", TotalBiomassHaul)),
-         Trawl_duration = as.numeric(gsub(",", ".", Trawl_duration)),
-         Wind.strength = as.numeric(gsub(",", ".", Wind.strength)),
-         Sea.state = as.numeric(gsub(",", ".", Sea.state)),
-         Distance_covered_GPS = as.numeric(gsub(",", ".", Distance_covered_GPS)),
-         Activity = as.numeric(gsub(",", ".", Activity)),
-         Wunds = as.numeric(gsub(",", ".", Wunds)),
-         Brusing = as.numeric(gsub(",", ".", Brusing)),
-         Ectoparasites = as.numeric(gsub(",", ".", Ectoparasites)),
-         at_celsius = as.numeric(gsub(",", ".", at_celsius)),
-         sst_celsius = as.numeric(gsub(",", ".", sst_celsius)),
-         sbt_reanalysis = as.numeric(gsub(",", ".", sbt_reanalysis)),
-         diff_at_sbt = as.numeric(gsub(",", ".", diff_at_sbt)),
-         diff_sst_sbt = as.numeric(gsub(",", ".", diff_sst_sbt)),
-         depth = as.numeric(gsub(",", ".", depth)),
-         #sso_merged = as.numeric(gsub(",", ".", sso_merged)),
-         #sbo_merged = as.numeric(gsub(",", ".", sbo_merged)),
-         #diff_sso_sbo = as.numeric(gsub(",", ".", diff_sso_sbo)),
-         #SSSAL_merged = as.numeric(gsub(",", ".", SSSAL_merged)),
-         #SBSAL_merged = as.numeric(gsub(",", ".", SBSAL_merged)),
-         #diff_SSSAL_SBSAL = as.numeric(gsub(",", ".", diff_SSSAL_SBSAL)),
-         #SSph_merged = as.numeric(gsub(",", ".", SSph_merged)),
-         #SBph_merged = as.numeric(gsub(",", ".", SBph_merged)),
-         #diff_SSph_SBph = as.numeric(gsub(",", ".", diff_SSph_SBph))
-  )
-
-# Convert the 'time' column to Date format if needed 
-data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
-data$time_hours <- as.POSIXct(data$time_hours, format = "%d-%m-%y %H:%M", tz = "UTC")
-
-summary(data)
-
-#Create a type variable to explore the distribution of the data 
-# of each variable in both observed and simulated
-data$type <- NA
-data$type[data$Alive_Dead == 1] <- "alive"
-data$type[data$Alive_Dead == 0] <- "dead"
 str(data)
 
 #List the variables that you will use in the model:
-vars  <- c("TL", "Sex", "Maturity", "Cloud.cover", "Sea.state", "MinsExposedtoAir", 
-           "Average_speed", "TotalBiomassHaul", "Trawl_duration",  "subs",         
-           "depth",  "diff_sst_sbt") 
-#ALL: "diff_SSSAL_SBSAL", "diff_SSph_SBph", "Season"
-#Gme, Esp, Tma: "Wind.strength", , "diff_sso_sbo"
+vars <- c("subs", "slope", "bottomT", "distance_to_seamount", "distance_to_canyons", 
+          "distance_to_fans", "depth", "seabottom_o2", "seabottom_nppv", 
+          "seabottom_ph", "seabottom_nh4", "seabottom_no3", "seabottom_po4", "seabottom_so")
 
 # Create function for density.plot: 
 # You will use this to create density plots of environmental data on alive and dead specimens:

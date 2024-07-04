@@ -4,6 +4,98 @@
 #--------------------------------------------------------------------------------------
 #adapted from dmarch github: https://github.com/dmarch/ocean3d/blob/8b525bd1b13bea93f608e89f40ae9a561ca49e64/R/cmems2track_v2.R#L138
 
+cmems2d <- function(lon, lat, date, productid, repo, data) {
+  # Description
+  # Extracts oceanographic information from 3D numerical models downloaded from CMEMS
+  
+  # Arguments
+  # data        Your database
+  # lon         longitude
+  # lat         latitude
+  # date        POSIXct date time or Date
+  # depth       depth value, in meters (positive)
+  # productid   id of the product from catalog table. This is used to find the netcdf file from the repository (repo)
+  # repo        repository path with netcdf files. it follows the same structure as the CMEMS FTP server
+  
+  # Description
+  # Extraction of values is done using the nearest neighbor 2d point.
+  
+  # Load libraries
+  library(lubridate)
+  library(ncdf4)
+  library(dplyr)
+  
+  # Get information and variable name for a given product
+  product_info <- filter(cat, id_product == productid)
+  var <- as.character(product_info$variable)
+  
+  # get all product files
+  product_files <- list.files(paste(repo, product_info$service, product_info$layer, product_info$var_name, sep="/"), full.names=TRUE, recursive=TRUE)
+  if (length(product_files) == 0) {
+    stop("No product files found in the specified repository path.")
+  }
+  
+  # select first file and get dimensions
+  ncfile <- product_files[1]
+  nc <- nc_open(ncfile)
+  nclon <- nc$dim$lon$vals # ncvar_get(nc, varid="lon")
+  nclat <- nc$dim$lat$vals # ncvar_get(nc, varid="lat")
+  nctime <- nc$dim$time$vals
+  time_seconds <- nctime * 60  # Convert minutes to seconds
+  ncday <- as.POSIXct(time_seconds, origin = "1900-01-01", tz = "UTC")
+  nc_close(nc)
+  
+  # output matrix
+  #out <- matrix(NA, nrow = 1, ncol = length(data$code), dimnames = list(NULL, data$code))
+  # Initialize a named vector to store the results
+  results <- setNames(rep(NA, nrow(data)), data$code)
+  
+  # get data for each observation
+  for (i in 1:length(date)) {
+    print(i)
+    
+    # get day, lon, lat, depth
+    iday <- as.POSIXct(data$date_time[i], format = "%Y-%m-%d %H:%M", tz = "UTC")
+    ilon <- data$lon[i]
+    ilat <- data$lat[i]
+   
+    # open netcdf matching(d)
+    product_files <- list.files(paste(repo, product_info$service, product_info$layer, product_info$var_name, sep="/"), full.names=TRUE, recursive=TRUE)
+    ncfile <- product_files[1]
+    nc <- nc_open(ncfile)
+    
+    # identify nearest neighbour locations
+    minlon <- which.min(abs(nclon - ilon))
+    minlat <- which.min(abs(nclat - ilat))
+    mintime <- which.min(abs(ncday - iday))
+    
+    # get variable
+    ncdata <- ncvar_get(nc, varid=var, start=c(minlon, minlat, mintime), count=c(1,1,1))
+    
+    # Store the result in the named vector
+    if (!is.na(ncdata)) {
+      results[data$code[i]] <- ncdata
+    }
+    
+    # close nc
+    nc_close(nc)
+  }
+ 
+   # Convert the named vector to a dataframe
+  results_df <- data.frame(code = names(results), value = as.numeric(results), stringsAsFactors = FALSE)
+  
+  # Remove NA values from results_df
+  results_df <- results_df[!is.na(results_df$value), ]
+  
+  # Rename the value column to the variable name
+  colnames(results_df)[colnames(results_df) == "value"] <- var
+  
+  # Join the results with the original data dataframe
+  data <- left_join(data, results_df, by = "code")
+  
+  return(data)
+}
+
 cmems3d_surface <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
   # Description
   # Extracts oceanographic information from 3D numerical models downloaded from CMEMS

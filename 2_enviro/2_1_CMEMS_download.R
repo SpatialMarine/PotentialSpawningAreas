@@ -42,20 +42,11 @@ Days_df <- Days_df %>%
 head(Days_df)
 
 # add mins and secs:
-# initialize an empty vector to store the new values
-new_days <- vector()
-# loop through each value in the dataframe
-for (j in 1:nrow(Days_df)) {
-  # Concatenate the date with the time string
-  new_value <- paste0(Days_df$Days[j], " 11:00:00")
-  # Append the new value to the vector
-  new_days <- c(new_days, new_value)
-}
-# Convert to POSIXct without the timezone
-new_days_posix <- as.POSIXct(new_days, format="%Y-%m-%d %H:%M:%S", tz="UTC")
-# Convert back to character strings without timezone information (format required for cm$subset function)
-Days_df$Days_with_time <- format(new_days_posix, format="%Y-%m-%d %H:%M:%S")
-head(Days_df)
+# Note: 11:00:00 if you use 12:00:00 CMEMS use the next day
+Days_df$Days_with_time <- paste0(Days_df$Days, " 11:00:00")
+
+
+
 
 # 2) Load CMEMS package through python (currently CMEMS data can only be accessed this way) -------------------------
 # install python 
@@ -70,7 +61,12 @@ cm <- import("copernicusmarine")
 
 # log in in your CMEMS user (you should have another script with this info)
 cm$login(username, password)
+# for session yes == y
 y
+
+
+
+
 
 # 3) Download data -------------------------------------------------------------
 # Define the time subset you want:
@@ -88,10 +84,7 @@ for(i in 1:nrow(cat)){
   
   # Calculate remaining products
   remaining_products <- nrow(cat) - i
-  
-  # Print the current product and remaining products
-  print(paste("Processing product", i, "of", nrow(cat), "-", remaining_products, "remaining"))
-  
+
   # Create the folder for each product if it doesn't exist already 
   dir_path <- file.path(destination_folder, cat$service[i], cat$layer[i], cat$var_name[i])
   if (!file.exists(dir_path)) {
@@ -102,8 +95,11 @@ for(i in 1:nrow(cat)){
     # Calculate remaining dates
     remaining_dates <- nrow(df) - j
     
+    # Print the current product and remaining products
+    print(paste("Processing product", i, "of", nrow(cat), "-", remaining_products, "remaining"))
     # Print the current date and remaining dates
     print(paste("Processing date", j, "of", nrow(df), "-", remaining_dates, "remaining"))
+
     
     # Create folders for different dates inside the variable folders
     date_dir <- file.path(dir_path, df$Year[j], df$Month[j], df$Day[j])
@@ -132,6 +128,16 @@ for(i in 1:nrow(cat)){
 }
 Sys.time() - t 
 beep()
+
+
+
+
+
+
+
+
+
+
 
 
 # Check it all with an example: 

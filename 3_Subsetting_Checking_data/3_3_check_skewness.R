@@ -17,7 +17,7 @@ str(data)
 
 # Select specific columns from the data dataset in which you want to assess skewness
 
-varskew  <- c("subs", "slope", "bottomT", "distance_to_seamount", "distance_to_canyons", 
+varskew  <- c("slope", "bottomT", "distance_to_seamount", "distance_to_canyons", 
                       "distance_to_fans", "depth", "seabottom_o2", "seabottom_nppv", 
                       "seabottom_ph", "seabottom_nh4", "seabottom_no3", "seabottom_po4", "seabottom_so")
 
@@ -25,6 +25,7 @@ varskew  <- c("subs", "slope", "bottomT", "distance_to_seamount", "distance_to_c
 class(varskew)
 selvarskew <- data %>% dplyr::select(all_of(varskew))
 head(selvarskew)
+str(selvarskew)
 
 # Initialize an empty data frame for skewness table
 skewness_table <- data.frame(variable = character(), skewness = numeric(), shapiro = numeric())
@@ -77,9 +78,11 @@ print(skewness_table)
 #Improve: all execept: TL, WeightLWR, Cloud.cover, Net_horizontal_opening, Distance_covered_GPS, Average_speed, 
 
 data <- data %>% #recomendacion solo si cambia mucho.
-  mutate(LN_TotalBiomassHaul = log1p(TotalBiomassHaul),
-         LN_MinsExposedtoAir = log1p(MinsExposedtoAir))
+  mutate(LN_TotalBiomassHaul = log1p(slope),
+         LN_MinsExposedtoAir = log1p(distance_to_canyons),
+         LN_MinsExposedtoAir = log1p(distance_to_fans),
+         LN_MinsExposedtoAir = log1p(distance_to_fans))
 head(data)
 
-output_file <- file.path(output_data, "data_subsets", paste0(sp_code,"_dataset_log_pred.csv")) 
+output_file <- file.path(temp_data, "data_subsets", paste0(genus,"_dataset_log_pred.csv")) 
 write.csv2(data, file = output_file, row.names = FALSE)
