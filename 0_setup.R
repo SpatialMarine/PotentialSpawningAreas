@@ -6,7 +6,7 @@
 cpu <- "david"  
 
 # Set main data paths
-if(cpu == "david") main_dir <- "C:/Users/david/OneDrive/Escritorio/Huevos"
+if(cpu == "david") main_dir <- "C:/Users/david/SML Dropbox/gitdata/EggCase_Distribution"
 setwd(main_dir)
 
 # 2. Create data paths
