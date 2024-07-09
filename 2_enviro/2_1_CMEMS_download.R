@@ -50,11 +50,10 @@ Days_df$Days_with_time <- paste0(Days_df$Days, " 11:00:00")
 
 # 2) Load CMEMS package through python (currently CMEMS data can only be accessed this way) -------------------------
 # install python 
-install_python() 
-virtualenv_create(envname = "cmems")
-virtualenv_install("cmems", packages = c("copernicusmarine"))
+#install_python() 
+#virtualenv_create(envname = "cmems")
+#virtualenv_install("cmems", packages = c("copernicusmarine"))
 use_virtualenv("cmems", required = TRUE)
-py_install("copernicusmarine")
 
 # load package / import library (py)
 cm <- import("copernicusmarine")

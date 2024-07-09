@@ -11,20 +11,9 @@ library(ncdf4)
 data <- read.csv2("temp/pres_absData.csv", sep = ";")
 
 # add mins and secs:
-# initialize an empty vector to store the new values
-new_days <- vector()
-# loop through each value in the dataframe
-for (j in 1:nrow(data)) {
-  # Concatenate the date with the time string
-  new_value <- paste0(data$date[j], " 11:00:00")
-  # Append the new value to the vector
-  new_days <- c(new_days, new_value)
-}
-# Convert to POSIXct without the timezone
-new_days_posix <- as.POSIXct(new_days, format="%Y-%m-%d %H:%M:%S", tz="UTC")
-# Convert back to character strings without timezone information (format required for cm$subset function)
-data$date_time <- format(new_days_posix, format="%Y-%m-%d %H:%M:%S")
-head(data)
+# Note: 11:00:00 if you use 12:00:00 CMEMS use the next day
+data$Days_with_time <- paste0(data$date, " 11:00:00")
+
 
 # use same temporal resolution (day) and numeric for lon and lat
 data$date <- as.Date(data$date) #if your time scale has not hours

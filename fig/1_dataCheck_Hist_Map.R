@@ -6,7 +6,7 @@
 
 
 #-------------------------------------------------------------------------------
-# 02. Plot data spatial distribution and amount of data per year - data checks
+# 01. Plot data spatial distribution and amount of data per year - data checks
 #-------------------------------------------------------------------------------
 library(ggplot2)
 library(dplyr)

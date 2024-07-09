@@ -9,6 +9,9 @@
 
 library(geosphere)
 library(sf)
+library(gdistance)
+library(sp)
+library(raster)
 
 data <- read.csv2("temp/env_data.csv", sep = ";")
 
@@ -19,6 +22,103 @@ data$lat <- as.numeric(data$lat)
 range(data$date)
 range(data$lon)
 range(data$lat)
+
+# Make an ocean mask so you calculate distance only without accounting for the land
+bathy <- raster("input/gebco/gebco_bathy.tif")
+print(bathy)
+
+# transform 0 to NA
+bathy[bathy >= 0] <- NA
+print(bathy)
+
+# Eliminate Atlantic data (xmin, xmax, ymin, ymax)
+b <- as(extent(-6, 0, 42, 46), 'SpatialPolygons')
+crs(b) <- crs(bathy)
+# Use the mask function to apply the mask to bathy
+bathy <- mask(bathy, b, inverse = TRUE)
+plot(bathy_d)
+
+# create ocean mask using the bathymetry
+mask <- bathy/bathy
+
+# change to a coarser resolution
+mask_ag <- aggregate(mask, fact = 10)
+plot(mask_ag)
+
+# create surface
+tr1 <- transition(mask_ag, transitionFunction=mean, directions=16)
+tr1C <- geoCorrection(tr1)
+print(tr1C)
+
+point1<- c(3.2041567, 41.82413)
+dist2col <- accCost(tr1C, point1)
+dist2col[is.infinite(dist2col)] <- NA
+plot(dist2col)
+
+
+
+
+# SOMETHING LIKE THIS?
+
+# Function to calculate minimum distance to seamounts considering land mask
+min_distance_to_point_feature <- function(location, feature, land_mask) {
+  # Get coordinates of the location
+  loc_coords <- st_coordinates(location)
+  # Find nearest feature in cropped_mounts to the location
+  nearest_feature <- st_nearest_feature(location, feature)
+  # Get coordinates of the nearest feature
+  feature_coords <- st_coordinates(nearest_feature)
+  
+  # Create transition matrix from land mask (considering 16 directions)
+  tr1 <- transition(land_mask, transitionFunction = mean, directions = 16)
+  tr1C <- geoCorrection(tr1)
+  
+  # Calculate accumulated cost distance to nearest feature location
+  dist2col <- accCost(tr1C, loc_coords)
+  
+  # If the nearest feature is over land, find the nearest point on land and use it as the endpoint
+  if (raster::extract(land_mask, feature_coords) == 1) {
+    nearest_land_point <- st_nearest_points(location, land_mask)
+    feature_coords <- st_coordinates(nearest_land_point)
+  }
+  
+  # Calculate geodesic distance between location and adjusted feature coordinates
+  distance <- distGeo(loc_coords, feature_coords)
+  
+  # Use accumulated cost distance if it is finite and less than geodesic distance
+  if (!is.na(dist2col) && dist2col < distance) {
+    distance <- dist2col
+  }
+  
+  return(distance)
+}
+
+# Load your study locations (already defined as study_locations)
+# Load cropped_mounts and mask_ag
+# cropped_mounts <- st_read("path_to_cropped_mounts.shp")
+# mask_ag <- raster("path_to_mask_ag.tif")
+
+# Calculate distances for each study location
+distances <- sapply(1:nrow(study_locations), function(i) {
+  min_distance_to_point_feature(study_locations[i, ], cropped_mounts, mask_ag)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # 1) From point feature (.shp) -------------------------------------------------
 # 1.1) Sea Mounts
@@ -33,7 +133,7 @@ cropped_mounts <- st_intersection(mounts, mediterranean_extent)
 cropped_mounts
 
 # Function to calculate minimum distance to seamounts
-min_distance_to_point_feature <- function(location, feature) {
+min_distance_to_point_feature <- function(location, feature, land_mask) {
   #location: a single study location represented as an sf object.
   #seamounts: a collection of features also represented as an sf object.
   # Get coordinates of the location
