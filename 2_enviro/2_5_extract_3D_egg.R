@@ -3,12 +3,12 @@
 # Title: 
 
 #-------------------------------------------------------------------------------
-# 2.4. Extract 3D data from raster to points 
+# 2.5. Extract 3D data from raster to points 
 #-------------------------------------------------------------------------------
 library(dplyr)
 
 #Load data
-data <- read.csv("temp/data_2D_dist.csv", sep = ";") #remember having date format in your .csv
+data <- read.csv("temp/env_data2D.csv", sep = ";") #remember having date format in your .csv
 summary(data)
 head(data)
 
@@ -22,6 +22,7 @@ range(data$date)
 range(data$lon)
 range(data$lat)
 range(data$depth)
+range(data$date_time)
 
 # Add a new column with the year information
 data <- data %>%
@@ -60,4 +61,4 @@ for (pid in unique(cat$id_product)) {
 head(data)
 
 # Save dataframe
-write.csv2(data, "temp/data_2D_3D_dist.csv", row.names = FALSE)
+write.csv(data, "temp/data_2D_3D_dist.csv", row.names = FALSE)

@@ -12,7 +12,7 @@ library(beepr)
 
 # Import data catalog
 catalog <- read.csv2("input/Catalog_CMEMS.csv", sep=";")
-head(catalog)
+str(catalog) #ensure numerical variables are numeric
 
 catalog <- catalog %>%
   mutate(
@@ -26,7 +26,7 @@ catalog <- catalog %>%
 
 # 1) Prepare data required for requesting download to CMEMS -------------------
 # Import our data to extract our dates
-data <- read.csv2("temp/pres_absData.csv", sep = ";")
+data <- read.csv2("input/pres_absData.csv", sep = ";")
 
 # extract the dates in which there is data:
 data$date <- as.Date(data$date)
