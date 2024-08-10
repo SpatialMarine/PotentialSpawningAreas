@@ -3,7 +3,7 @@
 # Title:
 
 #-------------------------------------------------------------------------------
-# 2.1. Download environmental data from CMEMS
+# 2.7. Download environmental data from CMEMS for predict
 #-------------------------------------------------------------------------------
 library(reticulate)
 library(lubridate)
@@ -24,35 +24,31 @@ catalog <- catalog %>%
     depth_max = as.numeric(gsub(",", ".", depth_max)))
 
 
-# 1) Prepare data required for requesting download to CMEMS -------------------
-# Import our data to extract our dates
-data <- read.csv2("temp/pres_absData.csv", sep = ";")
 
-# extract the dates in which there is data:
-data$date <- as.Date(data$date)
-Days <- unique(data$date)
-Days_df <- data.frame(Days)
-Days_df$Days <- as.Date(Days_df$Days)
 
-# Add a new column with the year information
-Days_df <- Days_df %>%
-  mutate(Year = format(Days, "%Y"),
-         Month = format(Days, "%m"),
-         Day = format(Days, "%d"))
-head(Days_df)
+# 1. Create a dates dataframe for the dates you want to get data from ----------
+# Create a sequence of dates from January 1, 2021, to December 31, 2021
+dates <- seq(as.Date("2021-01-01"), as.Date("2021-12-31"), by = "day")
 
-# add mins and secs:
-# Note: 11:00:00 if you use 12:00:00 CMEMS use the next day
-Days_df$Days_with_time <- paste0(Days_df$Days, " 11:00:00")
+# Convert the dates to the desired format with the time "11:00:00"
+date_times <- paste(dates, "11:00:00")
 
-min(Days_df$Days_with_time)
-max(Days_df$Days_with_time)
+# Create a dataframe
+dates <- data.frame(date = dates, date_time = date_times)
+dates$date <- as.Date(dates$date)
+
+# Add a new column with the year, month and day information
+dates <- dates %>%
+  mutate(Year = format(date, "%Y"),
+         Month = format(date, "%m"),
+         Day = format(date, "%d"))
+head(dates)
 
 
 
 
 
-# 2) Load CMEMS package through python (currently CMEMS data can only be accessed this way) -------------------------
+# 2) Load CMEMS package through python -----------------------------------------
 # install python 
 #install_python() 
 #virtualenv_create(envname = "cmems")
@@ -70,10 +66,9 @@ y
 
 
 
-
 # 3) Download data -------------------------------------------------------------
 # Define the time subset you want:
-df <- Days_df 
+df <- dates 
 
 # Define the catalog subset you want:
 cat <- catalog
@@ -82,7 +77,7 @@ cat <- catalog
 
 
 # Define the name of the file and the destination
-destination_folder <- paste0(input_data, "/cmems")
+destination_folder <- paste0(input_data, "/cmems_predict")
 if (!dir.exists(destination_folder)) dir.create(destination_folder, recursive = TRUE)
 
 t <- Sys.time()
@@ -90,9 +85,9 @@ for(i in 1:nrow(cat)){
   
   # Calculate remaining products
   remaining_products <- nrow(cat) - i
-
+  
   # Create the folder for each product if it doesn't exist already 
-  dir_path <- file.path(destination_folder, cat$service[i], cat$layer[i], cat$var_name[i])
+  dir_path <- file.path(destination_folder, dates$Year[j], dates$Month[j], dates$Day[j])
   if (!file.exists(dir_path)) {
     dir.create(dir_path, recursive = TRUE)}
   
@@ -105,21 +100,15 @@ for(i in 1:nrow(cat)){
     print(paste("Processing product", i, "of", nrow(cat), "-", remaining_products, "remaining"))
     # Print the current date and remaining dates
     print(paste("Processing date", j, "of", nrow(df), "-", remaining_dates, "remaining"))
-
-    
-    # Create folders for different dates inside the variable folders
-    date_dir <- file.path(dir_path, df$Year[j], df$Month[j], df$Day[j])
-    if (!file.exists(date_dir)) {
-      dir.create(date_dir, recursive = TRUE)}
     
     # Define the file name using the current date
-    file_name <- paste0(cat$var_name[i], "_", df$Days[j], ".nc")
+    file_name <- paste0(format(as.Date(dates$date[j], origin = "1970-01-01"), "%Y%m%d"),"_", catalog$variable[i], ".nc")
     
     # download data
     cm$subset(
       dataset_id = cat$layer[i],
-      start_datetime = df$Days_with_time[j], #format example "1994-05-16 12:00:00"
-      end_datetime = df$Days_with_time[j],
+      start_datetime = df$date_time[j], #format example "1994-05-16 12:00:00"
+      end_datetime = df$date_time[j],
       variables = list(cat$variable[i]), # attention - variable must be a list
       minimum_longitude = cat$xmin[i],
       maximum_longitude =  cat$xmax[i],
@@ -128,7 +117,7 @@ for(i in 1:nrow(cat)){
       minimum_depth = cat$depth_min[i],
       maximum_depth = cat$depth_max[i],
       output_filename = file_name,
-      output_directory = date_dir,
+      output_directory = dir_path,
       force_download = TRUE)
   }
 }
@@ -136,33 +125,3 @@ Sys.time() - t
 beep()
 
 
-
-
-
-
-
-
-
-
-
-
-# Check it all with an example: 
-library(ncdf4)
-library(raster)
-
-# 2D
-nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/SBT_Reanalysis/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
-nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
-nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
-sbt_reanalysis <- brick("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/SBT_Reanalysis/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
-time <- getZ(sbt_reanalysis)
-time_seconds <- time * 60  # Convert minutes to seconds
-days <- as.POSIXct(time_seconds, origin = "1900-01-01", tz = "UTC")
-
-# 3D
-nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_BGC_006_008/med-ogs-bio-rean-d/NPPV_Reanalysis/2020/06/18/NPPV_Reanalysis_2020-06-18.nc")
-nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
-nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
-ncdepth <- nc$dim$depth$vals
-nctime <- nc$dim$time$vals
-ncday <- as.POSIXct(nctime, origin = "1970-01-01", tz = "UTC") 
