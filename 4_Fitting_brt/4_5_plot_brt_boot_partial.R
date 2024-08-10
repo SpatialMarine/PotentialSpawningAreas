@@ -2,29 +2,30 @@
 
 # Title:
 
-#-------------------------------------------------------------------------------#---------------------------------------------------------------------------------------------------
-# plot_brt_boot_partial          Plot BRT partial effects using bootstrap
-#---------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+# 4.5. plot_brt_boot_partial          Plot BRT partial effects using bootstrap
+#-------------------------------------------------------------------------------
+library(gbm)
 
 mod_code <- "brt"
 bootstrap <- T
 n_boot <- 100
 genus <- "Raja" #"Raja" #"Scyliorhinus"
+type <- "_Nkm2" #"_Nk2" #"_PA"
 
-#---------------------------------------------------------------
-# 1. Set data repository
-#---------------------------------------------------------------
 
-brtDir <- paste(output_data, mod_code, genus, sep="/")
-#brtDir <-paste(output_data,  mod_code, "27_new", sep="/")
+
+
+# 1. Set data repository-------------------------------------------------------
+brtDir <- paste(output_data, mod_code, paste0(genus, type), sep="/")
 outdir <- paste(brtDir, "predict_boost", sep="/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # import model full model
-mod <- readRDS(paste0(brtDir , "/", genus, ".rds"))
+mod <- readRDS(paste0(brtDir , "/", genus, type, ".rds"))
 
 # list of bootstrap models
-outdir_bootstrap <- paste0(brtDir, "/bootstrap/", genus)
+outdir_bootstrap <- paste0(brtDir, "/bootstrap/", genus, type)
 boots_files <- list.files(outdir_bootstrap, full.names = T)
 
 # batch import of bootstrap models
@@ -88,7 +89,7 @@ labels <- paste0(mod$contributions$var, " (", relinf, "%)")
 names(labels) <- mod$contributions$var
 
 # select number of variables to plot
-n_plots <- 6
+n_plots <- 10
 data2 <- filter(data, var %in% mod$contributions$var[1:n_plots])
 
 

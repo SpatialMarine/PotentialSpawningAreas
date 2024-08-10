@@ -152,8 +152,12 @@ library(raster)
 
 # 2D
 nc<- nc_open("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/SBT_Reanalysis/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
-nclon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
-nclat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
+lon <- nc$dim$lon$vals#ncvar_get(nc, varid="lon") # nc$dim$lon$vals => same or faster?
+lat <- nc$dim$lat$vals#ncvar_get(nc, varid="lat") 
+# Calculate the resolution in latitude and longitude
+lat_resolution <- abs(lat[2] - lat[1])
+lon_resolution <- abs(lon[2] - lon[1])
+
 sbt_reanalysis <- brick("input/cmems/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-tem-rean-d/SBT_Reanalysis/2020/12/02/SBT_Reanalysis_2020-12-02.nc")
 time <- getZ(sbt_reanalysis)
 time_seconds <- time * 60  # Convert minutes to seconds

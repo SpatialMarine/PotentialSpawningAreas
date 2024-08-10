@@ -8,21 +8,26 @@
 mod_code <- "brt"
 bootstrap <- T
 n_boot <- 100
-genus <- "Scyliorhinus" #Raja
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+type <- "_Nkm2" #"_Nk2" #"_PA"
+
+
+
+
 
 #---------------------------------------------------------------
 # 1. Set data repository
 #---------------------------------------------------------------
-indir <- paste(output_data, mod_code, genus, sep="/")
+indir <- paste(output_data, mod_code, paste0(genus, type), sep="/")
 
 outdir <- paste(indir, "predict_boost", sep="/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # import model full model
-mod <- readRDS(paste0(indir, "/", genus, ".rds"))
+mod <- readRDS(paste0(indir, "/", genus, type, ".rds"))
 
 # list of bootstrap models
-outdir_bootstrap <- paste0(indir, "/bootstrap/", genus)
+outdir_bootstrap <- paste0(indir, "/bootstrap/", genus, type)
 boots_files <- list.files(outdir_bootstrap, full.names = T)
 
 # batch import of bootstrap models
