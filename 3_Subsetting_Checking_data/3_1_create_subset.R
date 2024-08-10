@@ -8,7 +8,7 @@
 library(dplyr)
 
 #Load data
-data <- read.csv("temp/data_2D_3D_dist.csv", sep = ";") 
+data <- read.csv("temp/data_2D_3D_dist_eke.csv", sep = ",") 
 names(data)
 head(data)
 

@@ -26,7 +26,7 @@ catalog <- catalog %>%
 
 # 1) Prepare data required for requesting download to CMEMS -------------------
 # Import our data to extract our dates
-data <- read.csv2("input/pres_absData.csv", sep = ";")
+data <- read.csv2("temp/pres_absData.csv", sep = ";")
 
 # extract the dates in which there is data:
 data$date <- as.Date(data$date)
@@ -73,6 +73,9 @@ df <- Days_df
 
 # Define the catalog subset you want:
 cat <- catalog
+#cat <- catalog %>%
+#  filter(variable %in% c("uo", "vo"), product_type %in% c("Reanalysis")) 
+
 
 # Define the name of the file and the destination
 destination_folder <- paste0(input_data, "/cmems")

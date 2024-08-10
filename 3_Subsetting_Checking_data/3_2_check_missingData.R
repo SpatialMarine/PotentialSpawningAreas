@@ -5,6 +5,8 @@
 #-------------------------------------------------------------------------------
 # 3.2. Check missing data in predictors
 #-------------------------------------------------------------------------------
+library(ggplot2)
+library(dplyr)
 
 genus <- "Scyliorhinus" #Raja
 
@@ -30,9 +32,10 @@ plot_Missing <- function(data_in, title = NULL){
 }
 
 # set names of the environmental variables
-vars <- c("subs", "slope", "bottomT", "distance_to_seamount", "distance_to_canyons", 
-          "distance_to_fans", "depth", "seabottom_o2", "seabottom_nppv", 
-          "seabottom_ph", "seabottom_nh4", "seabottom_no3", "seabottom_po4", "seabottom_so")
+vars <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT", 
+          "seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",
+          "seabottom_no3Reanalysis", "seabottom_po4Reanalysis", "seabottom_soReanalysis", "seabottom_uoReanalysis",
+          "seabottom_voReanalysis", "eke", "subs", "slope", "roughness")
 
 # Select columns with environmental data
 selEnv <- data %>% dplyr::select(all_of(vars))
@@ -48,18 +51,3 @@ jpeg(file = "MissingData.jpeg",
      width = 23.8, height = 21.65, units = "cm", res = 300)
 plot_Missing(selEnv) 
 dev.off()
-
-#Calculate percentage of NA in your predictors:
-#TotalBiomass:
-na_count <- sum(is.na(data$TotalBiomassHaul))
-na_count
-total_observations <- length(data$TotalBiomassHaul)
-percentage <- (na_count / total_observations) * 100
-percentage #16.15% NA for TotalBiomassHaul Sca; 23.01% for Gme; 13.18 for Esp; 15.93% for Tma
-
-#SAL (diff_SSSAL_SBSAL; SBSAL_merged; SSSAL_merged):
-#na_count <- sum(is.na(data$diff_SSSAL_SBSAL))
-#na_count
-#total_observations <- length(data$diff_SSSAL_SBSAL)
-#percentage <- (na_count / total_observations) * 100
-#percentage #10.49% NA for all SAL (diff_SSSAL_SBSAL; SBSAL_merged; SSSAL_merged) Sca; 11.80% for Gme ; 11.63% for Esp; 0.88% for Tma

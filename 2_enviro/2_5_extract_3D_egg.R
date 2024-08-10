@@ -33,6 +33,7 @@ head(data)
 
 #open catalog
 catalog <- read.csv("input/Catalog_CMEMS.csv", sep=";")
+
 cat <- catalog %>%
   filter(dimensions %in% c("3D"))
 head(cat)
@@ -62,3 +63,18 @@ head(data)
 
 # Save dataframe
 write.csv(data, "temp/data_2D_3D_dist.csv", row.names = FALSE)
+
+#--------------------------------------------------------------------------------------
+# Calculate eddy kinetic energy (EKE)
+#--------------------------------------------------------------------------------------
+
+#Load data
+data <- read.csv("temp/data_2D_3D_dist.csv", sep = ",") #remember having date format in your .csv
+summary(data)
+head(data)
+
+# Calculate p for each row
+data$eke <- (data$seabottom_uoReanalysis^2 + data$seabottom_voReanalysis^2) / 2
+
+# Save dataframe
+write.csv(data, "temp/data_2D_3D_dist_eke.csv", row.names = FALSE)

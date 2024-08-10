@@ -1,24 +1,28 @@
-#---------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+# Title:
+
+#-------------------------------------------------------------------------------#---------------------------------------------------------------------------------------------------
 # plot_brt_boot_var_influence          Plot BRT variable relative incluence using bootstrap
 #---------------------------------------------------------------------------------------------------
 mod_code <- "brt"
 bootstrap <- T
 n_boot <- 100
-sp_code <- "Gme" #Sca, Gme, Esp, Tma
+genus <- "Scyliorhinus" #Raja
 
 #---------------------------------------------------------------
 # 1. Set data repository
 #---------------------------------------------------------------
-indir <- paste(output_data, mod_code, sp_code, sep="/")
+indir <- paste(output_data, mod_code, genus, sep="/")
 
 outdir <- paste(indir, "predict_boost", sep="/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # import model full model
-mod <- readRDS(paste0(indir, "/", sp_code, ".rds"))
+mod <- readRDS(paste0(indir, "/", genus, ".rds"))
 
 # list of bootstrap models
-outdir_bootstrap <- paste0(indir, "/bootstrap/", sp_code)
+outdir_bootstrap <- paste0(indir, "/bootstrap/", genus)
 boots_files <- list.files(outdir_bootstrap, full.names = T)
 
 # batch import of bootstrap models
@@ -65,6 +69,6 @@ p <- ggplot(data=data, mapping=aes(x=var, y=median, ymin=cil, ymax=ciu)) +
   )
 
 # export plot
-p_png <- paste0(outdir, "/", sp_code, "_", mod_code, "_var_influence_boot_c.png")
+p_png <- paste0(outdir, "/", genus, "_", mod_code, "_var_influence_boot_c.png")
 ggsave(p_png, p, width=14, height=17, units="cm", dpi=300)
 

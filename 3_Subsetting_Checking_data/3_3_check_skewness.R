@@ -5,6 +5,8 @@
 #-------------------------------------------------------------------------------
 # 3.3. Check skewness in predictors and log transform if needed
 #-------------------------------------------------------------------------------
+library(moments)
+library(dplyr)
 
 genus <- "Scyliorhinus" #Raja
 
@@ -17,9 +19,10 @@ str(data)
 
 # Select specific columns from the data dataset in which you want to assess skewness
 
-varskew  <- c("slope", "bottomT", "distance_to_seamount", "distance_to_canyons", 
-                      "distance_to_fans", "depth", "seabottom_o2", "seabottom_nppv", 
-                      "seabottom_ph", "seabottom_nh4", "seabottom_no3", "seabottom_po4", "seabottom_so")
+varskew  <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT", 
+              "seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",
+              "seabottom_no3Reanalysis", "seabottom_po4Reanalysis", "seabottom_soReanalysis", "seabottom_uoReanalysis",
+              "seabottom_voReanalysis", "eke", "slope", "roughness")
 
 # Select columns with environmental data
 class(varskew)
