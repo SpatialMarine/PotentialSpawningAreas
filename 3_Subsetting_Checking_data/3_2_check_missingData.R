@@ -8,7 +8,7 @@
 library(ggplot2)
 library(dplyr)
 
-genus <- "Scyliorhinus" #Raja
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, ".csv")

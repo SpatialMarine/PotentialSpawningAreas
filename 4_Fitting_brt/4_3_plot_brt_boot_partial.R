@@ -9,7 +9,7 @@
 mod_code <- "brt"
 bootstrap <- T
 n_boot <- 100
-genus <- "Scyliorhinus" #Raja
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #---------------------------------------------------------------
 # 1. Set data repository

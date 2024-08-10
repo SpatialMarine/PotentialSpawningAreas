@@ -8,7 +8,7 @@
 library(corrplot)
 library(Hmisc)
 
-genus <- "Scyliorhinus" #Raja
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
@@ -88,6 +88,7 @@ vars  <- c("depth", "slope", "fishingEffort",
            "bottom_nppv", "bottom_ph", 
            "bottom_nh4","bottom_so", 
            "bottom_uo", "bottom_vo", "bottom_eke")
+#Removed: roughness, no3, po4
 
 #"Distance_covered_GPS","SSSAL_merged", "SBSAL_merged", "sst_celsius", "diff_at_sbt", 
 # "at_celsius",  "sbt_merged", "diff_SSSAL_SBSAL", "diff_SSph_SBph", "Wind.strength", 

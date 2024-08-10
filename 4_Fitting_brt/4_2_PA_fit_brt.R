@@ -16,7 +16,7 @@ library(data.table)
 library(egg)
 library(fmsb)
 
-genus <- "Scyliorhinus" #Raja
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_folds_dataset.csv")
@@ -62,6 +62,7 @@ data$season <- case_when(
 #Set categorical predictors as categories:
 data <- data %>% 
   mutate(season = factor(season, c(1:4)),
+         substrate = factor(substrate),
          fold = factor(data$fold)) #Haul_N = factor(data$Haul_N),
 
 summary(data)
@@ -110,7 +111,7 @@ registerDoParallel(cl)
 #3. Build presence_absence model -----------------------------------------------
 
 #  Create output data repository
-outdir <- paste0(output_data, "/brt/", genus)
+outdir <- paste0(output_data, "/brt/", genus, "_PA")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 set.seed(131)
@@ -168,6 +169,9 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
   }
   }
   
+
+
+
 ## combine model outputs
 mod_list <- foreach(i=1:nrow(comb)) %dopar% all_list[[i]]$mod_out
 mod_list[!lengths(mod_list)] <-  list(data.frame(tree.complexity = NA))
@@ -206,21 +210,21 @@ p <- ggplot(data = cv_deviance) +
   theme_article()
 
 mod_code <- "brt"
-outdir <- paste0(output_data, "/brt/", genus)
+outdir <- paste0(output_data, "/brt/", genus, "_PA")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 #  Create output repository
-outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", "optim_params.png")
+outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", "optim_params_PA.png")
 ggsave(outfile, p, width=25, height=14, units="cm", dpi=300)
 
 ## export outputs
-outfile <- paste0(outdir, "/brt_optim_params.csv")
+outfile <- paste0(outdir, "/brt_optim_params_PA.csv")
 write.csv2(mod_out, outfile, row.names = FALSE)
 
-outfile <- paste0(outdir, "/brt_cv_deviance.csv")
+outfile <- paste0(outdir, "/brt_cv_deviance_PA.csv")
 write.csv(cv_deviance, outfile, row.names = FALSE)
 
-outfile <- paste0(outdir, "/brt_predlist.rds")
+outfile <- paste0(outdir, "/brt_predlist_PA.rds")
 saveRDS(predict_list, outfile)
 
 
@@ -234,12 +238,13 @@ saveRDS(predict_list, outfile)
 mod_code <- "brt"
 #genus <- "Scyliorhinus" #Raja
 
-outdir <- paste0(output_data, "/brt/", genus)
-mod_out <- read.csv2(paste0(outdir, "/brt_optim_params.csv"))
-predict_list <- readRDS(paste0(outdir, "/brt_predlist.rds"))
+outdir <- paste0(output_data, "/brt/", genus, "_PA")
+mod_out <- read.csv2(paste0(outdir, "/brt_optim_params_PA.csv"))
+predict_list <- readRDS(paste0(outdir, "/brt_predlist_PA.rds"))
 
 View(mod_out)
 View(predict_list)
+plot(p)
 
 #Save as excel to build the table for the paper:
 #library(openxlsx)
@@ -252,10 +257,10 @@ View(predict_list)
 #' 2) Then, if there are two or more very similar: the one with the highest cv_AUC
 #' 3) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 33 #Scyliorhinus = 33 (presence_absence)
+select_model_id <- 27 #Scyliorhinus = 33 (presence_absence), #Scyliorhinus = 31 (density), #Raja = 27 (presence_absence), #Raja  =  (density),
 
 #List the name of the predictor variables
-vars  <- c("season", "depth", "slope", "fishingEffort",
+vars  <- c("season", "depth", "slope", "substrate", "fishingEffort",
            "distCanyons", "distMounts", "distFans", 
            "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
            "bottom_nh4", "bottom_so", "bottom_eke", "RN")
@@ -279,8 +284,8 @@ mod_full <- dismo::gbm.fixed(data = data,             # data.frame with data
                              n.trees = ntrees) 
 
 # Save model
-saveRDS(mod_full, file = paste0(outdir, "/", genus, ".rds"))  # save model
-mod_full <- readRDS(paste0(outdir, "/", genus, ".rds"))
+saveRDS(mod_full, file = paste0(outdir, "/", genus, "_PA.rds"))  # save model
+mod_full <- readRDS(paste0(outdir, "/", genus, "_PA.rds"))
 
 
 
@@ -318,21 +323,21 @@ radarPlot <- function(var_imp, var_order, colors_border=rgb(0.2,0.5,0.5,0.9), co
 var_imp <- summary(mod_full)$rel.inf
 names(var_imp) <- summary(mod_full)$var
 asc <- names(var_imp)
-pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_radar.png")
+pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_radar_PA.png")
 png(pngfile, width=1500, height=1000, res=150)
 radarPlot(var_imp, var_order=asc)
 dev.off()
 
 # 5.2. Make bar plot
 # Plot variable contribution using bar plot
-pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_influence.png")
+pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_influence_PA.png")
 png(pngfile, width=1000, height=1000, res=150)
 ggBRT::ggInfluence(mod_full, show.signif = F, col.bar = "skyblue3")
 dev.off()
 
 # 5.3. Make response curve plot
 # Plot response curves
-pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_response.png")
+pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_response_PA.png")
 png(pngfile, width=1000, height=2000, res=200)
 names(mod_full$gbm.call)[1] <- "dataframe"
 ggBRT::ggPD(mod_full, n.plots =13, smooth = F, rug = F, ncol=2, col.line = "skyblue3")
@@ -355,7 +360,7 @@ find.int$interactions
 #See the list of potential interactions:
 find.int$rank.list
 
-outdir_interaction <- paste0(outdir, "/interactions")
+outdir_interaction <- paste0(outdir, "/interactions_PA")
 if (!dir.exists(outdir_interaction)) dir.create(outdir_interaction, recursive = TRUE)
 
 #Assess the level of interaction between the potential interactions:
@@ -367,7 +372,7 @@ theta <- 140  # Adjust the azimuthal angle as desired
 phi <- 20    # Adjust the polar angle as desired
 
 #Plot:
-pngfile <- paste0(outdir_interaction, "/", sp_code, "_", mod_code, "_interaction_1.png")
+pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_PA.png")
 png(pngfile, width=1500, height=1500, res=200)
 dismo::gbm.perspec(mod_full, 2, 1, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
@@ -377,7 +382,7 @@ theta <- 200  # Adjust the azimuthal angle as desired
 phi <- 40    # Adjust the polar angle as desired
 
 #Check how the correlation between the 2 variables occur in 3D (x=var1, z=var2, y=respuesta)
-pngfile <- paste0(outdir_interaction, "/", sp_code, "_", mod_code, "_interaction_2.png")
+pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_2_PA.png")
 png(pngfile, width=1500, height=1500, res=200)
 dismo::gbm.perspec(mod_full, 3, 1, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
@@ -399,7 +404,7 @@ dev.off()
 
 # Set output directory
 # Each bootstrap model is stored here
-outdir_bootstrap <- paste0(outdir, "/bootstrap/", genus)
+outdir_bootstrap <- paste0(outdir, "/bootstrap/", genus, "_PA")
 if (!dir.exists(outdir_bootstrap)) dir.create(outdir_bootstrap, recursive = TRUE)
 
 # Define number of bootstrap models
@@ -425,7 +430,7 @@ foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "str
                                bag.fraction = bf,    # bag fraction
                                n.trees = ntrees) 
     # store model
-  outfile <- paste0(outdir_bootstrap, "/", str_pad(i, 2, pad = "0"), "_", genus, "_", mod_code, "_boot.rds")
+  outfile <- paste0(outdir_bootstrap, "/", str_pad(i, 2, pad = "0"), "_", genus, "_", mod_code, "_boot_PA.rds")
   saveRDS(mod_boot, file = outfile)  # save model
   
   # Return something here if needed
