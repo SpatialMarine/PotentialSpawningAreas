@@ -86,12 +86,7 @@ for(i in 1:nrow(cat)){
   # Calculate remaining products
   remaining_products <- nrow(cat) - i
   
-  # Create the folder for each product if it doesn't exist already 
-  dir_path <- file.path(destination_folder, dates$Year[j], dates$Month[j], dates$Day[j])
-  if (!file.exists(dir_path)) {
-    dir.create(dir_path, recursive = TRUE)}
-  
-  #If you need a folder per each date:
+    #If you need a folder per each date:
   for(j in 1:nrow(df)){
     # Calculate remaining dates
     remaining_dates <- nrow(df) - j
@@ -101,6 +96,10 @@ for(i in 1:nrow(cat)){
     # Print the current date and remaining dates
     print(paste("Processing date", j, "of", nrow(df), "-", remaining_dates, "remaining"))
     
+    # Create the folder for each product if it doesn't exist already 
+    dir_path <- file.path(destination_folder, dates$Year[j], dates$Month[j], dates$Day[j])
+    if (!file.exists(dir_path)) {
+      dir.create(dir_path, recursive = TRUE)}
     # Define the file name using the current date
     file_name <- paste0(format(as.Date(dates$date[j], origin = "1970-01-01"), "%Y%m%d"),"_", catalog$variable[i], ".nc")
     
