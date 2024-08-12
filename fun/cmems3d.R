@@ -650,7 +650,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       if (depth_size == 0) {
         # Simply copy the file to the output directory
         # Define output file path
-        output_path <- file.path(output_dir, month, day)
+        output_path <- file.path(output_dir, day)
         # Create output directory if it does not exist
         if (!dir.exists(output_path)) {
           dir.create(output_path, recursive = TRUE)
@@ -699,7 +699,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       }
       
       # Define output file path
-      output_path <- file.path(output_dir, month, day)
+      output_path <- file.path(output_dir,  day)
       # Create output directory if it does not exist
       if (!dir.exists(output_path)) {
         dir.create(output_path, recursive = TRUE)
