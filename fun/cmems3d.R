@@ -4,6 +4,7 @@
 #--------------------------------------------------------------------------------------
 #adapted from dmarch github: https://github.com/dmarch/ocean3d/blob/8b525bd1b13bea93f608e89f40ae9a561ca49e64/R/cmems2track_v2.R#L138
 
+# Extract data from 2D:
 cmems2d <- function(lon, lat, date, productid, repo, data) {
   # Description
   # Extracts oceanographic information from 3D numerical models downloaded from CMEMS
@@ -96,6 +97,8 @@ cmems2d <- function(lon, lat, date, productid, repo, data) {
   return(data)
 }
 
+
+# Extract surface data from 3D:
 cmems3d_surface <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
   # Description
   # Extracts oceanographic information from 3D numerical models downloaded from CMEMS
@@ -223,6 +226,8 @@ cmems3d_surface <- function(lon, lat, date, productid, repo, data, maxZ = NULL) 
   return(data)
 }
 
+
+# Extract bottom data from 3D:
 cmems3d_bottom <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
   # Description
   # Extracts oceanographic information from 3D numerical models downloaded from CMEMS
@@ -337,6 +342,8 @@ cmems3d_bottom <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
   return(data)
 }
 
+
+# Extract data from nearest point in bathymetry to your data from 3D:
 cmems3d_nearest <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
   # Description
   # Extracts oceanographic information from 3D numerical models downloaded from CMEMS
@@ -473,6 +480,8 @@ cmems3d_nearest <- function(lon, lat, date, productid, repo, data, maxZ = NULL) 
   
 }
 
+
+# Extract the three 3D possibilities at once (surfece, bottom and nearest)
 cmems3d_all <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
   # Description
   # Extracts oceanographic information from 3D numerical models downloaded from CMEMS
@@ -586,5 +595,116 @@ cmems3d_all <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
   data[[paste0("nearest_", product_info$variable, "_", product_info$product_type)]] <- unique_nearest
   
   return(data)
+}
+
+
+
+
+# Convert 4D netCDF (lon,lat,depth,time) to 3D keeping only bottom (lon,lat,time)
+# Function to convert 4D netCDF to 3D netCDF
+convert_4d_to_3d_daily <- function(base_dir, output_dir) {
+  # Create output directory if it does not exist
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
+  
+  library(ncdf4)
+  library(fs)
+  library(purrr)
+  
+  # Helper function to process each netCDF file
+  process_file <- function(input_file) {
+    tryCatch({
+      # Open the netCDF file
+      #input_file = nc_files[2]
+      nc <- nc_open(input_file)
+      
+      # Extract dimension sizes
+      lon <- nc$dim$longitude$vals
+      lat <- nc$dim$latitude$vals
+      depth <- nc$dim$depth$vals
+      time <- nc$dim$time$vals
+      ncday <- as.POSIXct(time, origin = "1970-01-01", tz = "UTC")
+      date <- as.Date(ncday)
+      day <- format(date, "%d")
+      
+      lon_size <- length(lon)
+      lat_size <- length(lat)
+      depth_size <- length(depth)
+      time_size <- length(time)
+      
+      # Identify variable names
+      var_names <- names(nc$var)
+      if (length(var_names) != 1) {
+        stop("Expected exactly one variable per netCDF file. Found: ", length(var_names))
+      }
+      var_name <- var_names[1]
+      
+      # Read data
+      data <- ncvar_get(nc, var_name)
+      
+      # Check dimensions of data
+      if (length(dim(data)) == 3) {
+        data_4d <- array(data, dim = c(dim(data), 1))
+      } else {
+        data_4d <- data
+      }
+      
+      # Create a new array for 3D data
+      data_3d <- array(NA_real_, dim = c(lon_size, lat_size, time_size))
+      
+      # Process each (lon, lat, time) point
+      for (i in 1:lon_size) {
+        for (j in 1:lat_size) {
+          for (k in 1:time_size) {
+            # Extract the slice for the current (lon, lat, time)
+            slice <- data_4d[i, j, , k]
+            last_valid_depth <- max(which(!is.na(slice)), na.rm = TRUE)
+            if (!is.na(last_valid_depth)) {
+              data_3d[i, j, k] <- slice[last_valid_depth]
+            } else {
+              data_3d[i, j, k] <- NA_real_
+            }
+          }
+        }
+      }
+      
+      # Define output file path
+      output_file <- file.path(output_dir, day, basename(input_file))
+      output_file <- sub("\\.nc$", "_3d.nc", output_file)
+      
+      # Define dimensions
+      dim_lon <- ncdim_def(name = "longitude", units = "degrees_east", vals = lon)
+      dim_lat <- ncdim_def(name = "latitude", units = "degrees_north", vals = lat)
+      dim_time <- ncdim_def(name = "time", units = "seconds since 1970-01-01 00:00:00 UTC", vals = time)
+      
+      # Define variable
+      var_out <- ncvar_def(var_name, "mmol m-3", list(dim_lon, dim_lat, dim_time), missval = NA_real_)
+      
+      # Create a new netCDF file
+      nc_out <- nc_create(output_file, list(var_out), force_v4 = TRUE)
+      
+      # Write data to the new netCDF file
+      ncvar_put(nc_out, var_out, data_3d)
+      
+      # Add attributes (optional)
+      ncatt_put(nc_out, var_out, "long_name", "Mole concentration of Ammonium in sea water")
+      
+      # Close netCDF files
+      nc_close(nc)
+      nc_close(nc_out)
+      
+      message(paste("Processed file:", input_file, "->", output_file))
+    }, error = function(e) {
+      message(paste("Error processing file:", input_file))
+      message("Error message:", e$message)
+    })
+  }
+  
+  # Recursively list all netCDF files in the base directory
+  nc_files <- dir_ls(base_dir, recurse = TRUE, regexp = "\\.nc$")
+  
+  # Process each file
+  walk(nc_files, process_file)
 }
 

@@ -26,7 +26,7 @@ date_end <- as.Date("2021-12-31")
 
 # dynamic variables to extract (same names as catalog)
 catalog <- read.csv2("input/Catalog_CMEMS.csv", sep=";")
-names(catalog$variable)
+catalog$variable
 env_dyn_vars <- c("bottomT", "o2", "nppv", "ph", "nh4", "no3", "po4", "so", "uo", "vo")
 
 # import catalogue with oceanographic products
