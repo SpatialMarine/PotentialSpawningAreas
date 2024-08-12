@@ -87,6 +87,12 @@ rough <- prepareGrid(roughness, m, method="bilinear", name="roughness")
 stack_static <- stack(bat, slp, distCans, distFans, distMounts, FishingEff, rough)
 
 
+
+
+
+
+
+
 # 3. Convert 3D (lat, lon, depth) variables in 2D (lat, lon)--------------------
 # by selecting the deepest data
 

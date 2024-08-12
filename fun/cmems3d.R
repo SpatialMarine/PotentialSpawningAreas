@@ -599,7 +599,6 @@ cmems3d_all <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
 
 
 # Convert 4D netCDF (lon,lat,depth,time) to 3D keeping only bottom (lon,lat,time)
-# NOT ALL FILES HAVE THE SAME DATA FORMAT SOLVE THAT...
 convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   # Create output directory if it does not exist
   if (!dir.exists(output_dir)) {
@@ -614,22 +613,52 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   process_file <- function(input_file) {
     tryCatch({
       # Open the netCDF file
-      #input_file = nc_files[12]
+      #input_file = nc_files[1]
       nc <- nc_open(input_file)
+      
+      # Extract dimension sizes
+      lon_size <- length(nc$dim$longitude$vals)
+      lat_size <- length(nc$dim$latitude$vals)
+      depth_size <- length(nc$dim$depth$vals)
+      time_size <- length(nc$dim$time$vals)
+      
+      # Process the 4D data
       
       # Extract dimension sizes
       lon <- nc$dim$longitude$vals
       lat <- nc$dim$latitude$vals
       depth <- nc$dim$depth$vals
       time <- nc$dim$time$vals
+      
+      # Initial conversion assuming the origin is "1970-01-01"
       ncday <- as.POSIXct(time, origin = "1970-01-01", tz = "UTC")
       date <- as.Date(ncday)
       day <- format(date, "%d")
       
-      lon_size <- length(lon)
-      lat_size <- length(lat)
-      depth_size <- length(depth)
-      time_size <- length(time)
+      # Check if the date does not start with "2021"
+      if (!startsWith(format(date, "%Y"), "2021")) {
+        # Apply the alternative conversion using "1900-01-01"
+        ncday <- as.POSIXct(time*60, origin = "1900-01-01", tz = "UTC")
+        date <- as.Date(ncday)
+        day <- format(date, "%d")
+      }
+      
+      # JUST SAVE AS THEY ARE THOSE THAT ARE ALREADY 3D:
+      # Check if the data is not 4D (i.e., if depth_size or time_size is 1)
+      if (depth_size == 0) {
+        # Simply copy the file to the output directory
+        # Define output file path
+        output_path <- file.path(output_dir, day)
+        # Create output directory if it does not exist
+        if (!dir.exists(output_path)) {
+          dir.create(output_path, recursive = TRUE)
+        }
+        output_file <- file.path(output_path, basename(input_file))
+        output_file <- sub("\\.nc$", "_3d.nc", output_file)
+        file_copy(input_file, output_file, overwrite = TRUE)
+        message(paste("Copied non-4D file:", input_file, "->", output_path))
+      } else {
+
       
       # Identify variable names
       var_names <- names(nc$var)
@@ -698,6 +727,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       nc_close(nc_out)
       
       message(paste("Processed file:", input_file, "->", output_file))
+      }
     }, error = function(e) {
       message(paste("Error processing file:", input_file))
       message("Error message:", e$message)
