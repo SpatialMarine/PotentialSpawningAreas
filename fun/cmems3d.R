@@ -613,7 +613,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   process_file <- function(input_file) {
     tryCatch({
       # Open the netCDF file
-      #input_file = nc_files[1]
+      #input_file = nc_files[10]
       nc <- nc_open(input_file)
       
       # Extract dimension sizes
@@ -634,6 +634,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       ncday <- as.POSIXct(time, origin = "1970-01-01", tz = "UTC")
       date <- as.Date(ncday)
       day <- format(date, "%d")
+      month <- format(date, "%m")
       
       # Check if the date does not start with "2021"
       if (!startsWith(format(date, "%Y"), "2021")) {
@@ -641,6 +642,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
         ncday <- as.POSIXct(time*60, origin = "1900-01-01", tz = "UTC")
         date <- as.Date(ncday)
         day <- format(date, "%d")
+        month <- format(date, "%m")
       }
       
       # JUST SAVE AS THEY ARE THOSE THAT ARE ALREADY 3D:
@@ -648,7 +650,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       if (depth_size == 0) {
         # Simply copy the file to the output directory
         # Define output file path
-        output_path <- file.path(output_dir, day)
+        output_path <- file.path(output_dir, month, day)
         # Create output directory if it does not exist
         if (!dir.exists(output_path)) {
           dir.create(output_path, recursive = TRUE)
@@ -697,12 +699,12 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       }
       
       # Define output file path
-      output_path <- file.path(output_dir, day)
+      output_path <- file.path(output_dir, month, day)
       # Create output directory if it does not exist
       if (!dir.exists(output_path)) {
         dir.create(output_path, recursive = TRUE)
       }
-      output_file <- file.path(output_path, basename(input_file))
+      output_file <- paste(output_path, basename(input_file), sep = "/")
       output_file <- sub("\\.nc$", "_3d.nc", output_file)
       
       # Define dimensions

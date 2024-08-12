@@ -97,14 +97,14 @@ stack_static <- stack(bat, slp, distCans, distFans, distMounts, FishingEff, roug
 # by selecting the deepest data
 
 # Example usage
+main_output_dir <- "input/cmems_predict_3d/2021"
 folder_path <- "input/cmems_predict/2021"
 base_dirs <- list.dirs(path = folder_path, full.names = TRUE, recursive = FALSE)
-output_dir <- "input/cmems_predict_3d/2021"
 
 # Loop through each subfolder and apply the function
 for (base_dir in base_dirs) {
   # Create an output directory corresponding to the input subfolder
-  output_dir <- file.path(output_dir, basename(base_dir))
+  output_dir <- file.path(main_output_dir, basename(base_dir))
   
   # Apply the conversion function
   convert_4d_to_3d_daily(base_dir, output_dir)
