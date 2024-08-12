@@ -598,10 +598,8 @@ cmems3d_all <- function(lon, lat, date, productid, repo, data, maxZ = NULL) {
 }
 
 
-
-
 # Convert 4D netCDF (lon,lat,depth,time) to 3D keeping only bottom (lon,lat,time)
-# Function to convert 4D netCDF to 3D netCDF
+# NOT ALL FILES HAVE THE SAME DATA FORMAT SOLVE THAT...
 convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   # Create output directory if it does not exist
   if (!dir.exists(output_dir)) {
@@ -616,7 +614,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   process_file <- function(input_file) {
     tryCatch({
       # Open the netCDF file
-      #input_file = nc_files[2]
+      #input_file = nc_files[12]
       nc <- nc_open(input_file)
       
       # Extract dimension sizes
@@ -670,7 +668,12 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       }
       
       # Define output file path
-      output_file <- file.path(output_dir, day, basename(input_file))
+      output_path <- file.path(output_dir, day)
+      # Create output directory if it does not exist
+      if (!dir.exists(output_path)) {
+        dir.create(output_path, recursive = TRUE)
+      }
+      output_file <- file.path(output_path, basename(input_file))
       output_file <- sub("\\.nc$", "_3d.nc", output_file)
       
       # Define dimensions
