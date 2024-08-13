@@ -3,7 +3,7 @@
 # Title:
 
 #-------------------------------------------------------------------------------
-# 2.7. Download environmental data from CMEMS for predict
+# 2.6. Download environmental data from CMEMS for predict
 #-------------------------------------------------------------------------------
 library(reticulate)
 library(lubridate)

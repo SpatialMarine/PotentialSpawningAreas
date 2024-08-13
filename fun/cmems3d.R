@@ -722,7 +722,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       ncvar_put(nc_out, var_out, data_3d)
       
       # Add attributes (optional)
-      ncatt_put(nc_out, var_out, "long_name", "Mole concentration of Ammonium in sea water")
+      ncatt_put(nc_out, var_out, "long_name", "var") #var should be changed by var_name
       
       # Close netCDF files
       nc_close(nc)

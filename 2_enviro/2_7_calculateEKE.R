@@ -3,7 +3,7 @@
 # Title:
 
 #-------------------------------------------------------------------------------
-# 2.6. Derive Eddy kinetic energy
+# 2.8. Derive Eddy kinetic energy
 #-------------------------------------------------------------------------------
 
 # Load libraries
@@ -50,10 +50,19 @@ catalog <- rbind(catalog, new_line)
 catalog <- catalog %>%
   filter(variable %in% c("uo", "vo", "eke")) 
 
-# Function to calculate EKE
+
+# 1. Create a dates dataframe for the dates you want to get data from ----------
+# Create a sequence of dates from January 1, 2021, to December 31, 2021
+surveyDates <- as.data.frame(seq(as.Date("2021-01-01"), as.Date("2021-12-31"), by = "day"))
+colnames(surveyDates) <- "date"
+str(surveyDates)
+
+
+
+# 2. Function to calculate EKE -------------------------------------------------
 generate_eke_gradient <- function(input_u_product_id, input_v_product_id, output_product_id){
   # Set repository for CMEMS products
-  cmems_repo <- paste0(input_data, "/cmems")
+  cmems_repo <- paste0(input_data, "/cmems_predict_3d")
   
   # Ensure character type for catalog fields
   catalog$product <- as.character(catalog$layer)
@@ -75,9 +84,6 @@ generate_eke_gradient <- function(input_u_product_id, input_v_product_id, output
   output_var <- catalog$variable[output_product_id]
   output_name <- catalog$standard_name[output_product_id]
   
-  # Load survey dates
-  surveyDates <- read.csv("temp/data_2D_3D_dist.csv", sep = ",")
-  
   # Add information to survey dates
   surveyDates <- surveyDates %>%
     mutate(
@@ -96,21 +102,27 @@ generate_eke_gradient <- function(input_u_product_id, input_v_product_id, output
   y <- foreach(i = 1:length(surveyDates$date), .packages = c("raster", "lubridate"), .inorder = FALSE) %dopar% {
     tryCatch({
       # Get date components
+      #i=1
       date <- surveyDates$date[i]
       YYYY <- year(date)
       MM <- sprintf("%02d", month(date))
       DD <- sprintf("%02d", day(date))
       
       # Construct file paths for U and V components
-      product_folder <- paste(cmems_repo, catalog$service, catalog$layer, sep = "/")
+      #product_folder <- paste(cmems_repo, catalog$service, catalog$layer, sep = "/") # this one is for extraction
+      product_folder <- paste(cmems_repo,YYYY, MM, DD, sep = "/")
       
       # U component
-      file_name_u <- paste0(catalog$var_name[1], "_", YYYY, "-", MM, "-", DD, ".nc")
-      file_path_u <- paste(product_folder[1], catalog$var_name[1], YYYY, MM, DD, file_name_u, sep = "/")
+      #file_name_u <- paste0(catalog$var_name[1], "_", YYYY, "-", MM, "-", DD, ".nc") # this one is for extraction
+      #file_path_u <- paste(product_folder[1], catalog$var_name[1], YYYY, MM, DD, file_name_u, sep = "/") # this one is for extraction
+      file_name_u <- paste0(YYYY, MM, DD,"_", catalog$variable[1],"_3d.nc")
+      file_path_u <- paste(product_folder[1],file_name_u, sep = "/")
       
       # V component
-      file_name_v <- paste0(catalog$var_name[2], "_", YYYY, "-", MM, "-", DD, ".nc")
-      file_path_v <- paste(product_folder[1], catalog$var_name[2], YYYY, MM, DD, file_name_v, sep = "/")
+      #file_name_v <- paste0(catalog$var_name[2], "_", YYYY, "-", MM, "-", DD, ".nc") # this one is for extraction
+      #file_path_v <- paste(product_folder[1], catalog$var_name[2], YYYY, MM, DD, file_name_v, sep = "/") # this one is for extraction
+      file_name_v <- paste0(YYYY, MM, DD,"_", catalog$variable[2],"_3d.nc")
+      file_path_v <- paste(product_folder[1],file_name_v, sep = "/")
       
       # Debugging output for paths
       print(paste("File path U:", file_path_u))
@@ -127,9 +139,10 @@ generate_eke_gradient <- function(input_u_product_id, input_v_product_id, output
         names(p) <- output_var
         
         # Save output raster
-        product_folder <- paste(cmems_repo, "EKE", YYYY, MM, DD, sep = "/")
-        if (!dir.exists(product_folder)) dir.create(product_folder, recursive = TRUE)
-        file_name <- paste0("EKE_", YYYY, "-", MM, "-", DD, ".nc")
+        #product_folder <- paste(cmems_repo, "EKE", YYYY, MM, DD, sep = "/") # this one is for extraction
+        product_folder <- paste(cmems_repo,YYYY, MM, DD, sep = "/")
+                if (!dir.exists(product_folder)) dir.create(product_folder, recursive = TRUE)
+        file_name <- paste0(YYYY, MM, DD,"_", "EKE.nc")
         file_path <- paste(product_folder, file_name, sep = "/")
         writeRaster(p, filename = file_path, format = "CDF", overwrite = TRUE,
                     varname = output_var, longname = output_name, xname = "lon", yname = "lat")
@@ -158,9 +171,14 @@ generate_eke_gradient(input_u_product_id = 1, input_v_product_id = 2, output_pro
 
 
 # check one:
-library(ncdf4)
-eg <- nc_open(paste0(cmems_repo, "/EKE/2020/06/18/EKE_2020-06-18.nc"))
-library(stars)
-file_path <- paste0(cmems_repo, "/EKE/2020/06/18/EKE_2020-06-18.nc")
-egb <- read_stars(file_path)
-plot(eg)
+#library(ncdf4)
+#eg <- nc_open(paste0(cmems_repo, "/2021/05/07/20210507_EKE.nc"))
+#library(stars)
+#file_path <- paste0(cmems_repo, "/EKE/2020/06/18/EKE_2020-06-18.nc")
+#egb <- read_stars(file_path)
+#plot(eg)
+#
+#
+#u <- 0.0430239
+#v <- 0.173732
+#p <- (u^2 + v^2) / 2
