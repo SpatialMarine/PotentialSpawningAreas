@@ -68,8 +68,11 @@ print(GSA_filtered)
 mod_code <- "brt"
 genus <- "Raja" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
+season <- "2021"
 path <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_median.tif")
 habitat <- raster(path)
+class(habitat)
+
 # Convert raster to data frame
 habitat_df <- as.data.frame(habitat, xy = TRUE)
 colnames(habitat_df) <- c("x", "y", "habitat")
@@ -97,7 +100,7 @@ habitat_clipped_sf <- st_intersection(habitat_sf, GSA_filtered)
 # Convert the clipped sf object back to a data frame (with original coordinates)
 # Ensure that we retain the original x and y coordinates
 habitat_clipped_df <- as.data.frame(habitat_clipped_sf) %>%
-  select(x, y, habitat)  # Keep the original x, y, and habitat columns
+  dplyr::select(x, y, habitat)  # Keep the original x, y, and habitat columns
 
 # Check for any remaining NAs and clean up the data
 habitat_clipped_df <- habitat_clipped_df %>%
