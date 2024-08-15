@@ -27,8 +27,7 @@ bathy_filtered <- bathy_df %>%
   filter(Bathy >= -800 & Bathy <= 5)
 # Apply the mask
 print(bathy_filtered)
-bathy_sf <- st_as_sf(bathy_filtered, coords = c("x", "y"), crs = st_crs(mask), remove = FALSE)
-#plot(bathy_sf)
+
 
 
 # 1.2. Landmask
@@ -111,16 +110,34 @@ summary(habitat_clipped_df)
 
 
 # 3. Crop habitat to bathymetric range 800 m -----------------------------------
+bathy_sf <- st_as_sf(bathy_filtered, coords = c("x", "y"), crs = st_crs(mask), remove = FALSE)
+print(bathy_sf)
+#plot(bathy_sf)
 
+# Check CRS and align if necessary
+if (st_crs(habitat_clipped_sf) != st_crs(bathy_sf)) {
+  habitat_clipped_sf <- st_transform(habitat_clipped_sf, crs = st_crs(bathy_sf))
+}
+# Perform spatial intersection to crop habitat_clipped_sf by bathy_sf
+# Ensure bathy_sf is also an sf object with proper geometry
+habitat_cropped_sf <- st_intersection(habitat_clipped_sf, bathy_sf)
 
+# Convert the cropped result back to a data frame, if needed
+habitat_cropped_df <- as.data.frame(habitat_cropped_sf) %>%
+  select(x, y, habitat)  # Keep only relevant columns
 
+# Inspect the result
+summary(habitat_cropped_df)
+str(habitat_cropped_df)
+
+write.csv(habitat_cropped_df, "habitat_cropped.csv", row.names = FALSE)
 
 
 # 3. Make zoomed in map---------------------------------------------------------
 # Define the plot
 p <- ggplot() +
   # Plot habitat raster
-  geom_tile(data = habitat_clipped_df, aes(x = x, y = y, fill = habitat)) +
+  geom_tile(data = habitat_cropped_df, aes(x = x, y = y, fill = habitat)) +
   scale_fill_viridis_c(option = "viridis", name = "Habitat") +
   
   # Plot bathymetric contours
