@@ -5,10 +5,16 @@
 #-------------------------------------------------------------------------------#---------------------------------------------------------------------------------------------------
 # plot_brt_boot_var_influence          Plot BRT variable relative incluence using bootstrap
 #---------------------------------------------------------------------------------------------------
+library(gbm)
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(egg)
+
 mod_code <- "brt"
 bootstrap <- T
 n_boot <- 100
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
 
 
@@ -38,8 +44,10 @@ data_list <- list()
 
 for(i in 1:length(models)){
   # get model
-  mi <- models[[i]]
-  
+  #i=1
+    mi <- models[[i]]
+  #print(summary(mi))
+
   # get relative importance for variables
   df <- data.frame(boot = i, var = summary(mi)$var, rel.inf = summary(mi)$rel.inf)
   

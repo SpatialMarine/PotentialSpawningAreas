@@ -6,16 +6,16 @@
 # This script generates a daily multiband raster to then make model predictions.
 
 #-------------------------------------------------------------------------------
-# 2.8. Stack environmental data for predict
+# 2.9. Stack environmental data for predict
 #-------------------------------------------------------------------------------
 library(sf)
 library(doParallel)
 library(dplyr)
 library(lubridate)
 library(raster)
-library(rgdal)
 library(ncdf4)
 library(stringr)
+
 
 # 1. Set static data repository -------------------------------------------------------
 # path to environmental static data
@@ -29,11 +29,10 @@ if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 
 
-
 # 2. Create oceanmask-----------------------------------------------------------
 # Set raster resolution and extent
 res <- 0.042
-e <- extent(-6, 30, 40, 46)
+e <- extent(-2, 4, 36, 42) 
 
 # create base raster
 m <- raster(e, res = res, crs = crs("+proj=longlat +datum=WGS84"))
@@ -45,26 +44,15 @@ m[] <- 1
 
 # 3. Stack static environmental data-------------------------------------------
 # import static maps
-bathy <- raster(paste0(static_data, "/bathy.tif"))  # bathymetry
-bathy <- bathy+0
+depth <- raster(paste0(static_data, "/bathy.tif"))  # bathymetry
+depth <- depth+0
 
 slope <- raster(paste0(static_data, "/slope.tif"))  # slope
 slope <- slope+0
 
-distCanyons <- raster(paste0(static_data, "/distance_canyons.tif"))  # distance to shore
-distCanyons <- distCanyons+0
+fishingEffort <- raster(paste0(static_data, "/FishingEffort.tif"))  # distance to shore
+fishingEffort <- fishingEffort+0
 
-distanceFans <- raster(paste0(static_data, "/distance_fans.tif"))  # distance to shore
-distanceFans <- distanceFans+0
-
-distanceMounts <- raster(paste0(static_data, "/distance_mounts.tif"))  # distance to shore
-distanceMounts <- distanceMounts+0
-
-FishingEffort <- raster(paste0(static_data, "/FishingEffort.tif"))  # distance to shore
-FishingEffort <- FishingEffort+0
-
-roughness <- raster(paste0(static_data, "/roughness.tif"))  # distance to shore
-roughness <- roughness+0
 
 # prepare function for stack
 prepareGrid <- function(r, m, method, name){
@@ -75,42 +63,13 @@ prepareGrid <- function(r, m, method, name){
   return(rm)
 }
 
+
 # create stack with static variables
-bat <- prepareGrid(bathy, m, method="bilinear", name="bathy")
+dept <- prepareGrid(depth, m, method="bilinear", name="depth")
 slp <- prepareGrid(slope, m, method="bilinear", name="slope")
-distCans <- prepareGrid(distCanyons, m, method="bilinear", name="distCanyons")
-distFans <- prepareGrid(distanceFans, m, method="bilinear", name="distanceFans")
-distMounts <- prepareGrid(distanceMounts, m, method="bilinear", name="distanceMounts")
-FishingEff <- prepareGrid(FishingEffort, m, method="bilinear", name="FishingEffort")
-rough <- prepareGrid(roughness, m, method="bilinear", name="roughness")
+fishingEff <- prepareGrid(fishingEffort, m, method="bilinear", name="fishingEffort")
 
-stack_static <- stack(bat, slp, distCans, distFans, distMounts, FishingEff, rough)
-
-
-
-
-
-
-
-
-# 3. Convert 3D (lat, lon, depth) variables in 2D (lat, lon)--------------------
-# by selecting the deepest data
-
-# Example usage
-main_output_dir <- "input/cmems_predict_3d/2021"
-folder_path <- "input/cmems_predict/2021"
-base_dirs <- list.dirs(path = folder_path, full.names = TRUE, recursive = FALSE)
-
-# Loop through each subfolder and apply the function
-for (base_dir in base_dirs) {
-  # Create an output directory corresponding to the input subfolder
-  output_dir <- file.path(main_output_dir, basename(base_dir))
-  
-  # Apply the conversion function
-  convert_4d_to_3d_daily(base_dir, output_dir)
-}
-
-
+stack_static <- stack(dept, slp, fishingEff)
 
 
 
@@ -119,9 +78,7 @@ for (base_dir in base_dirs) {
 
 
 # 4. Prepare dynamic variables for stack --------------------------------------------------
-
 # Function to prepare and stack raster files for each day
-
 prepareStackForDay <- function(day_folder, variables, res, e, output_folder) {
   
   # Define extent and resolution
@@ -130,10 +87,19 @@ prepareStackForDay <- function(day_folder, variables, res, e, output_folder) {
   # Create an empty stack
   stack_dynamic <- stack()
   
+  # Mapping of original variable names to new names
+  variable_names_map <- list(
+    bottomT = "bottom_temp",
+    o2 = "bottom_oxygen",
+    nppv = "bottom_nppv",
+    so = "bottom_so"
+  )
+  
   for (variable in variables) {
+  # example to test code: variable <- variables[2]
     
     # Construct the file pattern for the variable
-    file_pattern <- paste0("*_", variable, ".nc")
+    file_pattern <- paste0("*_", variable, "_3d.nc")
     
     # List netCDF files for the given variable
     nc_files <- list.files(path = day_folder, pattern = file_pattern, full.names = TRUE)
@@ -144,64 +110,80 @@ prepareStackForDay <- function(day_folder, variables, res, e, output_folder) {
     
     # Read each netCDF file and prepare the raster
     for (nc_file in nc_files) {
+    # example for testing code: nc_file <- nc_files[1]
       
       # Open the netCDF file
-      nc <- nc_open(nc_file)
-      
-      # Get dimensions
-      lon <- ncvar_get(nc, "longitude")
-      lat <- ncvar_get(nc, "latitude")
-      time <- ncvar_get(nc, "time")
+      r <- raster(nc_file)
 
+      # Calculate the number of columns and rows
+      ncol <- (e@xmax - e@xmin) / res
+      nrow <- (e@ymax - e@ymin) / res
       
-      # Print dimensions for debugging
-      cat("Dimensions for", variable, "from", nc_file, ":\n")
-      cat("Longitude:", length(lon), "\n")
-      cat("Latitude:", length(lat), "\n")
-      cat("Time:", length(time), "\n")
+      # Create an empty raster with the specified extent and resolution
+      target_raster <- raster(ncol = ncol, nrow = nrow, 
+                              xmn = e@xmin, xmx = e@xmax, 
+                              ymn = e@ymin, ymx = e@ymax)
       
+      r_resampled <- resample(r, target_raster, method = "bilinear")
       
-      # Extract the data for the first time step (assuming you want the first slice)
-      data <- ncvar_get(nc, "bottomT", start = c(1, 1, 1), count = c(-1, -1, 1))
-      
-      # Convert the data matrix to a 2D array
-      data_matrix <- t(data[,,1])  # Assuming `data` is ordered as (lon, lat, time)
-      
-      # Create a raster from the 2D data matrix
-      r <- raster(nrows = nrow(data_matrix), ncols = ncol(data_matrix),
-                  xmn = min(lon), xmx = max(lon),
-                  ymn = min(lat), ymx = max(lat))
-      
-      # Set values for the raster
-      r <- setValues(r, as.vector(data_matrix))
-      
-      # Set projection if not already set
-      projection(r) <- "+proj=longlat +datum=WGS84"
-      
-      # Crop and resample the raster
-      r <- crop(r, e)
-      r <- resample(r, raster(extent = e, resolution = res), method = "bilinear")
+      # Resamplear stack_static para que coincida con r_resampled
+      stack_static_resampled <- resample(stack_static, r_resampled, method = "bilinear")
       
       # Stack the raster
-      stack_dynamic <- stack(stack_dynamic, r)
+      stack_dynamic <- stack(stack_dynamic, r_resampled)
+      
+      # Rename the latest raster layer in the stack with the desired name
+      layer_name <- variable_names_map[[variable]]
+      names(stack_dynamic)[nlayers(stack_dynamic)] <- layer_name
+      
       
       # Close the netCDF file
-      nc_close(nc)
+      rm(r)
     }
   }
   
-  # Save the stack to file
-  if (nlayers(stack_dynamic) > 0) {
-    output_file <- file.path(output_folder, paste0("stack_", format(Sys.Date(), "%Y%m%d"), ".grd"))
-    writeRaster(stack_dynamic, output_file, format = "raster", overwrite = TRUE)
+  # Now add the static layers once, resampled to the same resolution as the dynamic stack
+  if (!is.null(stack_static)) {
+    
+    # Resample the static stack to match the dynamic raster
+    stack_static_resampled <- resample(stack_static, target_raster, method = "bilinear")
+    
+    # Combine the dynamic stack with the resampled static stack (only once)
+    stack_final <- stack(stack_dynamic, stack_static_resampled)
+    
+  } else {
+    # If no static stack is provided, just return the dynamic stack
+    stack_final <- stack_dynamic
   }
+  
+  # Save the final stack to file
+  if (nlayers(stack_final) > 0) {
+    # Extract the base directory and split by '/'
+    components <- unlist(strsplit(day_folder, "/"))
+    
+    # Assumes that folder structure includes year, month, day in the specified positions
+    year <- components[3]
+    month <- components[4]
+    day <- components[5]
+    
+    # Create a date string for the file name
+    date_string <- paste0(year, month, day)
+    
+    # Define the output file path
+    output_file <- file.path(output_folder, paste0("stack_", date_string, ".grd"))
+    
+    # Save the final stack
+    writeRaster(stack_final, output_file, format = "raster", overwrite = TRUE)
+    
+    cat("Stack saved to", output_file, "\n")
+  }
+  
+  # Return the final stacked raster
+  return(stack_final)
 }
 
 
-
-
-
-# prepare the function to process each dayly stack:
+# Function to process each dayly stack:
 processDailyStacks <- function(base_folder, variables, res, e) {
   
   # Get list of all month folders
@@ -210,9 +192,11 @@ processDailyStacks <- function(base_folder, variables, res, e) {
   for (month_folder in month_folders) {
     
     # Get list of all day folders within the current month folder
+    # example to test code: month_folder <- month_folders[1]
     day_folders <- list.dirs(month_folder, full.names = TRUE, recursive = FALSE)
     
     for (day_folder in day_folders) {
+    # example to test code: day_folder <- day_folders[1]
       
       # Extract date from folder name
       date_folder <- basename(day_folder)
@@ -232,18 +216,19 @@ processDailyStacks <- function(base_folder, variables, res, e) {
 
 
 
-# Stack you documents:
+# Stack you files:
 # General path:
-base_folder <- "input/cmems_predict/2021"
+base_folder <- "input/cmems_predict_3d/2021"
 
 # Select the dynamic variables to extract (same names as catalog):
-catalog <- read.csv2("input/Catalog_CMEMS.csv", sep=";")
+catalog <- read.csv2("input/catalog_stack.csv", sep=";")
 catalog$variable
-variables <- c("bottomT", "o2", "nppv", "ph", "nh4", "no3", "po4", "so", "uo", "vo")
+variables <- c("bottomT", "o2", "nppv", "so")
 
 # Set the resolution and extent:
 res <- 0.042
-e <- extent(-6, 30, 40, 46) 
+e <- extent(-2, 4, 36, 42) 
+
 
 # Process the stacks
 processDailyStacks(base_folder, variables, res, e)
@@ -267,126 +252,6 @@ processDailyStacks(base_folder, variables, res, e)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Create a dates dataframe:
-# Set period
-date_start <- as.Date("2021-01-01")
-date_end <- as.Date("2021-12-31")
-
-# Create dates
-dates <- data.frame(date = seq.Date(date_start, date_end, by = "day"))
-dates$date <- as.Date(dates$date)
-
-# Add a new column with the year, month and day information
-dates <- dates %>%
-  mutate(Year = format(date, "%Y"),
-         Month = format(date, "%m"),
-         Day = format(date, "%d"))
-head(dates)
-
-
-
-
-
-
-# prepare function for stack:
-prepareGridCatalogue <- function(var, date, catalog, m, method, name, input_data){
-  # Load required libraries
-  library(stringr)
-  library(lubridate)
-  library(raster)  # Ensure raster functions are available
-  
-  # Create an empty map with NA in case no file is found
-  empty_m <- m
-  empty_m[!is.na(empty_m)] <- NA
-  
-  # Locate product by variable name in the catalog
-  c <- catalog[catalog$variable == var, ]
-  
-  # Handle case where the catalog is empty
-  if (nrow(c) == 0) {
-    warning(paste("No matching variable found in the catalog for variable:", var))
-    return(empty_m)
-  }
-  
-  # Prepare date information
-  YYYY <- year(date)
-  MM <- sprintf("%02d", month(date))
-  DD <- sprintf("%02d", day(date))
-  
-  # Locate folder path for the specific date
-  product_folder <- file.path(input_data, "cmems_predict", YYYY, MM, DD)
-  
-  # List files matching the variable pattern in the folder
-  folder_files <- list.files(product_folder, full.names = TRUE, pattern = var)
-  
-  # Check that there is exactly one file to retrieve
-  if (length(folder_files) == 1){
-    # Import the file
-    r <- tryCatch({
-      raster(folder_files[1], var = var)  # Open the NetCDF file using the correct variable
-    }, error = function(e) {
-      warning(paste("Error reading raster for", var, "on", date, ":", e))
-      return(empty_m)
-    })
-    
-    # Resample at a common grid
-    pg <- prepareGrid(r, m, method = method, name = name)
-  } else {
-    # If no file or multiple files found, return the empty map
-    if(length(folder_files) == 0){
-      warning(paste("No file found for variable", var, "on", date))
-    } else {
-      warning(paste("Multiple files found for variable", var, "on", date, "- using the first one."))
-    }
-    pg <- empty_m
-    names(pg) <- name
-  }
-  
-  return(pg)
-}
-
-
-
-# Load necessary packages
-library(foreach)
-library(doParallel)
-library(lubridate)
-library(raster)
-library(stringr)
-library(dplyr)
-
-
-
-# Register parallel backend
-numCores <- detectCores() - 1  # Use one less than the number of cores
-cl <- makeCluster(numCores)
-registerDoParallel(cl)
-
-# Progress tracking (optional)
-progress <- txtProgressBar(min = 1, max = nrow(dates), style = 3)
-
-# Process data in parallel
-foreach(i = 1:nrow(dates), .packages = c("lubridate", "raster", "stringr", "dplyr"), .combine='c') %dopar% {
-  # Set day i
-  date <- dates$date[i]
-  YYYY <- year(date)
-  MM <- sprintf("%02d", month(date))
-  DD <- sprintf("%02d", day(date))
-  print(date)
-  
   # Create empty stack
   stack_dynamic <- stack()
   

@@ -118,6 +118,7 @@ repo <- paste0(input_data, "/cmems")
 # Iterate over each productid in 'cat' dataframe
 for (pid in unique(cat$id_product)) {
   # Filter data corresponding to current productid
+  # example for checking code:  id_product <- 1
   subset_data <- subset(cat, id_product == pid)
 
 data <- cmems2d(lon=data$lon, lat=data$lat, date=data$date, productid=pid, repo=repo, data=data)

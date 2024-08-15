@@ -17,15 +17,16 @@ library(data.table)
 library(egg)
 library(fmsb)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_folds_dataset.csv")
 data <- read.csv2(file)
 
+
 names(data)
 str(data)
-
+head(data)
 
 #1. Select only density data ---------------------------------------------------
 #Chose response variable distribution: 
@@ -42,7 +43,7 @@ data$ln_N_km2 <- log1p(data$N_km2)
 hist(data$ln_N_km2)
 shapiro.test(data$ln_N_km2)
 summary(data$ln_N_km2)
-
+#data$e_N_km2 <- exp(data$ln_N_km2) - 1
 
 
 
@@ -54,7 +55,7 @@ colnames(data) <- c("Haul_N", "code", "Genus", "lat", "lon", "season", "depth",
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
-                    "bottom_temp", "Year", "Month", "Day", "bottom_oxygen", 
+                    "bottom_temp","bottom_oxygen", 
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
                     "bottom_eke", "RN", "id", "fold", "ln_N_km2")
@@ -85,12 +86,13 @@ data <- data %>%
 
 summary(data)
 str(data)
+names(data)
 
 # List the name of the predictor variables
-vars  <- c("season", "substrate", "depth", "slope", "fishingEffort",
-           "distCanyons", "distMounts", "distFans", 
+vars  <- c("season", "depth", "substrate", "slope", "fishingEffort",
+           # "distMounts","distCanyons", "distFans",
            "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
-           "bottom_nh4", "bottom_so", "bottom_eke", "RN")
+           "bottom_nh4", "bottom_so", "bottom_eke", "RN") 
 
 
 
@@ -113,7 +115,7 @@ comb <- expand.grid(lr=c(0.001, 0.005, 0.01, 0.05), tc=c(1,3,5), bf=c(0.5, 0.6, 
 ## Prepare clusters
 cores <-detectCores()
 cores #if you use all of them you, your computer may crash (consumes all the CPU).
-cores <- 6  
+cores <- 8  
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -266,13 +268,13 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 27 #Scyliorhinus = 35 (density), Raja = 27
+select_model_id <- 31 #Scyliorhinus = 31 (density), Raja = 30
 
 #List the name of the predictor variables
 vars  <- c("season", "substrate", "depth", "slope", "fishingEffort",
-           "distCanyons", "distMounts", "distFans", 
+           #"distMounts",  "distCanyons", "distFans",
            "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
-           "bottom_nh4", "bottom_so", "bottom_eke", "RN")
+           "bottom_nh4", "bottom_so", "bottom_eke", "RN") 
 
 
 tc <- mod_out$tc[select_model_id]
@@ -386,17 +388,17 @@ phi <- 20    # Adjust the polar angle as desired
 #Plot:
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 2, 1, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 5, 1, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #*# Set the angle for the 3D plot
-theta <- 200  # Adjust the azimuthal angle as desired
+theta <- 120  # Adjust the azimuthal angle as desired
 phi <- 40    # Adjust the polar angle as desired
 
 #Check how the correlation between the 2 variables occur in 3D (x=var1, z=var2, y=respuesta)
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_2_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 3, 1, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 2, 1, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #dismo::gbm.perspec(mod_full, 7, 2)

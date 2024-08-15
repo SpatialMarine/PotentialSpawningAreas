@@ -8,7 +8,7 @@
 library(corrplot)
 library(Hmisc)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
@@ -30,7 +30,7 @@ colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth",
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
-                    "bottom_temp", "Year", "Month", "Day", "bottom_oxygen", 
+                    "bottom_temp", "bottom_oxygen", 
                     "bottom_nppv", "bottom_ph", 
                     "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", 
@@ -65,7 +65,7 @@ dev.off()
 
 # Calculate correlations using Spearman and clustering analysis
 # plot: #A9D18E for S canicula and #F4B183 for G melastomus
-pngfile <- paste0(output_dir, "/", sp_code, "_eda_cluster.png")
+pngfile <- paste0(output_dir, "/", genus, "_eda_cluster.png")
 png(pngfile, width=2500, height=2000, res=300)
 op <- par(mar=c(0.5,5,0.5,0.5))
 v <- as.formula(paste("~", vars, collapse="+"))

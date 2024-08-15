@@ -8,7 +8,7 @@
 library(gridExtra)
 library(grid)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
@@ -56,7 +56,7 @@ p4 <- density.plot(title = "Fishing Effort", xlab = "Fishing Effort", legend = "
 p5 <- density.plot(title = "Dist Canyons", xlab = "Dist Canyons", legend = "", alpha = 0.35, data = data, var = "distCanyons", group = "N_km2")
 p6 <- density.plot(title = "Dist Mounts", xlab = "Dist Mounts", legend = "", alpha = 0.35, data = data, var = "distMounts", group = "N_km2")
 p7 <- density.plot(title = "Dist Fans", xlab = "Dist Fans", legend = "", alpha = 0.35, data = data, var = "distFans", group = "N_km2")
-p8 <- density.plot(title = "Bottom Temp", xlab = "Bottom Temp", legend = "", alpha = 0.35, data = data, var = "bottomT", group = "N_km2")
+p8 <- density.plot(title = "Bottom Temp", xlab = "Bottom Temp", legend = "", alpha = 0.35, data = data, var = "bottomT_Reanalysis", group = "N_km2")
 p9 <- density.plot(title = "Bottom Oxygen", xlab = "Bottom Oxygen", legend = "", alpha = 0.35, data = data, var = "seabottom_o2Reanalysis", group = "N_km2")
 p10 <- density.plot(title = "Bottom NPPV", xlab = "Bottom NPPV", legend = "", alpha = 0.35, data = data, var = "seabottom_nppvReanalysis", group = "N_km2")
 p11 <- density.plot(title = "Bottom pH", xlab = "Bottom pH", legend = "", alpha = 0.35, data = data, var = "seabottom_phReanalysis", group = "N_km2")

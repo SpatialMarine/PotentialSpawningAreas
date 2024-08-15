@@ -9,6 +9,7 @@
 #-------------------------------------------------------------------------------
 # 2.7. Transform 4D to 3D
 #-------------------------------------------------------------------------------
+library(raster)
 
 # 1. Create oceanmask-----------------------------------------------------------
 # Set raster resolution and extent
@@ -27,6 +28,13 @@ m[] <- 1
 # Convert 4D netCDF (lon,lat,depth,time) to 3D keeping only bottom (lon,lat,time)
 convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   # Create output directory if it does not exist
+  # example to test code:
+  #main_output_dir <- "input/cmems_predict_3d/2021"
+  #folder_path <- "input/cmems_predict/2021"
+  #base_dirs <- list.dirs(path = folder_path, full.names = TRUE, recursive = FALSE)
+  
+  
+  
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
@@ -213,8 +221,11 @@ for (base_dir in base_dirs) {
 }
 
 # 3. Check results:
-
+library(ncdf4)
 nh4 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_nh4_3d.nc")
+nh4 <- brick("input/cmems_predict_3d/2021/01/01/20210101_nh4_3d.nc")
+plot(nh4)
+
 no3 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_no3_3d.nc")
 nppv <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_nppv_3d.nc")
 o2 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_o2_3d.nc")

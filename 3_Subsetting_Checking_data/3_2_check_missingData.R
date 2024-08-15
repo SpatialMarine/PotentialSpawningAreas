@@ -8,7 +8,7 @@
 library(ggplot2)
 library(dplyr)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
@@ -32,7 +32,7 @@ plot_Missing <- function(data_in, title = NULL){
 }
 
 # set names of the environmental variables
-vars <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT", 
+vars <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT_Reanalysis", 
           "seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",
           "seabottom_no3Reanalysis", "seabottom_po4Reanalysis", "seabottom_soReanalysis", "seabottom_uoReanalysis",
           "seabottom_voReanalysis", "eke", "subs", "slope", "roughness")

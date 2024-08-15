@@ -19,10 +19,10 @@ str(data)
 
 # Select specific columns from the data dataset in which you want to assess skewness
 
-varskew  <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT", 
+varskew  <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT_Reanalysis", 
               "seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",
               "seabottom_no3Reanalysis", "seabottom_po4Reanalysis", "seabottom_soReanalysis", "seabottom_uoReanalysis",
-              "seabottom_voReanalysis", "eke", "slope", "roughness")
+              "seabottom_voReanalysis", "eke", "slope", "roughness", "depth")
 
 # Select columns with environmental data
 class(varskew)

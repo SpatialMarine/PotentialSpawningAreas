@@ -2,11 +2,20 @@
 
 # Title:
 
+
+
+# Attention: in 4_7_predictMap_boot: the same output is obtained but using a mean
+# from 100 bootstrap predictions, then, use the next one directly if you don't
+# want to check something in particular
+
 #-------------------------------------------------------------------------------
 # 4.6. predict_brt          Predict BRT
 #-------------------------------------------------------------------------------
 library(ggplot2)
 library(sf)
+library(pals)
+library(gbm)
+library(beepr)
 
 mod_code <- "brt"
 bootstrap <- F
@@ -14,9 +23,12 @@ genus <- "Raja" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
 
 
+
+
+
 # 1. Import model and data------------------------------------------------------
 indir <- paste(output_data, mod_code, paste0(genus, type), sep="/")
-outdir <- paste(indir, "predict_boost", sep="/")
+outdir <- paste0(indir, "/predict_boost")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # Import model
@@ -27,10 +39,12 @@ mask <- st_read("input/landmask/Europa/Europe_coastline_poly.shp")
 print(mask)
 mask <- st_transform(mask, crs = 4326)
 
+
+
 # Prepare clusters
 cores <-detectCores()
 cores #if you use all of them you, your computer may crash (consumes all the CPU).
-cores <- 6  
+cores <- 8 
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -42,12 +56,16 @@ dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr", "pals", "dismo", "gbm")) %dopar% {
   
   # Get time information
+  #i=1
   date <- dates[i]
   YYYY <- year(date)
   MM <- sprintf("%02d", month(date))
+  DD <- sprintf("%02d", day(date))
   
   # Locate file
-  pat <- paste0(format(date, "%Y%m%d"), "_enviro.grd")
+  pat <- paste0( "stack_", format(date, "%Y%m%d"), ".grd")
+  # Get list of all month folders
+  stack_repo <- paste0("input/cmems_predict_3d/2021/", MM, "/", DD)
   grdfile <- list.files(stack_repo, recursive = TRUE, full.names = TRUE, pattern = pat)
   
   # Import environmental stack
@@ -62,23 +80,20 @@ foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr"
   if (!dir.exists(product_folder)) dir.create(product_folder, recursive = TRUE)  # create output directory if does not exist
   
   # store file in ncformat
-  outfile <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", sp_code, "_", mod_code, "_pred.tif")
+  outfile <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred.tif")
   writeRaster(pred, filename=outfile, overwrite=TRUE)
   
   # export plot
-  pngfile <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", sp_code, "_", mod_code, "_pred.png")
+  pngfile <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred.png")
   png(pngfile, width=560, height=600, res=100)
-  plot(pred, main = paste(sp_name, "   Model:", mod_code, "\n", date), zlim=c(0,1), col = viridis(100))
-  plot(land, col="grey80", border="grey60", add=TRUE)
+  plot(pred, main = paste(genus, "   Model:", mod_code, "\n", date), zlim=c(0,1), col = viridis(100))
+  plot(mask, col="grey80", border="grey60", add=TRUE)
   text(x = -3.5, y = 44, labels = date)
   box()
   dev.off()
 }
 
-#---------------------------------------------------------------
-# Stop cluster
-#---------------------------------------------------------------
 stopCluster(cl)
 
 print("Prediction ready")  
-
+beep()
