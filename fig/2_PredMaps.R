@@ -80,7 +80,7 @@ print(habitat)
 # Ensure CRS matches for all spatial data
 st_crs(mask) <- 4326
 st_crs(GSA_filtered) <- st_crs(mask)
-st_crs(Bathy_cont1) <- st_crs(mask)
+#st_crs(Bathy_cont1) <- st_crs(mask)
 
 
 
@@ -98,7 +98,7 @@ create_mask <- function(raster_layer, min_value, max_value) {
 }
 
 # Create the mask with values from 0 to 800
-bathy_mask <- create_mask(bathy, min_value = -700, max_value = 5)
+bathy_mask <- create_mask(bathy, min_value = -650, max_value = 5)
 #plot(bathy_mask)
 
 # Resample bathy_mask to match the resolution of habitat
@@ -144,9 +144,9 @@ summary(habitat_clipped_df)
 
 # 4. Crop bathymetric contours to GSA06 ------------------------------------------
 # Set the CRS of Bathy_cont1 to match GSA_filtered if needed
-st_crs(Bathy_cont1) <- st_crs(GSA_filtered)
-Bathy_cropped <- st_intersection(Bathy_cont1, GSA_filtered)
-str(Bathy_cropped)
+#st_crs(Bathy_cont1) <- st_crs(GSA_filtered)
+#Bathy_cropped <- st_intersection(Bathy_cont1, GSA_filtered)
+#str(Bathy_cropped)
 
 
 # 5. Make HABITAT zoomed in map---------------------------------------------------------
@@ -201,7 +201,7 @@ ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
 # 6. Load error map ------------------------------------------------------------
 # 1.5. Predicted habitat
 mod_code <- "brt"
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
 season <- "2021"
 path <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
@@ -224,7 +224,7 @@ create_mask <- function(raster_layer, min_value, max_value) {
 }
 
 # Create the mask with values from 0 to 800
-bathy_mask <- create_mask(bathy, -750, 5)
+bathy_mask <- create_mask(bathy, -650, 5)
 #plot(bathy_mask)
 
 # Resample bathy_mask to match the resolution of habitat

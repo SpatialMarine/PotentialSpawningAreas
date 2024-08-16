@@ -15,16 +15,17 @@ library(gbm)
 library(viridis)
 library(foreach)
 
-mod_code <- "brt"
-bootstrap <- F
+
+bootstrap <- T
+
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-type <- "_Nkm2" #"_Nk2" #"_PA"
-
-
+family <- "LN_laplace_sinO2"
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
+mod_code <- "brt"
 
 
 # 1. Set data repository--------------------------------------------------------
-indir <- paste(output_data, mod_code, paste0(genus, type), sep="/")
+indir <- paste(output_data, mod_code, paste0(genus, type, "_", family), sep="/")
 
 
 outdir <- paste0(indir, "/predict_boost")
@@ -47,7 +48,7 @@ print(mask)
 
 
 # list of bootstrap models
-outdir_bootstrap <- paste0(indir, "/bootstrap/", paste0(genus, type))
+outdir_bootstrap <- paste0(indir, "/bootstrap/", paste0(genus, type, "_", family))
 boots_files <- list.files(outdir_bootstrap, full.names = T)
 
 # batch import of bootstrap models

@@ -11,11 +11,10 @@ library(dplyr)
 library(ggplot2)
 library(egg)
 
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+family <- "LN_laplace_sinO2"
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-bootstrap <- T
-n_boot <- 100
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-type <- "_Nkm2" #"_Nk2" #"_PA"
 
 
 
@@ -24,7 +23,7 @@ type <- "_Nkm2" #"_Nk2" #"_PA"
 #---------------------------------------------------------------
 # 1. Set data repository
 #---------------------------------------------------------------
-indir <- paste(output_data, mod_code, paste0(genus, type), sep="/")
+indir <- paste(output_data, mod_code, paste0(genus, type, "_", family), sep="/")
 
 outdir <- paste(indir, "predict_boost", sep="/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
@@ -33,7 +32,7 @@ if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 mod <- readRDS(paste0(indir, "/", genus, type, ".rds"))
 
 # list of bootstrap models
-outdir_bootstrap <- paste0(indir, "/bootstrap/", genus, type)
+outdir_bootstrap <- paste0(indir, "/bootstrap/", genus, type, "_", family)
 boots_files <- list.files(outdir_bootstrap, full.names = T)
 
 # batch import of bootstrap models
@@ -82,6 +81,6 @@ p <- ggplot(data=data, mapping=aes(x=var, y=median, ymin=cil, ymax=ciu)) +
   )
 
 # export plot
-p_png <- paste0(outdir, "/", genus, "_", mod_code, "_var_influence_boot_c.png")
+p_png <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "_var_influence_boot_c.png")
 ggsave(p_png, p, width=14, height=17, units="cm", dpi=300)
 

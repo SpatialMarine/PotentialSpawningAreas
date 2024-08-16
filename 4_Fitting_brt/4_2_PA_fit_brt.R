@@ -73,7 +73,7 @@ names(data)
 vars  <- c("season", "depth", "substrate", "slope", "fishingEffort",
           # "distMounts","distFans", "distCanyons",
            "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
-           "bottom_nh4", "bottom_so", "bottom_eke", "RN")  #
+           "bottom_so", "bottom_eke", "RN")  # "bottom_nh4",
 
 
 
@@ -258,7 +258,7 @@ plot(p)
 #' 2) Then, if there are two or more very similar: the one with the highest cv_AUC
 #' 3) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 33 #Scyliorhinus = 33 (presence_absence), #Raja = 33 (presence_absence)
+select_model_id <- 29 #Scyliorhinus = 29 (presence_absence), #Raja = 13 (presence_absence)
 
 #List the name of the predictor variables
 vars  <- c("season", "depth", "slope", "substrate", "fishingEffort",
@@ -385,7 +385,7 @@ phi <- 40    # Adjust the polar angle as desired
 #Check how the correlation between the 2 variables occur in 3D (x=var1, z=var2, y=respuesta)
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_2_PA.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 3, 2, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 3, 1, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #dismo::gbm.perspec(mod_full, 7, 2)
