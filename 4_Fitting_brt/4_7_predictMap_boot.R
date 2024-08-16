@@ -36,7 +36,7 @@ print(mask)
 mask <- st_transform(mask, crs = 4326)
 
 # crop it:
-e <- c(-3, 5, 35, 43)
+e <- c(-4, 8, 34, 45) 
 e <- extent(e)
 bbox <- st_as_sfc(st_bbox(e))
 # Set the CRS of bbox to match the mask
@@ -73,7 +73,7 @@ dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr", "pals", "dismo", "gbm", "scam")) %dopar% {
   
   # Get time information
-  #i=1
+  #i=211
   date <- dates[i]
   YYYY <- year(date)
   MM <- sprintf("%02d", month(date))
@@ -131,7 +131,7 @@ foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr"
   # export plot
   pngfile <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred.png")
   png(pngfile, width=560, height=600, res=100)
-  plot(pred_med, main = paste(genus, "   Model:", mod_code, "\n", date), zlim=c(raster_min, raster_max), col = viridis(100))
+  plot(pred_med, main = paste(genus, "   Model:", mod_code, "\n", date), col = viridis(100))
   plot(mask, col="grey80", border="grey60", add=TRUE)
   text(x = -3.5, y = 44, labels = date)
   box()

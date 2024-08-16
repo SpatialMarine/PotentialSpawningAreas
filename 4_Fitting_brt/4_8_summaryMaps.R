@@ -129,6 +129,10 @@ for (i in 1:nrow(dates)) {
 print("Processing completed.")
 beep()
 
+
+# Identify which elements in the list are NULL
+null_indices <- which(sapply(stack_list, is.null))
+
 # After parallel processing, create a stack from the list of raster stacks
 pred_stack <- raster::stack(stack_list)
 

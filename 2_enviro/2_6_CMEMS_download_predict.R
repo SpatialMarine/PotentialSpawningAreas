@@ -11,7 +11,7 @@ library(dplyr)
 library(beepr)
 
 # Import data catalog
-catalog <- read.csv2("input/Catalog_CMEMS.csv", sep=";")
+catalog <- read.csv2("input/Catalog_pred.csv", sep=";")
 str(catalog) #ensure numerical variables are numeric
 
 catalog <- catalog %>%
@@ -124,3 +124,85 @@ Sys.time() - t
 beep()
 
 
+# I had to remove a copy of all the eke files generated:
+# List all files in the directory ending with "_eke_3d.nc"
+# Define the base directory
+base_folder <- paste0(input_data, "/cmems_predict_3d/2021")
+
+# Get list of all month folders
+month_folders <- list.dirs(base_folder, full.names = TRUE, recursive = FALSE)
+
+# Loop through each month folder
+for (month_folder in month_folders) {
+  #month_folder <- month_folders[1]
+  
+  # Get list of all day folders within the current month folder
+  day_folders <- list.dirs(month_folder, full.names = TRUE, recursive = FALSE)
+  
+  # Loop through each day folder
+  for (day_folder in day_folders) {
+    #day_folder <- day_folders[1]
+    
+    # List all files in the day folder ending with "_eke_3d.nc"
+    #files_to_remove <- list.files(path = day_folder, pattern = "_EKE\\.nc$|_nh4\\.nc$|_no3\\.nc$|_ph\\.nc$|_po4\\.nc$|_uo\\.nc$|_vo\\.nc$", full.names = TRUE)
+    # List all files in the day folder
+    all_files <- list.files(path = day_folder, full.names = TRUE)
+    # Filter files to eliminate those that start with "stack_" and end with ".gri"
+    files_to_remove <- all_files[grepl("^stack_.*\\.grd$", basename(all_files))]
+    
+    # Print files to be removed (for confirmation)
+    print(files_to_remove)
+    
+    # Remove all matching files
+    file.remove(files_to_remove)
+  }
+}
+
+
+
+
+# Rename files:
+# Define the base directory
+base_folder <- paste0(input_data, "/cmems_predict/2021")
+
+# Get list of all month folders
+month_folders <- list.dirs(base_folder, full.names = TRUE, recursive = FALSE)
+
+# Loop through each month folder
+for (month_folder in month_folders) {
+  #month_folder <- month_folders[1]
+  
+  # Get list of all day folders within the current month folder
+  day_folders <- list.dirs(month_folder, full.names = TRUE, recursive = FALSE)
+  
+  # Loop through each day folder
+  for (day_folder in day_folders) {
+    #day_folder <- day_folders[1]
+    
+    # List all files in the day folder
+    files_to_rename <- list.files(path = day_folder, full.names = TRUE)
+    
+    # Loop through each file
+    for (file in files_to_rename) {
+      #file <- files_to_rename[1]
+      
+      # Get the base name of the file (without the full path)
+      file_base_name <- basename(file)
+      
+      # Check if the file contains "_(1)" and remove it
+      if (grepl("_\\(1\\)", file_base_name)) {
+        # New name without "_(1)"
+        new_file_base_name <- gsub("_\\(1\\)", "", file_base_name)
+        
+        # Create the full path for the new file name
+        new_file <- file.path(dirname(file), new_file_base_name)
+        
+        # Rename the file
+        file.rename(from = file, to = new_file)
+        
+        # Optionally print the renamed file
+        print(paste("Renamed:", file, "->", new_file))
+      }
+    }
+  }
+}

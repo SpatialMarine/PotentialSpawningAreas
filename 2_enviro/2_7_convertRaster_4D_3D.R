@@ -10,6 +10,7 @@
 # 2.7. Transform 4D to 3D
 #-------------------------------------------------------------------------------
 library(raster)
+library(beepr)
 
 # 1. Create oceanmask-----------------------------------------------------------
 # Set raster resolution and extent
@@ -34,8 +35,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   #base_dirs <- list.dirs(path = folder_path, full.names = TRUE, recursive = FALSE)
   
   
-  
-  if (!dir.exists(output_dir)) {
+    if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
   
@@ -52,11 +52,20 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       #folder_path <- "input/cmems_predict/2021/01/01"
       # List all .nc files in the specified folder
       #nc_files <- list.files(path = folder_path, pattern = "\\.nc$", full.names = TRUE)
-      #input_file = nc_files[10]
+      #input_file = nc_files[3]
       #output_dir <- folder_path
       
       # Open the netCDF file
       nc <- nc_open(input_file)
+      # List available variables in the file
+      var_names <- names(nc$var)
+      # If no variables are found, skip the file
+      if (length(var_names) == 0) {
+        message(paste("No variables found in file:", input_file))
+        return(NULL)
+      }
+      # Process the first variable (you can adjust this based on your needs)
+      var_name <- var_names[1]
       
       # Extract dimension sizes
       lon_size <- length(nc$dim$longitude$vals)
@@ -103,18 +112,11 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
       } else {
         
         
-        # Identify variable names
-        var_names <- names(nc$var)
-        if (length(var_names) != 1) {
-          stop("Expected exactly one variable per netCDF file. Found: ", length(var_names))
-        }
-        var_name <- var_names[1]
-        
         # Identify attributes:
         # Extract the long_name attribute
-        long_name <- ncatt_get(nc, varid = "uo", attname = "long_name")$value
+        long_name <- ncatt_get(nc, varid = var_name, attname = "long_name")$value
         # Extract the units attribute directly as a character string
-        units <- ncatt_get(nc, varid = "uo", attname = "units")$value
+        units <- ncatt_get(nc, varid = var_name, attname = "units")$value
         # Extract the units of the time variable
         time_units <- ncatt_get(nc, varid = "time", attname = "units")$value
         # Extract the units of the latitude variable
@@ -213,17 +215,21 @@ base_dirs <- list.dirs(path = folder_path, full.names = TRUE, recursive = FALSE)
 
 # Loop through each subfolder and apply the function
 for (base_dir in base_dirs) {
+  #base_dir <- base_dirs[1]
+  
   # Create an output directory corresponding to the input subfolder
   output_dir <- file.path(main_output_dir, basename(base_dir))
   
   # Apply the conversion function
   convert_4d_to_3d_daily(base_dir, output_dir)
 }
+beep()
+
 
 # 3. Check results:
 library(ncdf4)
-nh4 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_nh4_3d.nc")
-nh4 <- brick("input/cmems_predict_3d/2021/01/01/20210101_nh4_3d.nc")
+nh4 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_so_3d.nc")
+nh4 <- brick("input/cmems_predict_3d/2021/01/01/20210101_so_3d.nc")
 plot(nh4)
 
 no3 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_no3_3d.nc")

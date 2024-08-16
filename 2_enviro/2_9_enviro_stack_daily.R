@@ -32,7 +32,8 @@ if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 # 2. Create oceanmask-----------------------------------------------------------
 # Set raster resolution and extent
 res <- 0.042
-e <- extent(-2, 4, 36, 42) 
+e <- extent(-4, 8, 34, 45) 
+
 
 # create base raster
 m <- raster(e, res = res, crs = crs("+proj=longlat +datum=WGS84"))
@@ -227,62 +228,9 @@ variables <- c("bottomT", "o2", "nppv", "so")
 
 # Set the resolution and extent:
 res <- 0.042
-e <- extent(-2, 4, 36, 42) 
+e <- extent(-4, 8, 34, 45)  
 
 
 # Process the stacks
 processDailyStacks(base_folder, variables, res, e)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  # Create empty stack
-  stack_dynamic <- stack()
-  
-  # Loop for each dynamic variable
-  for (j in 1:length(env_dyn_vars)){
-    jvar <- prepareGridCatalogue(var = env_dyn_vars[j], catalog = catalog, name = env_dyn_vars[j], date = date, m = m, method = "bilinear", input_data = input_data)
-    stack_dynamic <- stack(stack_dynamic, jvar)
-  }
-  
-  # Combine with static stack
-  s <- stack(stack_static, stack_dynamic)
-  s <- setZ(s, rep(date, nlayers(s)))
-  
-  # Set/create folder
-  product_folder <- file.path(outdir, YYYY, MM, DD)  # Set folder to include day
-  if (!dir.exists(product_folder)) dir.create(product_folder, recursive = TRUE)  # Create output directory if it does not exist
-  
-  # Store file in GRD format
-  outfile <- file.path(product_folder, paste0(format(date, "%Y%m%d"), "_enviro.grd"))
-  writeRaster(s, outfile, bandorder = 'BIL', overwrite = TRUE)
-  
-  # Progress update (optional)
-  setTxtProgressBar(progress, i)
-}
-
-# Stop the cluster
-stopCluster(cl)
-close(progress)
-
-print("Daily stack ready")
-
-
-
-
+beep()
