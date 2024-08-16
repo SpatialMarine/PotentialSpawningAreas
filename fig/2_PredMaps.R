@@ -46,12 +46,16 @@ print(mask)
 
 
 # 1.3. Bathymetric contour
-Bathy_cont<- st_read("input/emodnet/Bathy/contour1/Contours_2022.shp")
-Bathy_cont$Elevation <- as.numeric(Bathy_cont$Elevation)
+Bathy_cont<- st_read("input/gebco/cont/gebco_contours4osm.shp")
 print(Bathy_cont)
+
+Bathy_cont$DEPTH <- as.numeric(Bathy_cont$DEPTH)
+unique(Bathy_cont$DEPTH)
+
 #Select the bathymetrical lines that you want to plot:
 Bathy_cont1 <- Bathy_cont %>%
-  filter(Elevation %in% c(50, 200, 800))
+  filter(DEPTH %in% c(-100, -200, -750))
+unique(Bathy_cont1$DEPTH)
 # Set the CRS for the raster
 st_crs(Bathy_cont1) <- st_crs(mask)
 print(Bathy_cont1)
@@ -71,12 +75,7 @@ type <- "_Nkm2" #"_Nk2" #"_PA"
 season <- "2021"
 path <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_median.tif")
 habitat <- raster(path)
-class(habitat)
-
-# Convert raster to data frame
-habitat_df <- as.data.frame(habitat, xy = TRUE)
-colnames(habitat_df) <- c("x", "y", "habitat")
-summary(habitat_df)
+print(habitat)
 
 # Ensure CRS matches for all spatial data
 st_crs(mask) <- 4326
@@ -84,7 +83,40 @@ st_crs(GSA_filtered) <- st_crs(mask)
 st_crs(Bathy_cont1) <- st_crs(mask)
 
 
-# 2. Crop habitat to GSA06 area ------------------------------------------------
+
+
+# 2. Crop habitat to bathy 800 m---------------------------------------------------
+# Define the function to create the mask
+create_mask <- function(raster_layer, min_value, max_value) {
+  # Apply the condition to the raster
+  mask <- calc(raster_layer, fun = function(x) {
+    x[x >= min_value & x <= max_value] <- 1
+    x[x < min_value | x > max_value] <- NA
+    return(x)
+  })
+  return(mask)
+}
+
+# Create the mask with values from 0 to 800
+bathy_mask <- create_mask(bathy, -750, 5)
+#plot(bathy_mask)
+
+# Resample bathy_mask to match the resolution of habitat
+bathy_mask_resampled <- resample(bathy_mask, habitat, method = "bilinear")
+
+# Apply the mask to the habitat raster
+habitat_cropped <- mask(habitat, bathy_mask_resampled)
+plot(habitat_cropped)
+
+# Convert raster to data frame
+habitat_df <- as.data.frame(habitat_cropped, xy = TRUE)
+colnames(habitat_df) <- c("x", "y", "habitat")
+summary(habitat_df)
+
+
+
+
+# 3. Crop habitat to GSA06 area ------------------------------------------------
 # Convert habitat_df to an sf object (using original x, y coordinates)
 habitat_sf <- st_as_sf(habitat_df, coords = c("x", "y"), crs = st_crs(mask), remove = FALSE)
 #plot(habitat_sf)
@@ -110,37 +142,19 @@ habitat_clipped_df <- habitat_clipped_df %>%
 summary(habitat_clipped_df)
 
 
+# 4. Crop bathymetric contours to GSA06 ------------------------------------------
+# Set the CRS of Bathy_cont1 to match GSA_filtered if needed
+st_crs(Bathy_cont1) <- st_crs(GSA_filtered)
+Bathy_cropped <- st_intersection(Bathy_cont1, GSA_filtered)
 
 
-# 3. Crop habitat to bathymetric range 800 m -----------------------------------
-bathy_sf <- st_as_sf(bathy_filtered, coords = c("x", "y"), crs = st_crs(mask), remove = FALSE)
-print(bathy_sf)
-#plot(bathy_sf)
-
-# Check CRS and align if necessary
-if (st_crs(habitat_clipped_sf) != st_crs(bathy_sf)) {
-  habitat_clipped_sf <- st_transform(habitat_clipped_sf, crs = st_crs(bathy_sf))
-}
-# Perform spatial intersection to crop habitat_clipped_sf by bathy_sf
-# Ensure bathy_sf is also an sf object with proper geometry
-habitat_cropped_sf <- st_intersection(habitat_clipped_sf, bathy_sf)
-
-# Convert the cropped result back to a data frame, if needed
-habitat_cropped_df <- as.data.frame(habitat_cropped_sf) %>%
-  select(x, y, habitat)  # Keep only relevant columns
-
-# Inspect the result
-summary(habitat_cropped_df)
-str(habitat_cropped_df)
-
-write.csv(habitat_cropped_df, "habitat_cropped.csv", row.names = FALSE)
 
 
-# 3. Make zoomed in map---------------------------------------------------------
+# 5. Make zoomed in map---------------------------------------------------------
 # Define the plot
 p <- ggplot() +
   # Plot habitat raster
-  geom_tile(data = habitat_cropped_df, aes(x = x, y = y, fill = habitat)) +
+  geom_tile(data = habitat_clipped_df, aes(x = x, y = y, fill = habitat)) +
   scale_fill_viridis_c(option = "viridis", name = "Habitat") +
   
   # Plot bathymetric contours
@@ -169,8 +183,11 @@ p <- ggplot() +
   xlab("Longitude") +
   ylab("Latitude")
 
-# Print the plot
-print(p)
 
 p + guides(fill = guide_legend(title = "Legend Title"))
 
+# export plot
+outdir <- paste0(output_data, "/fig/Map")
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type), "_habitat_Map.png")
+ggsave(p_png, p, width=23, height=17, units="cm", dpi=300)
