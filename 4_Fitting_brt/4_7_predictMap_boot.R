@@ -17,7 +17,7 @@ library(foreach)
 
 mod_code <- "brt"
 bootstrap <- F
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
 
 
@@ -55,7 +55,7 @@ brt_models <- lapply(boots_files, readRDS)
 
 # Prepare cluster
 cores <-detectCores() #if you use all of them you, your computer may crash (consumes all the CPU).
-cores <- 8
+cores <- 7
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 

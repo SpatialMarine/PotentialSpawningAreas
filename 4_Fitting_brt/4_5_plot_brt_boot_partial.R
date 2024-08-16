@@ -6,11 +6,14 @@
 # 4.5. plot_brt_boot_partial          Plot BRT partial effects using bootstrap
 #-------------------------------------------------------------------------------
 library(gbm)
+library(data.table)
+library(dplyr)
+library(egg)
 
 mod_code <- "brt"
 bootstrap <- T
 n_boot <- 100
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
 
 
@@ -95,7 +98,7 @@ data2 <- filter(data, var %in% mod$contributions$var[1:n_plots])
 
 # plot: #orange for S canicula and #steelbluefor G melastomus
 p <- ggplot(data2, aes(x = xval)) +
-  geom_ribbon(aes(ymin = cil, ymax = ciu), fill="steelblue", alpha=.4, linetype=0) +
+  geom_ribbon(aes(ymin = cil, ymax = ciu), fill="steelblue", alpha=.6, linetype=0) +
   geom_line(aes(y = med), color="steelblue") +
   ylab("Fitted function") + xlab("") +
   facet_wrap(var~., scales = "free_x", ncol =2, strip.position = "bottom", labeller=labeller(var=labels)) +

@@ -11,6 +11,10 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
+mod_code <- "brt"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+type <- "_Nkm2" #"_Nk2" #"_PA"
+season <- "2021"
 
 # 1. Set data repository and load rasters---------------------------------------
 
@@ -35,7 +39,7 @@ mask <- st_read("input/landmask/Europa/Europe_coastline_poly.shp")
 print(mask)
 mask <- st_transform(mask, crs = 4326)
 # crop it:
-e <- c(-3, 5, 35, 43)
+e <- c(-3, 7, 35, 43)
 e <- extent(e)
 bbox <- st_as_sfc(st_bbox(e))
 # Set the CRS of bbox to match the mask
@@ -46,19 +50,19 @@ print(mask)
 
 
 # 1.3. Bathymetric contour
-Bathy_cont<- st_read("input/gebco/cont/gebco_contours4osm.shp")
-print(Bathy_cont)
-
-Bathy_cont$DEPTH <- as.numeric(Bathy_cont$DEPTH)
-unique(Bathy_cont$DEPTH)
-
-#Select the bathymetrical lines that you want to plot:
-Bathy_cont1 <- Bathy_cont %>%
-  filter(DEPTH %in% c(-100, -200, -750))
-unique(Bathy_cont1$DEPTH)
-# Set the CRS for the raster
-st_crs(Bathy_cont1) <- st_crs(mask)
-print(Bathy_cont1)
+#Bathy_cont<- st_read("input/gebco/cont/gebco_contours4osm.shp")
+#print(Bathy_cont)
+#
+#Bathy_cont$DEPTH <- as.numeric(Bathy_cont$DEPTH)
+#unique(Bathy_cont$DEPTH)
+#
+##Select the bathymetrical lines that you want to plot:
+#Bathy_cont1 <- Bathy_cont %>%
+#  filter(DEPTH %in% c(-750)) #-100, -200, 
+#unique(Bathy_cont1$DEPTH)
+## Set the CRS for the raster
+#st_crs(Bathy_cont1) <- st_crs(mask)
+#print(Bathy_cont1)
 
 # 1.4. GSAs
 GSA <- st_read("input/GSAs/GSAs_simplified.shp")
@@ -68,11 +72,7 @@ GSA_filtered <- GSA %>%
   filter(SECT_COD == "GSA06")
 print(GSA_filtered)
 
-# 1.5. Predicted habitat
-mod_code <- "brt"
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-type <- "_Nkm2" #"_Nk2" #"_PA"
-season <- "2021"
+# 1.5. Predicted error
 path <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_median.tif")
 habitat <- raster(path)
 print(habitat)
@@ -90,15 +90,15 @@ st_crs(Bathy_cont1) <- st_crs(mask)
 create_mask <- function(raster_layer, min_value, max_value) {
   # Apply the condition to the raster
   mask <- calc(raster_layer, fun = function(x) {
-    x[x >= min_value & x <= max_value] <- 1
-    x[x < min_value | x > max_value] <- NA
+    x[(x >= min_value) & (x <= max_value)] <- 1
+    x[(x < min_value) | (x > max_value)] <- NA
     return(x)
   })
   return(mask)
 }
 
 # Create the mask with values from 0 to 800
-bathy_mask <- create_mask(bathy, -750, 5)
+bathy_mask <- create_mask(bathy, min_value = -700, max_value = 5)
 #plot(bathy_mask)
 
 # Resample bathy_mask to match the resolution of habitat
@@ -106,7 +106,7 @@ bathy_mask_resampled <- resample(bathy_mask, habitat, method = "bilinear")
 
 # Apply the mask to the habitat raster
 habitat_cropped <- mask(habitat, bathy_mask_resampled)
-plot(habitat_cropped)
+#plot(habitat_cropped)
 
 # Convert raster to data frame
 habitat_df <- as.data.frame(habitat_cropped, xy = TRUE)
@@ -146,19 +146,15 @@ summary(habitat_clipped_df)
 # Set the CRS of Bathy_cont1 to match GSA_filtered if needed
 st_crs(Bathy_cont1) <- st_crs(GSA_filtered)
 Bathy_cropped <- st_intersection(Bathy_cont1, GSA_filtered)
+str(Bathy_cropped)
 
 
-
-
-# 5. Make zoomed in map---------------------------------------------------------
+# 5. Make HABITAT zoomed in map---------------------------------------------------------
 # Define the plot
 p <- ggplot() +
   # Plot habitat raster
   geom_tile(data = habitat_clipped_df, aes(x = x, y = y, fill = habitat)) +
-  scale_fill_viridis_c(option = "viridis", name = "Habitat") +
-  
-  # Plot bathymetric contours
-  geom_sf(data = Bathy_cont1, color = "black", size = 0.5) +
+  scale_fill_viridis_c(option = "viridis", name = "Ln(density) N/km2") +
   
   # Plot land mask
   geom_sf(data = mask, fill = "grey80", color = "grey60") +
@@ -166,8 +162,11 @@ p <- ggplot() +
   # Plot GSAs
   geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
   
+  # Plot bathymetric contours
+  #geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
+  
   # Set spatial bounds (adjust these to fit your data)
-  coord_sf(xlim = c(-1, 4), ylim = c(36.5, 42.5), expand = TRUE) +
+  coord_sf(xlim = c(-1, 5.8), ylim = c(36.5, 42.2), expand = TRUE) +
   
   # Add scale bar (optional)
   annotation_scale(location = "bl", width_hint = 0.2) + 
@@ -175,19 +174,148 @@ p <- ggplot() +
   # Theme settings
   theme_bw() +
   theme(panel.grid = element_blank(),
-        legend.position = "bottom",
-        legend.box = "horizontal") +
+        legend.position = "right",
+        legend.box = "vertical",
+        aspect.ratio = 1) 
   
   # Title and labels
-  ggtitle(paste(genus, "   Model:", mod_code, "\n", season)) +
-  xlab("Longitude") +
-  ylab("Latitude")
+  #ggtitle(paste(genus, "   Model:", mod_code, "\n", season)) +
+  #xlab("Longitude") +
+  #ylab("Latitude")
 
-
-p + guides(fill = guide_legend(title = "Legend Title"))
+p
 
 # export plot
-outdir <- paste0(output_data, "/fig/Map")
+outdir <- paste0(output_data, "/fig/Map/", paste0(genus,type))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type), "_habitat_Map.png")
-ggsave(p_png, p, width=23, height=17, units="cm", dpi=300)
+ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
+
+
+
+
+
+
+
+
+# 6. Load error map ------------------------------------------------------------
+# 1.5. Predicted habitat
+mod_code <- "brt"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+type <- "_Nkm2" #"_Nk2" #"_PA"
+season <- "2021"
+path <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
+error <- raster(path)
+print(error)
+
+
+
+
+# 7. Crop error to bathy 800 m------------------------------------------------
+# Define the function to create the mask
+create_mask <- function(raster_layer, min_value, max_value) {
+  # Apply the condition to the raster
+  mask <- calc(raster_layer, fun = function(x) {
+    x[x >= min_value & x <= max_value] <- 1
+    x[x < min_value | x > max_value] <- NA
+    return(x)
+  })
+  return(mask)
+}
+
+# Create the mask with values from 0 to 800
+bathy_mask <- create_mask(bathy, -750, 5)
+#plot(bathy_mask)
+
+# Resample bathy_mask to match the resolution of habitat
+bathy_mask_resampled <- resample(bathy_mask, error, method = "bilinear")
+
+# Apply the mask to the habitat raster
+error_cropped <- mask(error, bathy_mask_resampled)
+#plot(error_cropped)
+
+# Convert raster to data frame
+error_df <- as.data.frame(error_cropped, xy = TRUE)
+colnames(error_df) <- c("x", "y", "error")
+summary(error_df)
+
+
+
+
+# 3. Crop habitat to GSA06 area ------------------------------------------------
+# Convert habitat_df to an sf object (using original x, y coordinates)
+error_sf <- st_as_sf(error_df, coords = c("x", "y"), crs = st_crs(mask), remove = FALSE)
+#plot(error_sf)
+
+# Ensure CRS compatibility between error_sf and GSA_filtered
+if (st_crs(error_sf) != st_crs(GSA_filtered)) {
+  error_sf <- st_transform(error_sf, crs = st_crs(GSA_filtered))
+}
+
+# Perform the intersection
+error_clipped_sf <- st_intersection(error_sf, GSA_filtered)
+
+# Convert the clipped sf object back to a data frame (with original coordinates)
+# Ensure that we retain the original x and y coordinates
+error_clipped_df <- as.data.frame(error_clipped_sf) %>%
+  dplyr::select(x, y, error)  # Keep the original x, y, and error columns
+
+# Check for any remaining NAs and clean up the data
+error_clipped_df <- error_clipped_df %>%
+  filter(!is.na(error))
+
+# Verify the result
+summary(error_clipped_df)
+
+
+
+# 5. Make ERROR zoomed in map---------------------------------------------------------
+colors <- c("#FFFFB2", "#FECC5C", "#FD8D3C", "#F03B20", "#BD0026", "#000000")
+colors <- c("#FFFFB2", "#FECC5C", "#FDBF6F", "#F03B20", "#BD0026", "#8B0000")
+# Create a function to generate a color palette
+color_palette <- colorRampPalette(colors)
+# Generate a gradient with a specified number of colors
+num_colors <- 100  # Adjust this to the number of colors you need
+gradient_colors <- color_palette(num_colors)
+
+
+# Define the plot
+p <- ggplot() +
+  # Plot error raster
+  geom_tile(data = error_clipped_df, aes(x = x, y = y, fill = error)) +
+  scale_fill_gradientn(colors = gradient_colors, name = "95% CI") +
+  
+  # Plot land mask
+  geom_sf(data = mask, fill = "grey80", color = "grey60") +
+  
+  # Plot GSAs
+  geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
+  
+  # Plot bathymetric contours
+  #geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
+  
+  # Set spatial bounds (adjust these to fit your data)
+  coord_sf(xlim = c(-1, 5.8), ylim = c(36.5, 42.2), expand = TRUE) +
+  
+  # Add scale bar (optional)
+  annotation_scale(location = "bl", width_hint = 0.2) + 
+  
+  # Theme settings
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        legend.position = "right",
+        legend.box = "vertical",
+        aspect.ratio = 1) 
+
+# Title and labels
+#ggtitle(paste(genus, "   Model:", mod_code, "\n", season)) +
+#xlab("Longitude") +
+#ylab("Latitude")
+
+p
+
+# export plot
+outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type))
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type), "_CIR_Map_scale.png")
+ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)

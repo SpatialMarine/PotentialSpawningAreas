@@ -17,7 +17,7 @@ library(foreach)
 
 mod_code <- "brt"
 bootstrap <- F
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
 
 
@@ -159,7 +159,8 @@ dev.off()
 
 
 
-# 2. Merge ERROR maps to create seasonal means----------------------------------------
+
+# 3. Merge ERROR maps to create seasonal means----------------------------------------
 # Prepare your date list and other necessary variables
 dates <- year_df #spring_df, winter_df, summer_df, autumn_df
 stack_list <- vector("list", nrow(dates))  # Pre-allocate list
