@@ -19,7 +19,7 @@ library(fmsb)
 library(dplyr)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2"
+family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
@@ -28,7 +28,7 @@ file <- paste0(temp_data, "/folds_dataset/", genus, "_folds_dataset.csv")
 data <- read.csv2(file)
 #data <- data %>% filter(presence_absence == 1)
 
-names(data)
+summary(data)
 str(data)
 head(data)
 
@@ -55,6 +55,7 @@ summary(data$ln_N_km2)
 
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
+names(data)
 colnames(data) <- c("Haul_N", "code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
@@ -62,7 +63,7 @@ colnames(data) <- c("Haul_N", "code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_temp","bottom_oxygen", 
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
-                    "bottom_eke", "RN", "id", "fold", "ln_N_km2")
+                    "bottom_eke", "ln_slope", "ln_fishingEffort", "RN", "id", "fold", "ln_N_km2")
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -93,10 +94,11 @@ str(data)
 names(data)
 
 # List the name of the predictor variables
-vars  <- c("depth", "substrate", "slope", "fishingEffort",
-           # "distMounts","distCanyons", "distFans", 
-           "bottom_temp",  "bottom_nppv",  
-           "bottom_so",  "RN") # "bottom_nh4", "bottom_oxygen","bottom_eke","bottom_ph","season", 
+vars  <- c("depth",  "ln_slope", "ln_fishingEffort",
+           "bottom_temp", "bottom_so",  "RN")
+# "distMounts","distCanyons", "distFans", "bottom_nppv",
+# "bottom_nh4", "bottom_oxygen","bottom_eke","bottom_ph",
+# "season", "substrate", "bottom_po4",  
 
 
 
@@ -135,6 +137,7 @@ if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 set.seed(131)
 names(data)
+str(data)
 
 all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar% {
   
@@ -272,12 +275,13 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 31 
+select_model_id <- 30 
 
 # Scyliorhinus:
 # LN_gaussian - all: 33
-# LN_laplace - all: 31 #28 (sin o2), 31 (sin 02 y eke), 28 (sin O2, eke y ph)
+# LN_laplace - all: 31 #27 (sin O2, eke, ph, nppv, po4)
 # laplace - all: 25
+# bernoilli - PA: 9
 
 # Raja = 30
 # LN_gaussian - all: 25
@@ -287,10 +291,11 @@ select_model_id <- 31
 
 
 #List the name of the predictor variables
-vars  <- c("substrate", "depth", "slope", "fishingEffort",
+vars  <- c("depth", "ln_slope", "ln_fishingEffort",
            #"distMounts",  "distCanyons", "distFans",
-           "bottom_temp",  "bottom_nppv", 
-            "bottom_so",  "RN") #"bottom_nh4","bottom_oxygen","bottom_eke","bottom_ph", "season", 
+           "bottom_temp",  #"bottom_po4", "bottom_nppv", 
+            "bottom_so",  "RN") 
+#"bottom_nh4","bottom_oxygen","bottom_eke","bottom_ph", "season", "substrate", 
 
 
 tc <- mod_out$tc[select_model_id]
@@ -404,7 +409,7 @@ phi <- 20    # Adjust the polar angle as desired
 #Plot:
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 5, 4, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 2, 3, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #*# Set the angle for the 3D plot
@@ -441,7 +446,7 @@ if (!dir.exists(outdir_bootstrap)) dir.create(outdir_bootstrap, recursive = TRUE
 n.boot <- 100  # number of model fits
 
 ## Prepare clusters
-cores <- 5
+cores <- 8
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 

@@ -10,10 +10,10 @@ library(groupdata2)
 
 # As mentioned previously, I will use all data to fit the model and check the model using cross-validation,
 # instead of a training and testing data sets.
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #Load data
-file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
+file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
 data <- read.csv2(file)
 
 names(data)

@@ -14,10 +14,11 @@ library(egg)
 bootstrap <- T
 n_boot <- 100
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2"
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "bernuilli"
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
+
 
 
 
@@ -28,7 +29,7 @@ outdir <- paste(brtDir, "predict_boost", sep="/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # import model full model
-mod <- readRDS(paste0(brtDir , "/", genus, type, ".rds"))
+mod <- readRDS(paste0(brtDir, "/", genus, "_Nkm2.rds"))
 
 # list of bootstrap models
 outdir_bootstrap <- paste0(brtDir, "/bootstrap/", genus, type, "_", family)

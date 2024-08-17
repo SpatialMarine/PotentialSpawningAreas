@@ -228,16 +228,17 @@ beep()
 
 # 3. Check results:
 library(ncdf4)
-nh4 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_so_3d.nc")
-nh4 <- brick("input/cmems_predict_3d/2021/01/01/20210101_so_3d.nc")
-plot(nh4)
-
-no3 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_no3_3d.nc")
 nppv <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_nppv_3d.nc")
 o2 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_o2_3d.nc")
-ph <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_ph_3d.nc")
-po4 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_po4_3d.nc")
 so <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_so_3d.nc")
+po4 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_po4_3d.nc")
+po4 <- brick("input/cmems_predict_3d/2021/01/01/20210101_po4_3d.nc")
+plot(po4)
+
+
+nh4 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_so_3d.nc")
+no3 <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_no3_3d.nc")
+ph <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_ph_3d.nc")
 uo <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_uo_3d.nc")
 vo <- nc_open("input/cmems_predict_3d/2021/01/01/20210101_vo_3d.nc")
 

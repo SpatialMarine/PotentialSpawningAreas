@@ -11,9 +11,9 @@ library(dplyr)
 library(ggplot2)
 library(egg)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2"
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "bernuilli"
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
 
@@ -29,7 +29,7 @@ outdir <- paste(indir, "predict_boost", sep="/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # import model full model
-mod <- readRDS(paste0(indir, "/", genus, type, ".rds"))
+mod <- readRDS(paste0(indir, "/", genus, "_Nkm2.rds"))
 
 # list of bootstrap models
 outdir_bootstrap <- paste0(indir, "/bootstrap/", genus, type, "_", family)
@@ -76,7 +76,7 @@ p <- ggplot(data=data, mapping=aes(x=var, y=median, ymin=cil, ymax=ciu)) +
   ylab("Relative influence (%)") + xlab("") +
   theme_article(base_size = 14) +
   theme(
-    panel.grid.major.y = element_line( size=.1, color="grey50"),
+    panel.grid.major.y = element_line(linewidth =.1, color="grey50"),
     axis.title.x = element_text(margin = ggplot2::margin(t = 20, r = 0, b = 0, l = 0))
   )
 

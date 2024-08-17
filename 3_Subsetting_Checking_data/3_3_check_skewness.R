@@ -8,7 +8,7 @@
 library(moments)
 library(dplyr)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
@@ -19,10 +19,13 @@ str(data)
 
 # Select specific columns from the data dataset in which you want to assess skewness
 
-varskew  <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT_Reanalysis", 
-              "seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",
-              "seabottom_no3Reanalysis", "seabottom_po4Reanalysis", "seabottom_soReanalysis", "seabottom_uoReanalysis",
-              "seabottom_voReanalysis", "eke", "slope", "roughness", "depth")
+varskew  <- c("fishingEffort", "bottomT_Reanalysis", "seabottom_soReanalysis",
+              "slope", "depth", "bathy") 
+
+#"distCanyons", "distMounts", "distFans", "seabottom_voReanalysis", "eke", "roughness", 
+#"seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",
+#"seabottom_no3Reanalysis", "seabottom_po4Reanalysis", , "seabottom_uoReanalysis",
+
 
 # Select columns with environmental data
 class(varskew)
@@ -81,10 +84,8 @@ print(skewness_table)
 #Improve: all execept: TL, WeightLWR, Cloud.cover, Net_horizontal_opening, Distance_covered_GPS, Average_speed, 
 
 data <- data %>% #recomendacion solo si cambia mucho.
-  mutate(LN_TotalBiomassHaul = log1p(slope),
-         LN_MinsExposedtoAir = log1p(distance_to_canyons),
-         LN_MinsExposedtoAir = log1p(distance_to_fans),
-         LN_MinsExposedtoAir = log1p(distance_to_fans))
+  mutate(LN_slope = log1p(slope),
+         LN_fishingEffort = log1p(fishingEffort))
 head(data)
 
 output_file <- file.path(temp_data, "data_subsets", paste0(genus,"_dataset_log_pred.csv")) 

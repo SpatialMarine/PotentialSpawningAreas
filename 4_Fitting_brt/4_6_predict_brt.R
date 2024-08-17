@@ -17,11 +17,10 @@ library(pals)
 library(gbm)
 library(beepr)
 
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "bernuilli"
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-bootstrap <- F
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-type <- "_Nkm2" #"_Nk2" #"_PA"
-
 
 
 

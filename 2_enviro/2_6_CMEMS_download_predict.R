@@ -71,9 +71,9 @@ y
 df <- dates 
 
 # Define the catalog subset you want:
-cat <- catalog
-#cat <- catalog %>%
-#  filter(variable %in% c("uo", "vo"), product_type %in% c("Reanalysis")) 
+#cat <- catalog
+cat <- catalog %>%
+  filter(variable %in% c("po4"), product_type %in% c("Reanalysis")) 
 
 
 # Define the name of the file and the destination
@@ -101,7 +101,7 @@ for(i in 1:nrow(cat)){
     if (!file.exists(dir_path)) {
       dir.create(dir_path, recursive = TRUE)}
     # Define the file name using the current date
-    file_name <- paste0(format(as.Date(dates$date[j], origin = "1970-01-01"), "%Y%m%d"),"_", catalog$variable[i], ".nc")
+    file_name <- paste0(format(as.Date(dates$date[j], origin = "1970-01-01"), "%Y%m%d"),"_", cat$variable[i], ".nc")
     
     # download data
     cm$subset(
@@ -124,6 +124,17 @@ Sys.time() - t
 beep()
 
 
+#check one of each:
+bottomT <- nc_open("input/cmems_predict/2021/01/01/20210101_bottomT.nc")
+nppv <- nc_open("input/cmems_predict/2021/01/01/20210101_nppv.nc")
+o2 <- nc_open("input/cmems_predict/2021/01/01/20210101_o2.nc")
+po4 <- nc_open("input/cmems_predict/2021/01/01/20210101_po4.nc")
+so <- nc_open("input/cmems_predict/2021/01/01/20210101_so.nc")
+
+
+
+
+# 2. Remove unwanted files------------------------------------------------------
 # I had to remove a copy of all the eke files generated:
 # List all files in the directory ending with "_eke_3d.nc"
 # Define the base directory
@@ -133,7 +144,7 @@ base_folder <- paste0(input_data, "/cmems_predict_3d/2021")
 month_folders <- list.dirs(base_folder, full.names = TRUE, recursive = FALSE)
 
 # Loop through each month folder
-for (month_folder in month_folders) {
+#for (month_folder in month_folders) {
   #month_folder <- month_folders[1]
   
   # Get list of all day folders within the current month folder
@@ -161,7 +172,9 @@ for (month_folder in month_folders) {
 
 
 
-# Rename files:
+# 2. Rename files------------------------------------------------------
+#nc <- nc_open("input/cmems_predict/2021/01/05/20210105_bottomT_(1).nc")
+
 # Define the base directory
 base_folder <- paste0(input_data, "/cmems_predict/2021")
 
@@ -192,8 +205,8 @@ for (month_folder in month_folders) {
       # Check if the file contains "_(1)" and remove it
       if (grepl("_\\(1\\)", file_base_name)) {
         # New name without "_(1)"
-        new_file_base_name <- gsub("_\\(1\\)", "", file_base_name)
-        
+        new_file_base_name <- gsub("bottomT_\\(1\\)", "po4", file_base_name)
+
         # Create the full path for the new file name
         new_file <- file.path(dirname(file), new_file_base_name)
         

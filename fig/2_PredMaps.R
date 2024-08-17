@@ -11,9 +11,10 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-mod_code <- "brt"
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-type <- "_Nkm2" #"_Nk2" #"_PA"
+family <- "LN_laplace_sinO2"
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
+mod_code <- "brt"
 season <- "2021"
 
 # 1. Set data repository and load rasters---------------------------------------
@@ -73,7 +74,7 @@ GSA_filtered <- GSA %>%
 print(GSA_filtered)
 
 # 1.5. Predicted error
-path <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_median.tif")
+path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.tif")
 habitat <- raster(path)
 print(habitat)
 
@@ -98,7 +99,7 @@ create_mask <- function(raster_layer, min_value, max_value) {
 }
 
 # Create the mask with values from 0 to 800
-bathy_mask <- create_mask(bathy, min_value = -650, max_value = 5)
+bathy_mask <- create_mask(bathy, min_value = -600, max_value = 5)
 #plot(bathy_mask)
 
 # Resample bathy_mask to match the resolution of habitat
@@ -186,9 +187,9 @@ p <- ggplot() +
 p
 
 # export plot
-outdir <- paste0(output_data, "/fig/Map/", paste0(genus,type))
+outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type), "_habitat_Map.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_habitat_Map.png")
 ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
 
 
@@ -204,7 +205,7 @@ mod_code <- "brt"
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 type <- "_Nkm2" #"_Nk2" #"_PA"
 season <- "2021"
-path <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
+path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
 error <- raster(path)
 print(error)
 
@@ -315,7 +316,7 @@ p <- ggplot() +
 p
 
 # export plot
-outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type))
+outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type), "_CIR_Map_scale.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_CIR_Map_scale.png")
 ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)

@@ -15,11 +15,12 @@ library(gbm)
 library(viridis)
 library(foreach)
 
-mod_code <- "brt"
-bootstrap <- F
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-type <- "_Nkm2" #"_Nk2" #"_PA"
+bootstrap <- T
 
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "LN_laplace_sinO2"
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
+mod_code <- "brt"
 
 # 1. Set data repository--------------------------------------------------------
 # Import landmask
@@ -69,6 +70,7 @@ winter_df <- data.frame(date = winter_dates, season = "Winter")
 spring_df <- data.frame(date = spring_dates, season = "Spring")
 summer_df <- data.frame(date = summer_dates, season = "Summer")
 autumn_df <- data.frame(date = autumn_dates, season = "Autumn")
+
 year_df <- data.frame(date = dates, season = "Autumn")
 
 
@@ -98,7 +100,7 @@ for (i in 1:nrow(dates)) {
   pat <- paste0(format(date, "%Y%m%d"), "_", genus, "_", mod_code, "_pred.tif")
   
   # Construct the path to the directory containing TIFF files
-  stack_repo <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", MM)
+  stack_repo <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", MM)
   
   # Debugging prints
   print(paste("Stack Repo:", stack_repo))
@@ -140,8 +142,8 @@ pred_stack <- raster::stack(stack_list)
 pred_med <- raster::calc(pred_stack, fun = median)
 
 # Define output paths
-tifffile <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_median.tif")
-pngfile <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_median.png")
+tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.tif")
+pngfile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.png")
 
 # Save the median raster as TIFF
 writeRaster(pred_med, filename = tifffile, format = "GTiff", overwrite = TRUE)
@@ -181,7 +183,7 @@ for (i in 1:nrow(dates)) {
   pat <- paste0(format(date, "%Y%m%d"), "_", genus, "_", mod_code, "_pred_cir.tif")
   
   # Construct the path to the directory containing TIFF files
-  stack_repo <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", MM)
+  stack_repo <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", MM)
   
   # Debugging prints
   print(paste("Stack Repo:", stack_repo))
@@ -219,8 +221,8 @@ pred_stack <- raster::stack(stack_list)
 pred_med <- raster::calc(pred_stack, fun = median)
 
 # Define output paths
-tifffile <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
-pngfile <- paste0("output/", mod_code, "/", paste0(genus, type), "/predict_boost/2021/", season, "_pred_CIR_median.png")
+tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
+pngfile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_CIR_median.png")
 
 # Save the median raster as TIFF
 writeRaster(pred_med, filename = tifffile, format = "GTiff", overwrite = TRUE)

@@ -93,7 +93,8 @@ prepareStackForDay <- function(day_folder, variables, res, e, output_folder) {
     bottomT = "bottom_temp",
     o2 = "bottom_oxygen",
     nppv = "bottom_nppv",
-    so = "bottom_so"
+    so = "bottom_so",
+    po4 = "bottom_po4"
   )
   
   for (variable in variables) {
@@ -224,7 +225,7 @@ base_folder <- "input/cmems_predict_3d/2021"
 # Select the dynamic variables to extract (same names as catalog):
 catalog <- read.csv2("input/catalog_stack.csv", sep=";")
 catalog$variable
-variables <- c("bottomT", "o2", "nppv", "so")
+variables <- c("bottomT", "o2", "nppv", "so", "po4")
 
 # Set the resolution and extent:
 res <- 0.042
@@ -234,3 +235,9 @@ e <- extent(-4, 8, 34, 45)
 # Process the stacks
 processDailyStacks(base_folder, variables, res, e)
 beep()
+
+
+# Check some:
+stack <- brick("input/cmems_predict_3d/2021/01/01/stack_20210101.grd")
+print(stack)
+plot(stack)

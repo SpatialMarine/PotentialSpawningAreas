@@ -7,11 +7,12 @@
 #-----------------------------------------------------------------
 library(corrplot)
 library(Hmisc)
+library(dplyr)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 
 #Load data
-file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
+file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
 data <- read.csv2(file)
 
 names(data)
@@ -34,18 +35,16 @@ colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_nppv", "bottom_ph", 
                     "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", 
-                    "bottom_uo", "bottom_vo", "bottom_eke")
+                    "bottom_uo", "bottom_vo", "bottom_eke", "ln_slope", "ln_fishingEffort")
 
 summary(data)
 
 # Select specific columns from the data dataset in which you want to assess correlation
-vars  <- c("depth", "slope", "roughness", "fishingEffort",
+vars  <- c("depth", "roughness",  #"slope", "fishingEffort",
            "distCanyons", "distMounts", "distFans", 
-           "bottom_temp", "bottom_oxygen", 
-           "bottom_nppv", "bottom_ph", 
-           "bottom_nh4", "bottom_no3", 
-           "bottom_po4", "bottom_so", 
-           "bottom_uo", "bottom_vo", "bottom_eke")
+           "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
+           "bottom_nh4", "bottom_no3", "bottom_po4", "bottom_so", 
+           "bottom_uo", "bottom_vo", "bottom_eke", "ln_slope", "ln_fishingEffort")
 
 
 # calculate correlations using Pearson
@@ -82,13 +81,13 @@ dev.off()
 # VIF may be also only for linear relationships and Spearman for non-linear too, but we are not sure, should look for more info. But basically jut use Spearman.
 
 #Make a selection eliminating those that are harder to explain or make less sense:
-vars  <- c("depth", "slope", "fishingEffort",
-           "distCanyons", "distMounts", "distFans", 
-           "bottom_temp", "bottom_oxygen", 
-           "bottom_nppv", "bottom_ph", 
-           "bottom_nh4","bottom_so", 
-           "bottom_uo", "bottom_vo", "bottom_eke")
-#Removed: roughness, no3, po4
+vars  <- c("depth", "ln_slope", "ln_fishingEffort",
+            "bottom_temp",  "bottom_so")
+#Removed: 
+#"distCanyons", "distMounts", "distFans",
+#"roughness", "bottom_no3", "bottom_po4", "bottom_nh4", 
+# "bottom_oxygen","bottom_ph", "bottom_eke", "bottom_nppv"
+
 
 #"Distance_covered_GPS","SSSAL_merged", "SBSAL_merged", "sst_celsius", "diff_at_sbt", 
 # "at_celsius",  "sbt_merged", "diff_SSSAL_SBSAL", "diff_SSph_SBph", "Wind.strength", 
