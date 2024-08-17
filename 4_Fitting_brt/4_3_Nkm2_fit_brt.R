@@ -19,8 +19,8 @@ library(fmsb)
 library(dplyr)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+family <- "bernuilli" #bernuilli #LN_laplace_sinO2
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
 #Load data
@@ -146,8 +146,8 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
   # faster learning rate means larger values
   mod <- dismo::gbm.step(data = data,             # data.frame with data
                     gbm.x = vars,          # predictor variables
-                    gbm.y = "ln_N_km2",            # response variable
-                    family = "laplace",  # the nature of error structure
+                    gbm.y = "presence_absence",            # response variable
+                    family = "bernoulli",  # the nature of error structure
                     tree.complexity = comb$tc[i],   # tree complexity
                     learning.rate = comb$lr[i],  # learning rate
                     bag.fraction = comb$bf[i],    # bag fraction
@@ -275,19 +275,19 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 30 
+select_model_id <- 9
 
 # Scyliorhinus:
 # LN_gaussian - all: 33
-# LN_laplace - all: 31 #27 (sin O2, eke, ph, nppv, po4)
+# LN_laplace - all: 30 (sin O2, eke, ph, nppv, po4)
 # laplace - all: 25
 # bernoilli - PA: 9
 
 # Raja = 30
 # LN_gaussian - all: 25
-# LN_laplace - all: 
+# LN_laplace - all: 31 (sin O2, eke, ph, nppv, po4)
 # laplace - P: 35
-
+# bernoilli - PA: 25
 
 
 #List the name of the predictor variables

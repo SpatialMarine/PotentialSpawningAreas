@@ -82,7 +82,7 @@ dev.off()
 
 #Make a selection eliminating those that are harder to explain or make less sense:
 vars  <- c("depth", "ln_slope", "ln_fishingEffort",
-            "bottom_temp",  "bottom_so")
+            "bottom_temp",  "bottom_so", "bottom_po4")
 #Removed: 
 #"distCanyons", "distMounts", "distFans",
 #"roughness", "bottom_no3", "bottom_po4", "bottom_nh4", 

@@ -11,11 +11,10 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-season <- "2021"
 
 # 1. Set data repository and load rasters---------------------------------------
 
@@ -37,7 +36,7 @@ print(bathy_filtered)
 
 # 1.2. Landmask
 mask <- st_read("input/landmask/Europa/Europe_coastline_poly.shp")
-print(mask)
+#print(mask)
 mask <- st_transform(mask, crs = 4326)
 # crop it:
 e <- c(-3, 7, 35, 43)
@@ -67,16 +66,20 @@ print(mask)
 
 # 1.4. GSAs
 GSA <- st_read("input/GSAs/GSAs_simplified.shp")
-print(GSA)
+#print(GSA)
 # Filter the sf object to keep only the features where SECT_COD is "GSA06"
 GSA_filtered <- GSA %>%
   filter(SECT_COD == "GSA06")
 print(GSA_filtered)
 
-# 1.5. Predicted error
+# 1.5. Predicted habitat
 path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.tif")
+#path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/01/20210101_Scyliorhinus_brt_pred.tif")
 habitat <- raster(path)
 print(habitat)
+
+
+
 
 # Ensure CRS matches for all spatial data
 st_crs(mask) <- 4326
@@ -87,20 +90,18 @@ st_crs(GSA_filtered) <- st_crs(mask)
 
 
 # 2. Crop habitat to bathy 800 m---------------------------------------------------
-# Define the function to create the mask
-create_mask <- function(raster_layer, min_value, max_value) {
-  # Apply the condition to the raster
-  mask <- calc(raster_layer, fun = function(x) {
-    x[(x >= min_value) & (x <= max_value)] <- 1
-    x[(x < min_value) | (x > max_value)] <- NA
-    return(x)
-  })
-  return(mask)
-}
+# Filter the values between -50 and -600 and set values outside the range to NA
+bathy_filtered <- calc(bathy, function(x) {
+  x[x > -50 | x < -600] <- NA  # Set values outside the range to NA
+  return(x)
+})
 
-# Create the mask with values from 0 to 800
-bathy_mask <- create_mask(bathy, min_value = -600, max_value = 5)
-#plot(bathy_mask)
+# Assign a value of 1 to the remaining (non-NA) values
+bathy_mask <- calc(bathy_filtered, function(x) {
+  x[!is.na(x)] <- 1
+  return(x)
+})
+
 
 # Resample bathy_mask to match the resolution of habitat
 bathy_mask_resampled <- resample(bathy_mask, habitat, method = "bilinear")
@@ -201,10 +202,7 @@ ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
 
 # 6. Load error map ------------------------------------------------------------
 # 1.5. Predicted habitat
-mod_code <- "brt"
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-type <- "_Nkm2" #"_Nk2" #"_PA"
-season <- "2021"
+
 path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
 error <- raster(path)
 print(error)
@@ -213,20 +211,17 @@ print(error)
 
 
 # 7. Crop error to bathy 800 m------------------------------------------------
-# Define the function to create the mask
-create_mask <- function(raster_layer, min_value, max_value) {
-  # Apply the condition to the raster
-  mask <- calc(raster_layer, fun = function(x) {
-    x[x >= min_value & x <= max_value] <- 1
-    x[x < min_value | x > max_value] <- NA
-    return(x)
-  })
-  return(mask)
-}
+# Filter the values between -50 and -600 and set values outside the range to NA
+bathy_filtered <- calc(bathy, function(x) {
+  x[x > -50 | x < -600] <- NA  # Set values outside the range to NA
+  return(x)
+})
 
-# Create the mask with values from 0 to 800
-bathy_mask <- create_mask(bathy, -650, 5)
-#plot(bathy_mask)
+# Assign a value of 1 to the remaining (non-NA) values
+bathy_mask <- calc(bathy_filtered, function(x) {
+  x[!is.na(x)] <- 1
+  return(x)
+})
 
 # Resample bathy_mask to match the resolution of habitat
 bathy_mask_resampled <- resample(bathy_mask, error, method = "bilinear")

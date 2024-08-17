@@ -14,9 +14,9 @@ library(egg)
 bootstrap <- T
 n_boot <- 100
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "bernuilli"
-type <- "_PA" #"_NKm2" "_PA" "only_P
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
 
@@ -116,5 +116,5 @@ p <- ggplot(data2, aes(x = xval)) +
 
 # export plot
 outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "_response_boot_c.png")
-ggsave(outfile, p, width=17, height=18.4, units="cm", dpi=300)
+ggsave(outfile, p, width=17, height=13, units="cm", dpi=300)
 

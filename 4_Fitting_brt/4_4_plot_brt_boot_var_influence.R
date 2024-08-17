@@ -11,11 +11,11 @@ library(dplyr)
 library(ggplot2)
 library(egg)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "bernuilli"
-type <- "_PA" #"_NKm2" "_PA" "only_P
-mod_code <- "brt"
 
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
+mod_code <- "brt"
 
 
 
@@ -69,7 +69,7 @@ data <- data %>%
 # reorder factors for plot in descending order
 data$var <- factor(data$var, levels = data$var)
 
-# plot: #orange for S canicula and #steelblue for G melastomus
+# plot:
 p <- ggplot(data=data, mapping=aes(x=var, y=median, ymin=cil, ymax=ciu)) + 
   geom_pointrange(col="steelblue") +
   coord_flip() +
@@ -82,5 +82,5 @@ p <- ggplot(data=data, mapping=aes(x=var, y=median, ymin=cil, ymax=ciu)) +
 
 # export plot
 p_png <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "_var_influence_boot_c.png")
-ggsave(p_png, p, width=14, height=17, units="cm", dpi=300)
+ggsave(p_png, p, width=14, height=12, units="cm", dpi=300)
 

@@ -19,10 +19,9 @@ library(foreach)
 bootstrap <- T
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
+family <- "bernuilli" #bernuilli #LN_laplace_sinO2
 type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-
 
 # 1. Set data repository--------------------------------------------------------
 indir <- paste(output_data, mod_code, paste0(genus, type, "_", family), sep="/")
@@ -90,6 +89,10 @@ foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr"
   s <- raster::stack(grdfile)
   s <- s+0
 
+  # Transform variables
+  s$ln_fishingEffort <- log1p(s$fishingEffort)
+  s$ln_slope <- log1p(s$slope)
+  
   # Initialize a list to hold prediction results
   stack_list <- list()
   
