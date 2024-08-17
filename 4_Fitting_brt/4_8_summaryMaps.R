@@ -17,9 +17,9 @@ library(foreach)
 
 bootstrap <- T
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "bernuilli" #bernuilli #LN_laplace_sinO2
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
 # 1. Set data repository--------------------------------------------------------

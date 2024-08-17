@@ -275,7 +275,7 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 9
+select_model_id <- 25
 
 # Scyliorhinus:
 # LN_gaussian - all: 33

@@ -41,10 +41,10 @@ summary(data)
 
 # Select specific columns from the data dataset in which you want to assess correlation
 vars  <- c("depth", "roughness",  #"slope", "fishingEffort",
-           "distCanyons", "distMounts", "distFans", 
-           "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
-           "bottom_nh4", "bottom_no3", "bottom_po4", "bottom_so", 
-           "bottom_uo", "bottom_vo", "bottom_eke", "ln_slope", "ln_fishingEffort")
+           #"distCanyons", "distMounts", "distFans", "bottom_eke", 
+           "bottom_temp", #"bottom_oxygen", "bottom_nppv", "bottom_ph", 
+            "bottom_no3", "bottom_po4", "bottom_so", #"bottom_nh4",
+           "ln_slope", "ln_fishingEffort") #"bottom_uo", "bottom_vo", 
 
 
 # calculate correlations using Pearson
