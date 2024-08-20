@@ -19,8 +19,8 @@ library(fmsb)
 library(dplyr)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "bernuilli" #bernuilli #LN_laplace_sinO2
-type <- "_PA" #"_NKm2" "_PA" "only_P
+family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
 #Load data
@@ -63,7 +63,8 @@ colnames(data) <- c("Haul_N", "code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_temp","bottom_oxygen", 
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
-                    "bottom_eke", "ln_slope", "ln_fishingEffort", "RN", "id", "fold", "ln_N_km2")
+                    "bottom_eke", "SD_bottomT", "SD_o2",
+                    "ln_slope", "ln_fishingEffort", "RN", "id", "fold", "ln_N_km2")
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -94,13 +95,13 @@ str(data)
 names(data)
 
 # List the name of the predictor variables
-vars  <- c("depth",  "ln_slope", "ln_fishingEffort",
-           "bottom_temp", "bottom_so",  "RN")
+vars  <- c("depth",  "ln_slope", "ln_fishingEffort", "substrate", 
+           "SD_bottomT", "SD_o2", "bottom_temp", 
+           "bottom_so", "bottom_oxygen", "RN")
+
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
-# "bottom_nh4", "bottom_oxygen","bottom_eke","bottom_ph",
+# "bottom_nh4", ,"bottom_eke","bottom_ph",
 # "season", "substrate", "bottom_po4",  
-
-
 
 
 
@@ -146,8 +147,8 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
   # faster learning rate means larger values
   mod <- dismo::gbm.step(data = data,             # data.frame with data
                     gbm.x = vars,          # predictor variables
-                    gbm.y = "presence_absence",            # response variable
-                    family = "bernoulli",  # the nature of error structure
+                    gbm.y = "ln_N_km2",            # response variable
+                    family = "laplace",  # the nature of error structure
                     tree.complexity = comb$tc[i],   # tree complexity
                     learning.rate = comb$lr[i],  # learning rate
                     bag.fraction = comb$bf[i],    # bag fraction
@@ -275,7 +276,7 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 25
+select_model_id <- 10 #31
 
 # Scyliorhinus:
 # LN_gaussian - all: 33
@@ -291,12 +292,10 @@ select_model_id <- 25
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "ln_slope", "ln_fishingEffort",
-           #"distMounts",  "distCanyons", "distFans",
-           "bottom_temp",  #"bottom_po4", "bottom_nppv", 
-            "bottom_so",  "RN") 
+vars  <- c("depth", "ln_slope", "ln_fishingEffort", "bottom_oxygen", "substrate",
+           "bottom_temp", "bottom_so", "SD_bottomT", "SD_o2", "RN") 
 #"bottom_nh4","bottom_oxygen","bottom_eke","bottom_ph", "season", "substrate", 
-
+# #"distMounts",  "distCanyons", "distFans","bottom_po4", "bottom_nppv", 
 
 tc <- mod_out$tc[select_model_id]
 lr <- mod_out$lr[select_model_id]
@@ -409,7 +408,7 @@ phi <- 20    # Adjust the polar angle as desired
 #Plot:
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 2, 3, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 1, 3, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #*# Set the angle for the 3D plot
@@ -419,7 +418,7 @@ phi <- 40    # Adjust the polar angle as desired
 #Check how the correlation between the 2 variables occur in 3D (x=var1, z=var2, y=respuesta)
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_2_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 3, 1, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 5, 1, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #dismo::gbm.perspec(mod_full, 7, 2)

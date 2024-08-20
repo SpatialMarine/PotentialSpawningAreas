@@ -8,7 +8,7 @@
 library(moments)
 library(dplyr)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, ".csv")
@@ -20,7 +20,7 @@ str(data)
 # Select specific columns from the data dataset in which you want to assess skewness
 
 varskew  <- c("fishingEffort", "bottomT_Reanalysis", "seabottom_soReanalysis", 
-              "slope", "depth", "bathy","seabottom_no3Reanalysis", "seabottom_po4Reanalysis") 
+              "slope", "depth", "bathy","seabottom_o2Reanalysis", "SD_bottomT", "SD_o2") 
 
 #"distCanyons", "distMounts", "distFans", "seabottom_voReanalysis", "eke", "roughness", 
 #"seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",

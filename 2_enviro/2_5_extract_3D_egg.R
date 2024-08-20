@@ -123,3 +123,43 @@ data$eke <- (data$seabottom_uoReanalysis^2 + data$seabottom_voReanalysis^2) / 2
 
 # Save dataframe
 write.csv(data, "temp/data_2D_3D_dist_eke.csv", row.names = FALSE)
+
+
+
+
+
+# 4. Load and extract data from SD static rasters -----------------------------
+data <- read.csv("temp/data_2D_3D_dist_eke.csv", sep = ",") 
+
+# use same temporal resolution (day) and numeric for lon and lat
+data$date <- as.Date(data$date) #if your time scale has not hours
+data$lon <- as.numeric(gsub(",", ".", data$lon))
+data$lat <- as.numeric(gsub(",", ".", data$lat))
+
+range(data$date)
+range(data$lon)
+range(data$lat)
+range(data$date_time)
+
+
+# 3.1. bottomT_SD 
+SD_bottomT <- raster("input/SD_enviro/SD_bottomT.tif")
+SD_bottomT
+
+data$SD_bottomT <- raster::extract(SD_bottomT, cbind(data$lon, data$lat)) 
+head(data)
+
+# 3.2. o2_SD 
+SD_o2 <- raster("input/SD_enviro/SD_o2.tif")
+SD_o2
+
+data$SD_o2 <- raster::extract(SD_o2, cbind(data$lon, data$lat)) 
+head(data)
+
+# Save dataframe
+write.csv(data, "temp/data_2D_3D_dist_eke_SD.csv", row.names = FALSE)
+
+# check:
+file <- paste0(temp_data, "/data_2D_3D_dist_eke_SD.csv")
+data <- read.csv(file, sep = ",")
+

@@ -35,7 +35,7 @@ plot_Missing <- function(data_in, title = NULL){
 vars <- c("fishingEffort", "distCanyons", "distMounts", "distFans", "bottomT_Reanalysis", 
           "seabottom_o2Reanalysis", "seabottom_nppvReanalysis", "seabottom_phReanalysis", "seabottom_nh4Reanalysis",
           "seabottom_no3Reanalysis", "seabottom_po4Reanalysis", "seabottom_soReanalysis", "seabottom_uoReanalysis",
-          "seabottom_voReanalysis", "eke", "subs", "slope", "roughness")
+          "seabottom_voReanalysis", "eke", "subs", "slope", "roughness", "SD_bottomT", "SD_o2")
 
 # Select columns with environmental data
 selEnv <- data %>% dplyr::select(all_of(vars))

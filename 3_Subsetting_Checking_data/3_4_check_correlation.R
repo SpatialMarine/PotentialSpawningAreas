@@ -31,21 +31,20 @@ colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth",
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
-                    "bottom_temp", "bottom_oxygen", 
-                    "bottom_nppv", "bottom_ph", 
-                    "bottom_nh4", "bottom_no3", 
-                    "bottom_po4", "bottom_so", 
-                    "bottom_uo", "bottom_vo", "bottom_eke", "ln_slope", "ln_fishingEffort")
+                    "bottom_temp", "bottom_oxygen","bottom_nppv", "bottom_ph", 
+                    "bottom_nh4", "bottom_no3", "bottom_po4", "bottom_so", 
+                    "bottom_uo", "bottom_vo", "bottom_eke", "SD_bottomT", "SD_o2",
+                    "ln_slope", "ln_fishingEffort")
 
 summary(data)
 
 # Select specific columns from the data dataset in which you want to assess correlation
-vars  <- c("depth", "roughness",  #"slope", "fishingEffort",
-           #"distCanyons", "distMounts", "distFans", "bottom_eke", 
-           "bottom_temp", #"bottom_oxygen", "bottom_nppv", "bottom_ph", 
-            "bottom_no3", "bottom_po4", "bottom_so", #"bottom_nh4",
-           "ln_slope", "ln_fishingEffort") #"bottom_uo", "bottom_vo", 
+vars  <- c("depth", "roughness",  "SD_bottomT", "SD_o2", 
+           "bottom_temp", "bottom_no3", "bottom_po4", "bottom_so", 
+           "ln_slope", "ln_fishingEffort") 
 
+#"slope", "fishingEffort","bottom_oxygen", "bottom_nppv", "bottom_ph", 
+#"distCanyons", "distMounts", "distFans", "bottom_eke", "bottom_nh4"  
 
 # calculate correlations using Pearson
 correlations <- cor(na.omit(dplyr::select(data, all_of(vars))), method="pearson")
@@ -81,10 +80,11 @@ dev.off()
 # VIF may be also only for linear relationships and Spearman for non-linear too, but we are not sure, should look for more info. But basically jut use Spearman.
 
 #Make a selection eliminating those that are harder to explain or make less sense:
-vars  <- c("depth", "ln_slope", "ln_fishingEffort",
-            "bottom_temp",  "bottom_so", "bottom_po4")
+vars  <- c("depth", "ln_slope", "ln_fishingEffort", "SD_bottomT", "SD_o2", 
+            "bottom_temp",  "bottom_so")
+
 #Removed: 
-#"distCanyons", "distMounts", "distFans",
+#"distCanyons", "distMounts", "distFans", , "bottom_po4"
 #"roughness", "bottom_no3", "bottom_po4", "bottom_nh4", 
 # "bottom_oxygen","bottom_ph", "bottom_eke", "bottom_nppv"
 

@@ -12,8 +12,8 @@ library(ggspatial)
 library(raster)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "bernuilli" #bernuilli #LN_laplace_sinO2
-type <- "_PA" #"_NKm2" "_PA" "only_P
+family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
 # 1. Set data repository and load rasters---------------------------------------
@@ -92,7 +92,7 @@ st_crs(GSA_filtered) <- st_crs(mask)
 # 2. Crop habitat to bathy 800 m---------------------------------------------------
 # Filter the values between -50 and -600 and set values outside the range to NA
 bathy_filtered <- calc(bathy, function(x) {
-  x[x > -50 | x < -600] <- NA  # Set values outside the range to NA
+  x[x > -50 | x < -500] <- NA  # Set values outside the range to NA
   return(x)
 })
 
