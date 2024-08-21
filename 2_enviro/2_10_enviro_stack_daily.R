@@ -54,6 +54,11 @@ slope <- slope+0
 fishingEffort <- raster(paste0(static_data, "/FishingEffort.tif"))  # distance to shore
 fishingEffort <- fishingEffort+0
 
+SD_bottomT <- raster(paste0(static_data, "/SD_bottomT.tif"))  # distance to shore
+SD_bottomT <- fishingEffort+0
+
+SD_o2 <- raster(paste0(static_data, "/SD_o2.tif"))  # distance to shore
+SD_o2 <- fishingEffort+0
 
 # prepare function for stack
 prepareGrid <- function(r, m, method, name){
@@ -69,8 +74,11 @@ prepareGrid <- function(r, m, method, name){
 dept <- prepareGrid(depth, m, method="bilinear", name="depth")
 slp <- prepareGrid(slope, m, method="bilinear", name="slope")
 fishingEff <- prepareGrid(fishingEffort, m, method="bilinear", name="fishingEffort")
+SD_o2 <- prepareGrid(SD_o2, m, method="bilinear", name="SD_o2")
+SD_bottomT <- prepareGrid(SD_bottomT, m, method="bilinear", name="SD_bottomT")
 
-stack_static <- stack(dept, slp, fishingEff)
+
+stack_static <- stack(dept, slp, fishingEff, SD_o2, SD_bottomT)
 
 
 

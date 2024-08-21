@@ -22,6 +22,8 @@ family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
+
+
 # 1. Set data repository--------------------------------------------------------
 # Import landmask
 mask <- st_read("input/landmask/Europa/Europe_coastline_poly.shp")
@@ -129,17 +131,18 @@ for (i in 1:nrow(dates)) {
 
 # Print a message indicating completion
 print("Processing completed.")
-beep()
-
 
 # Identify which elements in the list are NULL
 null_indices <- which(sapply(stack_list, is.null))
+null_indices
+#stack_list <- stack_list[!sapply(stack_list, is.null)]
 
 # After parallel processing, create a stack from the list of raster stacks
 pred_stack <- raster::stack(stack_list)
 
 # Calculate the median of the raster stack
 pred_med <- raster::calc(pred_stack, fun = median)
+beep()
 
 # Define output paths
 tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.tif")
@@ -212,13 +215,17 @@ for (i in 1:nrow(dates)) {
 
 # Print a message indicating completion
 print("Processing completed.")
-beep()
+
+# Identify which elements in the list are NULL
+null_indices <- which(sapply(stack_list, is.null))
+null_indices
 
 # After parallel processing, create a stack from the list of raster stacks
 pred_stack <- raster::stack(stack_list)
 
 # Calculate the median of the raster stack
 pred_med <- raster::calc(pred_stack, fun = median)
+beep()
 
 # Define output paths
 tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_CIR_median.tif")

@@ -7,39 +7,64 @@
 # the distribution of elasmobranch egg cases
 
 #-------------------------------------------------------------------------------
-# 4.2. Fit Boosted Regression Tree model for presence/absence data
+# 4.3. Fit Boosted Regression Tree model for density data (N/km2)
 #-------------------------------------------------------------------------------
+
 library(doParallel)
 library(ggBRT)
 library(lubridate)
 library(data.table)
 library(egg)
 library(fmsb)
+library(dplyr)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
+mod_code <- "brt"
 
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_folds_dataset.csv")
 data <- read.csv2(file)
+#data <- data %>% filter(presence_absence == 1)
 
-names(data)
+summary(data)
 str(data)
+head(data)
+
+#1. Select only density data ---------------------------------------------------
+#Chose response variable distribution: 
+hist(data$N_km2)
+shapiro.test(data$N_km2)
+
+#filter non 0 values:
+#data <- data %>% filter(N_km2 > 0)
+#hist(data$N_km2)
+#shapiro.test(data$N_km2)
+
+#transform response variable:
+data$ln_N_km2 <- log1p(data$N_km2)
+hist(data$ln_N_km2)
+shapiro.test(data$ln_N_km2)
+summary(data$ln_N_km2)
+#data$e_N_km2 <- exp(data$ln_N_km2) - 1
 
 
 
 
 
-#1. Organise dataset -----------------------------------------------------------
+#2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
+names(data)
 colnames(data) <- c("Haul_N", "code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
-                    "bottom_temp", "bottom_oxygen", 
-                    "bottom_nppv", "bottom_ph", 
-                    "bottom_nh4", "bottom_no3", 
-                    "bottom_po4", "bottom_so", 
-                    "bottom_uo", "bottom_vo", "bottom_eke", "RN", "id", "fold")
+                    "bottom_temp","bottom_oxygen", 
+                    "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
+                    "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
+                    "bottom_eke", "SD_bottomT", "SD_o2",
+                    "ln_slope", "ln_fishingEffort", "RN", "id", "fold", "ln_N_km2")
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -58,30 +83,45 @@ data$season <- case_when(
   
   (month(data$date) == 9 & day(data$date) >= 21) | (month(data$date) %in% c(10, 11)) | 
     (month(data$date) == 12 & day(data$date) < 21) ~ 4 )  # Autumn: Sep 21 - Dec 20
-  
+
 #Set categorical predictors as categories:
 data <- data %>% 
   mutate(season = factor(season, c(1:4)),
          substrate = factor(substrate),
          fold = factor(data$fold)) #Haul_N = factor(data$Haul_N),
 
+
+# Calculate oxygen saturation percentage:
+# Calculate pressure from depth (1 bar per 10m depth + 1 atmospheric pressure)
+# library(marelac)
+# Calculate the oxygen saturation concentration using the bottom temperature and salinity
+# `gas = "O2"` specifies that we are calculating oxygen saturation
+# saturation_concentration <- gas_satconc(S = data$bottom_so, 
+#                                         t = data$bottom_temp, 
+#                                         species = "O2")
+
+# Calculate the percentage of oxygen saturation
+# data$oxygen_sat_percent <- (data$bottom_oxygen / saturation_concentration) * 100
+
+
 summary(data)
 str(data)
 names(data)
 
 # List the name of the predictor variables
-vars  <- c("season", "depth", "substrate", "slope", "fishingEffort",
-          # "distMounts","distFans", "distCanyons",
-           "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
-           "bottom_so", "bottom_eke", "RN")  # "bottom_nh4",
+#vars  <- c("depth",  "ln_slope", "ln_fishingEffort", "substrate", 
+#           "SD_bottomT", "SD_o2", "bottom_temp", 
+#           "bottom_so", "bottom_oxygen", "RN")
+
+vars  <- c("depth", "ln_slope", "ln_fishingEffort", 
+           "bottom_temp", "bottom_so",  "RN", "bottom_eke", "substrate") 
+
+# "distMounts","distCanyons", "distFans", "bottom_nppv",
+# "bottom_nh4", ,"bottom_eke","bottom_ph", "distMounts","oxygen_sat_percent",
+# "season", "substrate", "bottom_po4",  "bottom_oxygen", "SD_bottomT", "SD_o2", 
 
 
-
-
-
-
-
-#2. Prepare model parameters----------------------------------------------------
+#3. Prepare model parameters----------------------------------------------------
 
 # Define number of trees
 ini.nt = 50
@@ -98,12 +138,9 @@ comb <- expand.grid(lr=c(0.001, 0.005, 0.01, 0.05), tc=c(1,3,5), bf=c(0.5, 0.6, 
 ## Prepare clusters
 cores <-detectCores()
 cores #if you use all of them you, your computer may crash (consumes all the CPU).
-cores <- 6  
+cores <- 8  
 cl <- makeCluster(cores)
 registerDoParallel(cl)
-
-
-
 
 
 
@@ -112,21 +149,22 @@ registerDoParallel(cl)
 #3. Build presence_absence model -----------------------------------------------
 
 #  Create output data repository
-outdir <- paste0(output_data, "/brt/", genus, "_PA")
+outdir <- paste0(output_data, "/", mod_code, "/", genus, type, "_", family)
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 set.seed(131)
+names(data)
+str(data)
 
 all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar% {
   
   # Fit model
   # Uses a block cross-validation
   # faster learning rate means larger values
-  mod <- #tryCatch(
-    dismo::gbm.step(data = data,             # data.frame with data
+  mod <- dismo::gbm.step(data = data,             # data.frame with data
                     gbm.x = vars,          # predictor variables
-                    gbm.y = "presence_absence",            # response variable
-                    family = "bernoulli",  # the nature of error structure
+                    gbm.y = "ln_N_km2",            # response variable
+                    family = "laplace",  # the nature of error structure
                     tree.complexity = comb$tc[i],   # tree complexity
                     learning.rate = comb$lr[i],  # learning rate
                     bag.fraction = comb$bf[i],    # bag fraction
@@ -135,9 +173,7 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
                     n.trees = ini.nt, 
                     step.size = step.nt, 
                     max.trees = max.nt)   
-    #, error = function(e) return(NULL))
 
-  
   if(!is.null(mod)) {
     # Keep CV parameters
     mod_out <- data.frame(
@@ -168,8 +204,8 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
     # Return NULL or an empty list if mod is NULL
     list(mod_out = NULL, cv_deviance = NULL, pred_list = NULL)
   }
-  }
-  
+}
+
 
 
 
@@ -210,22 +246,19 @@ p <- ggplot(data = cv_deviance) +
   facet_wrap(id ~.,) +
   theme_article()
 
-mod_code <- "brt"
-outdir <- paste0(output_data, "/brt/", genus, "_PA")
-if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 #  Create output repository
-outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", "optim_params_PA.png")
+outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", "optim_params", type, "_", family, ".png")
 ggsave(outfile, p, width=25, height=14, units="cm", dpi=300)
 
 ## export outputs
-outfile <- paste0(outdir, "/brt_optim_params_PA.csv")
+outfile <- paste0(outdir, "/brt_optim_params", type, "_", family,".csv")
 write.csv2(mod_out, outfile, row.names = FALSE)
 
-outfile <- paste0(outdir, "/brt_cv_deviance_PA.csv")
+outfile <- paste0(outdir, "/brt_cv_deviance", type, "_", family,".csv")
 write.csv(cv_deviance, outfile, row.names = FALSE)
 
-outfile <- paste0(outdir, "/brt_predlist_PA.rds")
+outfile <- paste0(outdir, "/brt_predlist", type, "_", family,".rds")
 saveRDS(predict_list, outfile)
 
 
@@ -233,15 +266,17 @@ saveRDS(predict_list, outfile)
 
 
 
-# 4. Fit full presence_absence model-------------------------------------------
+# 4. Fit full density model-------------------------------------------
+# genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+# family <- "LN_gaussian"
+# type <- "_NKm2" #"_NKm2" "_PA"
+# mod_code <- "brt"
 
 #Open the created dataset containing the models information and select the best model.
-mod_code <- "brt"
-#genus <- "Scyliorhinus" #Raja
+outdir <- paste0(output_data, "/", mod_code, "/", genus, type, "_", family)
 
-outdir <- paste0(output_data, "/brt/", genus, "_PA")
-mod_out <- read.csv2(paste0(outdir, "/brt_optim_params_PA.csv"))
-predict_list <- readRDS(paste0(outdir, "/brt_predlist_PA.rds"))
+mod_out <- read.csv2(paste0(outdir, "/brt_optim_params", type, "_", family,".csv"))
+predict_list <- readRDS(paste0(outdir, "/brt_predlist", type, "_", family,".rds"))
 
 View(mod_out)
 View(predict_list)
@@ -255,17 +290,31 @@ plot(p)
 #' selection is based on parameters, criteria and checking curves (see appendix 1 for Elith et al. 2008 recommendations)
 #' But as summary:
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
-#' 2) Then, if there are two or more very similar: the one with the highest cv_AUC
-#' 3) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
+#' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 29 #Scyliorhinus = 29 (presence_absence), #Raja = 13 (presence_absence)
+select_model_id <- 27 
+
+# Scyliorhinus:
+# LN_gaussian - all: 33
+# LN_laplace - all: 30 (sin O2, eke, ph, nppv, po4)
+# laplace - all: 25
+# bernoilli - PA: 9
+
+# Raja = 30
+# LN_gaussian - all: 25
+# LN_laplace - all: 31 (sin O2, eke, ph, nppv, po4)
+# laplace - P: 35
+# bernoilli - PA: 25
+
 
 #List the name of the predictor variables
-vars  <- c("season", "depth", "slope", "substrate", "fishingEffort",
-           # "distMounts", "distCanyons","distFans", 
-           "bottom_temp", "bottom_oxygen", "bottom_nppv", "bottom_ph", 
-           "bottom_nh4", "bottom_so", "bottom_eke", "RN")  
+vars  <- c("depth", "ln_slope", "ln_fishingEffort", "bottom_eke","substrate", 
+           "bottom_temp", "bottom_so", "RN") #
 
+#"SD_bottomT", "SD_o2", "oxygen_sat_percent","bottom_oxygen",
+
+#"bottom_nh4","bottom_oxygen","bottom_eke","bottom_ph", "season", "substrate", 
+# #"distMounts",  "distCanyons", "distFans","bottom_po4", "bottom_nppv", "distMounts",
 
 tc <- mod_out$tc[select_model_id]
 lr <- mod_out$lr[select_model_id]
@@ -285,8 +334,11 @@ mod_full <- dismo::gbm.fixed(data = data,             # data.frame with data
                              n.trees = ntrees) 
 
 # Save model
-saveRDS(mod_full, file = paste0(outdir, "/", genus, "_PA.rds"))  # save model
-mod_full <- readRDS(paste0(outdir, "/", genus, "_PA.rds"))
+saveRDS(mod_full, file = paste0(outdir, "/", genus, "_Nkm2.rds"))  # save model
+mod_full <- readRDS(paste0(outdir, "/", genus, "_Nkm2.rds"))
+
+
+
 
 
 
@@ -324,21 +376,21 @@ radarPlot <- function(var_imp, var_order, colors_border=rgb(0.2,0.5,0.5,0.9), co
 var_imp <- summary(mod_full)$rel.inf
 names(var_imp) <- summary(mod_full)$var
 asc <- names(var_imp)
-pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_radar_PA.png")
+pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_radar", type, "_", family, ".png")
 png(pngfile, width=1500, height=1000, res=150)
 radarPlot(var_imp, var_order=asc)
 dev.off()
 
 # 5.2. Make bar plot
 # Plot variable contribution using bar plot
-pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_influence_PA.png")
+pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_var_influence", type, "_", family, ".png")
 png(pngfile, width=1000, height=1000, res=150)
 ggBRT::ggInfluence(mod_full, show.signif = F, col.bar = "skyblue3")
 dev.off()
 
 # 5.3. Make response curve plot
 # Plot response curves
-pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_response_PA.png")
+pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_response", type, "_", family, ".png")
 png(pngfile, width=1000, height=2000, res=200)
 names(mod_full$gbm.call)[1] <- "dataframe"
 ggBRT::ggPD(mod_full, n.plots =13, smooth = F, rug = F, ncol=2, col.line = "skyblue3")
@@ -361,7 +413,7 @@ find.int$interactions
 #See the list of potential interactions:
 find.int$rank.list
 
-outdir_interaction <- paste0(outdir, "/interactions_PA")
+outdir_interaction <- paste0(outdir, "/interactions", type, "_", family)
 if (!dir.exists(outdir_interaction)) dir.create(outdir_interaction, recursive = TRUE)
 
 #Assess the level of interaction between the potential interactions:
@@ -369,13 +421,13 @@ if (!dir.exists(outdir_interaction)) dir.create(outdir_interaction, recursive = 
 #*the two variables. A lower value (close to 0) would indicate a less significant interaction.
 
 #*# Set the angle for the 3D plot
-theta <- 220  # Adjust the azimuthal angle as desired
+theta <- 140  # Adjust the azimuthal angle as desired
 phi <- 20    # Adjust the polar angle as desired
 
 #Plot:
-pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_PA.png")
+pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 2, 1, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 1, 5, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #*# Set the angle for the 3D plot
@@ -383,9 +435,9 @@ theta <- 120  # Adjust the azimuthal angle as desired
 phi <- 40    # Adjust the polar angle as desired
 
 #Check how the correlation between the 2 variables occur in 3D (x=var1, z=var2, y=respuesta)
-pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_2_PA.png")
+pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_2_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 3, 1, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 5, 1, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #dismo::gbm.perspec(mod_full, 7, 2)
@@ -405,14 +457,14 @@ dev.off()
 
 # Set output directory
 # Each bootstrap model is stored here
-outdir_bootstrap <- paste0(outdir, "/bootstrap/", genus, "_PA")
+outdir_bootstrap <- paste0(outdir, "/bootstrap/", genus, type, "_", family)
 if (!dir.exists(outdir_bootstrap)) dir.create(outdir_bootstrap, recursive = TRUE)
 
 # Define number of bootstrap models
 n.boot <- 100  # number of model fits
 
 ## Prepare clusters
-cores <- 5
+cores <- 8
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -430,8 +482,8 @@ foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "str
                                learning.rate = lr,  # learning rate
                                bag.fraction = bf,    # bag fraction
                                n.trees = ntrees) 
-    # store model
-  outfile <- paste0(outdir_bootstrap, "/", str_pad(i, 2, pad = "0"), "_", genus, "_", mod_code, "_boot_PA.rds")
+  # store model
+  outfile <- paste0(outdir_bootstrap, "/", str_pad(i, 2, pad = "0"), "_", genus, "_", mod_code, "_boot_Nkm2.rds")
   saveRDS(mod_boot, file = outfile)  # save model
   
   # Return something here if needed
@@ -440,3 +492,4 @@ foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "str
 
 ## stop clusters
 stopCluster(cl)
+

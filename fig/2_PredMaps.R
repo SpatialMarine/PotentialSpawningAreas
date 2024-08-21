@@ -16,6 +16,8 @@ family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
+
+
 # 1. Set data repository and load rasters---------------------------------------
 
 # 1.1. Bathymetry
@@ -72,13 +74,12 @@ GSA_filtered <- GSA %>%
   filter(SECT_COD == "GSA06")
 print(GSA_filtered)
 
+
 # 1.5. Predicted habitat
 path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.tif")
 #path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/01/20210101_Scyliorhinus_brt_pred.tif")
 habitat <- raster(path)
 print(habitat)
-
-
 
 
 # Ensure CRS matches for all spatial data
@@ -107,7 +108,7 @@ bathy_mask <- calc(bathy_filtered, function(x) {
 bathy_mask_resampled <- resample(bathy_mask, habitat, method = "bilinear")
 
 # Apply the mask to the habitat raster
-habitat_cropped <- mask(habitat, bathy_mask_resampled)
+habitat_cropped <- raster::mask(habitat, bathy_mask_resampled)
 #plot(habitat_cropped)
 
 # Convert raster to data frame
@@ -142,6 +143,7 @@ habitat_clipped_df <- habitat_clipped_df %>%
 
 # Verify the result
 summary(habitat_clipped_df)
+
 
 
 # 4. Crop bathymetric contours to GSA06 ------------------------------------------
@@ -190,7 +192,7 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_habitat_Map.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_habitat_Map_vars.png")
 ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
 
 
@@ -313,5 +315,5 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_CIR_Map_scale.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_CIR_Map_scale_vars.png")
 ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
