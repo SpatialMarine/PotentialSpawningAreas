@@ -144,7 +144,7 @@ base_folder <- paste0(input_data, "/cmems_predict_3d/2021")
 month_folders <- list.dirs(base_folder, full.names = TRUE, recursive = FALSE)
 
 # Loop through each month folder
-#for (month_folder in month_folders) {
+for (month_folder in month_folders) {
   #month_folder <- month_folders[1]
   
   # Get list of all day folders within the current month folder

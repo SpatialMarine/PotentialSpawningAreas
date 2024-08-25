@@ -19,7 +19,7 @@ library(foreach)
 bootstrap <- T
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
@@ -38,7 +38,7 @@ print(mask)
 mask <- st_transform(mask, crs = 4326)
 
 # crop it:
-e <- c(-4, 8, 34, 45) 
+e <- c(-1.5, 5, 37, 43) 
 e <- extent(e)
 bbox <- st_as_sfc(st_bbox(e))
 # Set the CRS of bbox to match the mask
@@ -46,7 +46,26 @@ st_crs(bbox) <- st_crs(mask)
 #Crop the mask using the bounding box
 mask <- st_intersection(mask, bbox)
 print(mask)
+#plot(mask)
 
+
+bathy<- raster("input/gebco/Bathy.tif")
+print(bathy)
+# plot(bathy)
+# Filter the values between -50 and -600 and set values outside the range to NA
+bathy_filtered <- calc(bathy, function(x) {
+  x[x > -5 | x < -650] <- NA  # Set values outside the range to NA
+  return(x)
+})
+
+# Assign a value of 1 to the remaining (non-NA) values
+bathy_mask <- calc(bathy_filtered, function(x) {
+  x[!is.na(x)] <- 1
+  return(x)
+})
+
+bathy_mask_resampled <- resample(bathy_mask, s, method = "bilinear")
+bathy_mask_resampled <- crop(bathy_mask_resampled, e)
 
 # list of bootstrap models
 outdir_bootstrap <- paste0(indir, "/bootstrap/", paste0(genus, type, "_", family))
@@ -54,15 +73,16 @@ boots_files <- list.files(outdir_bootstrap, full.names = T)
 
 # batch import of bootstrap models
 brt_models <- lapply(boots_files, readRDS)
+print(brt_models[1])
 
 # Prepare cluster
 cores <-detectCores() #if you use all of them you, your computer may crash (consumes all the CPU).
-cores <- 7
+cores <- 2
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 # Create dates
-date_start <- as.Date("2021-01-01")
+date_start <- as.Date("2021-04-26")
 date_end <- as.Date("2021-12-31")
 dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 
@@ -72,10 +92,12 @@ dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 
 
 # 2. Create bootstrap maps (habitat and CI)-------------------------------------
-foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr", "pals", "dismo", "gbm", "scam")) %dopar% {
+#foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr", "pals", "dismo", "gbm", "scam")) %dopar% {
+
+for(i in 1:length(dates)) {
   
   # Get time information
-  #i=211
+  #i=1
   date <- dates[i]
   YYYY <- year(date)
   MM <- sprintf("%02d", month(date))
@@ -91,6 +113,9 @@ foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr"
   s <- raster::stack(grdfile)
   s <- s+0
 
+  s <- crop(s, e)
+  s <- raster::mask(s, bathy_mask_resampled)
+  
   # Transform variables
   s$ln_fishingEffort <- log1p(s$fishingEffort)
   s$ln_slope <- log1p(s$slope)
@@ -154,7 +179,7 @@ foreach(i=1:length(dates), .packages=c("lubridate", "raster", "stringr", "dplyr"
   
 }
 
-stopCluster(cl)
+#stopCluster(cl)
 
 print("Prediction ready")  
 beep()

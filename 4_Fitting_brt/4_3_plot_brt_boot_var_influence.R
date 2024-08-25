@@ -13,9 +13,10 @@ library(egg)
 
 
 genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
+
 
 
 

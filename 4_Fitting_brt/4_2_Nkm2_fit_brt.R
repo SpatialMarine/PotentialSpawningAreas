@@ -19,7 +19,7 @@ library(fmsb)
 library(dplyr)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
@@ -113,7 +113,7 @@ names(data)
 #           "SD_bottomT", "SD_o2", "bottom_temp", 
 #           "bottom_so", "bottom_oxygen", "RN")
 
-vars  <- c("depth", "ln_slope", "ln_fishingEffort", 
+vars  <- c("depth", "ln_slope", "ln_fishingEffort", "bottom_vo", "bottom_uo", #"SD_bottomT",
            "bottom_temp", "bottom_so",  "RN", "bottom_eke", "substrate") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
@@ -265,7 +265,6 @@ saveRDS(predict_list, outfile)
 
 
 
-
 # 4. Fit full density model-------------------------------------------
 # genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 # family <- "LN_gaussian"
@@ -308,8 +307,8 @@ select_model_id <- 27
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "ln_slope", "ln_fishingEffort", "bottom_eke","substrate", 
-           "bottom_temp", "bottom_so", "RN") #
+vars  <- c("depth", "ln_slope", "ln_fishingEffort", "bottom_vo", "bottom_uo", #"SD_bottomT",
+           "bottom_temp", "bottom_so",  "RN", "bottom_eke", "substrate") 
 
 #"SD_bottomT", "SD_o2", "oxygen_sat_percent","bottom_oxygen",
 

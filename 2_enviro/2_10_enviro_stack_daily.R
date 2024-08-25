@@ -15,7 +15,7 @@ library(lubridate)
 library(raster)
 library(ncdf4)
 library(stringr)
-
+library(beepr)
 
 # 1. Set static data repository -------------------------------------------------------
 # path to environmental static data
@@ -31,7 +31,7 @@ if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # 2. Create oceanmask-----------------------------------------------------------
 # Set raster resolution and extent
-res <- 0.042
+res <- 0.0042
 e <- extent(-4, 8, 34, 45) 
 
 
@@ -89,7 +89,6 @@ stack_static <- stack(dept, slp, fishingEff, SD_o2, SD_bottomT)
 # 4. Prepare dynamic variables for stack --------------------------------------------------
 # Function to prepare and stack raster files for each day
 prepareStackForDay <- function(day_folder, variables, res, e, output_folder) {
-  
   # Define extent and resolution
   e <- extent(e)
   
@@ -236,7 +235,7 @@ catalog$variable
 variables <- c("bottomT", "o2", "nppv", "so", "po4")
 
 # Set the resolution and extent:
-res <- 0.042
+res <- 0.0042
 e <- extent(-4, 8, 34, 45)  
 
 

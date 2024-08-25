@@ -18,7 +18,7 @@ file <- paste0(temp_data, "/folds_dataset/", genus, "_folds_dataset.csv")
 data <- read.csv2(file)
 
 #transform response variable:
-data$ln_N_km2 <- log1p(data$N_km2)
+#data_Sca$ln_N_km2 <- log1p(data_Sca$N_km2)
 
 
 # 1.1. Bathymetry
@@ -104,26 +104,41 @@ bathy_df$filling_color <- color_palette_bathy[color_indices_bathy]
 
 # 4. Make map ------------------------------------------------------
 
+# Sort data by N_km2
+data <- data[order(data$N_km2), ]
+
 # Create a ggplot object
 p <- ggplot() +
   geom_tile(data = bathy_df, aes(x = x, y = y, fill = filling_color)) +
-  #geom_sf(data = Bathy_cont1,  lwd = 0.05) +
+  
   # land mask
   geom_sf(data = mask) +
-  # add tracks
-  geom_point(data = data, aes(x = lon, y = lat, fill = "#FFE4B2", size = N_km2), shape = 21, alpha = 0.6) + ##FFE4B2
+  
+  # add points
+  geom_jitter(data = data, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#FFE4B2"), #"#8D6E63" for skates, "#FFE4B2" for catsharks
+                               size = N_km2), shape = 21, color = "black", alpha = 0.6, stroke = 0.7, width = 0.02, height = 0.02) + 
+  
+  # Plot GSAs
+  #geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
+  
   #Set spatial bounds
-  coord_sf(xlim = c(-1, 5.8), ylim = c(36.5, 42.2), expand = TRUE) +
+  coord_sf(xlim = c(-1.5, 4.5), ylim = c(37, 42.2), expand = TRUE) +
+  
   # Add scale bar
-  annotation_scale(location = "bl", width_hint = 0.2) +  
+  #annotation_scale(location = "bl", width_hint = 0.2) +  
+  
   # theme
   theme_bw() +
   # Directly map colors without scaling
   scale_fill_identity()+
+  scale_size(range = c(1.5, 8)) +
+  
   # Remove grids
-  theme(panel.grid = element_blank())
-
-# p
+  theme(panel.grid = element_blank(),
+      legend.position = "right",
+      legend.box = "vertical",
+      aspect.ratio = 1) 
+ p
 
 # export plot
 outdir <- paste0(output_data, "/fig/Map/density")

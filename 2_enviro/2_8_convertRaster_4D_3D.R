@@ -12,20 +12,9 @@
 library(raster)
 library(beepr)
 
-# 1. Create oceanmask-----------------------------------------------------------
-# Set raster resolution and extent
-res <- 0.042
-e <- extent(-6, 30, 40, 46)
-
-# create base raster
-m <- raster(e, res = res, crs = crs("+proj=longlat +datum=WGS84"))
-m[] <- 1
 
 
-
-
-
-# 2. Create function for conversion --------------------------------------------
+# 1. Create function for conversion --------------------------------------------
 # Convert 4D netCDF (lon,lat,depth,time) to 3D keeping only bottom (lon,lat,time)
 convert_4d_to_3d_daily <- function(base_dir, output_dir) {
   # Create output directory if it does not exist
@@ -205,7 +194,7 @@ convert_4d_to_3d_daily <- function(base_dir, output_dir) {
 
 
 
-# 3. Convert 4D in 3D ----------------------------------------------------------
+# 2. Convert 4D in 3D ----------------------------------------------------------
 # by selecting the deepest data
 
 # Example usage

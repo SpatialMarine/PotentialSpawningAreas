@@ -12,7 +12,7 @@ library(ggspatial)
 library(raster)
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
@@ -79,6 +79,7 @@ print(GSA_filtered)
 path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.tif")
 #path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/01/20210101_Scyliorhinus_brt_pred.tif")
 habitat <- raster(path)
+#habitat <- calc(habitat, function(x) 10^x)
 print(habitat)
 
 
@@ -93,7 +94,7 @@ st_crs(GSA_filtered) <- st_crs(mask)
 # 2. Crop habitat to bathy 800 m---------------------------------------------------
 # Filter the values between -50 and -600 and set values outside the range to NA
 bathy_filtered <- calc(bathy, function(x) {
-  x[x > -50 | x < -500] <- NA  # Set values outside the range to NA
+  x[x > -50 | x < -600] <- NA  # Set values outside the range to NA
   return(x)
 })
 
@@ -207,6 +208,7 @@ ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
 
 path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_CIR_median.tif")
 error <- raster(path)
+#error <- calc(error, expm1)
 print(error)
 
 
