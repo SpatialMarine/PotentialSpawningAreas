@@ -18,9 +18,10 @@ library(foreach)
 bootstrap <- T
 
 genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
+dataset <- "ALL" #ALL, train
 
 
 
@@ -42,37 +43,12 @@ print(mask)
 
 
 # Create date sequences that you wish:
-
-# Monthly:
-winter_start <- as.Date("2021-01-01")
-winter_end <- as.Date("2021-03-20")
-winter_dates <- seq.Date(winter_start, winter_end, by="day")
-
-spring_start <- as.Date("2021-03-21")
-spring_end <- as.Date("2021-06-20")
-spring_dates <- seq.Date(spring_start, spring_end, by="day")
-
-summer_start <- as.Date("2021-06-21")
-summer_end <- as.Date("2021-09-22")
-summer_dates <- seq.Date(summer_start, summer_end, by="day")
-
-autumn_start <- as.Date("2021-09-23")
-autumn_end <- as.Date("2021-12-20")
-autumn_dates <- seq.Date(autumn_start, autumn_end, by="day")
-
-
 # Year:
 date_start <- as.Date("2021-01-01")
 date_end <- as.Date("2021-12-31")
 dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 
-
 # Convert date sequences to dataframes
-winter_df <- data.frame(date = winter_dates, season = "Winter")
-spring_df <- data.frame(date = spring_dates, season = "Spring")
-summer_df <- data.frame(date = summer_dates, season = "Summer")
-autumn_df <- data.frame(date = autumn_dates, season = "Autumn")
-
 year_df <- data.frame(date = dates, season = "Autumn")
 
 
@@ -135,7 +111,7 @@ print("Processing completed.")
 # Identify which elements in the list are NULL
 null_indices <- which(sapply(stack_list, is.null))
 null_indices
-#stack_list <- stack_list[!sapply(stack_list, is.null)]
+stack_list <- stack_list[!sapply(stack_list, is.null)]
 
 # After parallel processing, create a stack from the list of raster stacks
 pred_stack <- raster::stack(stack_list)

@@ -18,9 +18,9 @@ library(egg)
 library(fmsb)
 library(dplyr)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_sinO2" #bernuilli #LN_laplace_sinO2
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+family <- "LN_bernuilli_Final" #bernuilli #LN_laplace_sinO2
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 
 #Load data
@@ -56,7 +56,7 @@ summary(data$ln_N_km2)
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
-colnames(data) <- c("Haul_N", "code", "Genus", "lat", "lon", "season", "depth", 
+colnames(data) <- c("Vessel", "code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
@@ -113,8 +113,8 @@ names(data)
 #           "SD_bottomT", "SD_o2", "bottom_temp", 
 #           "bottom_so", "bottom_oxygen", "RN")
 
-vars  <- c("depth", "ln_slope", "ln_fishingEffort", "bottom_vo", "bottom_uo", #"SD_bottomT",
-           "bottom_temp", "bottom_so",  "RN", "bottom_eke", "substrate") 
+vars  <- c("depth", "slope", "ln_fishingEffort", #"bottom_eke", "bottom_vo", "bottom_uo", "SD_bottomT",
+           "bottom_temp", "bottom_so",  "RN", "substrate") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
 # "bottom_nh4", ,"bottom_eke","bottom_ph", "distMounts","oxygen_sat_percent",
@@ -163,8 +163,8 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
   # faster learning rate means larger values
   mod <- dismo::gbm.step(data = data,             # data.frame with data
                     gbm.x = vars,          # predictor variables
-                    gbm.y = "ln_N_km2",            # response variable
-                    family = "laplace",  # the nature of error structure
+                    gbm.y = "presence_absence",            # response variable
+                    family = "bernoulli",  # the nature of error structure
                     tree.complexity = comb$tc[i],   # tree complexity
                     learning.rate = comb$lr[i],  # learning rate
                     bag.fraction = comb$bf[i],    # bag fraction
@@ -246,6 +246,7 @@ p <- ggplot(data = cv_deviance) +
   facet_wrap(id ~.,) +
   theme_article()
 
+p
 
 #  Create output repository
 outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", "optim_params", type, "_", family, ".png")
@@ -291,7 +292,7 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 27 
+select_model_id <- 1 #5
 
 # Scyliorhinus:
 # LN_gaussian - all: 33
@@ -307,8 +308,8 @@ select_model_id <- 27
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "ln_slope", "ln_fishingEffort", "bottom_vo", "bottom_uo", #"SD_bottomT",
-           "bottom_temp", "bottom_so",  "RN", "bottom_eke", "substrate") 
+vars  <- c("depth", "slope", "ln_fishingEffort", #"bottom_eke", "bottom_vo", "bottom_uo", "SD_bottomT",
+           "bottom_temp", "bottom_so",  "RN",  "substrate") 
 
 #"SD_bottomT", "SD_o2", "oxygen_sat_percent","bottom_oxygen",
 
@@ -426,7 +427,7 @@ phi <- 20    # Adjust the polar angle as desired
 #Plot:
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 1, 5, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 2, 3, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #*# Set the angle for the 3D plot
@@ -470,7 +471,7 @@ registerDoParallel(cl)
 foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "stringr"), .combine = "c") %dopar% {
   
   # sampled half the data (with replacement) to fit the model (Hindell et al. 2020)
-  idata <- stratified(data, c("presence_absence", "Haul_N"), 0.7, replace = TRUE) 
+  idata <- stratified(data, c("presence_absence", "Vessel"), 0.7, replace = TRUE) 
   
   # fit BRT
   mod_boot <- dismo::gbm.fixed(data = idata,             # data.frame with data

@@ -40,7 +40,7 @@ summary(data)
 
 # Select specific columns from the data dataset in which you want to assess correlation
 vars  <- c("depth", "roughness",  "SD_bottomT", "SD_o2", "bottom_oxygen",
-           "bottom_temp", "bottom_no3", "bottom_po4", "bottom_so", 
+           "bottom_temp", "bottom_no3", "bottom_po4", "bottom_so", "bottom_nppv",
            "ln_slope", "ln_fishingEffort", "distMounts", "bottom_eke") 
 
 #"slope", "fishingEffort", "bottom_nppv", "bottom_ph", 
@@ -80,15 +80,13 @@ dev.off()
 # VIF may be also only for linear relationships and Spearman for non-linear too, but we are not sure, should look for more info. But basically jut use Spearman.
 
 #Make a selection eliminating those that are harder to explain or make less sense:
-vars  <- c("depth", "SD_bottomT", "SD_o2", "bottom_oxygen",
+vars  <- c("depth", "SD_bottomT", "SD_o2", "bottom_oxygen", "bottom_nppv",
            "bottom_temp",  "bottom_so", "ln_slope", "ln_fishingEffort", 
            "distMounts", "bottom_eke") 
 
 #Removed:
 # "roughness", "bottom_no3", "bottom_po4",
 
-#"Distance_covered_GPS","SSSAL_merged", "SBSAL_merged", "sst_celsius", "diff_at_sbt", 
-# "at_celsius",  "sbt_merged", "diff_SSSAL_SBSAL", "diff_SSph_SBph", "Wind.strength", 
 
 # calcualate correlations using Spearman and clustering analysis
 pngfile <- paste0(output_dir, "/", genus, "_eda_cluster_final.png")

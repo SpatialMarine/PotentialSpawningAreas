@@ -26,9 +26,6 @@ outdir <- paste0(temp_data, "/stack_daily/")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 
-
-
-
 # 2. Create oceanmask-----------------------------------------------------------
 # Set raster resolution and extent
 res <- 0.0042
@@ -60,6 +57,17 @@ SD_bottomT <- fishingEffort+0
 SD_o2 <- raster(paste0(static_data, "/SD_o2.tif"))  # distance to shore
 SD_o2 <- fishingEffort+0
 
+#substrate_folk5 <- raster(paste0(static_data, "/substrate_folk5.tif"))  # distance to shore
+#substrate_folk5 <- substrate_folk5+0
+#crs_substrate <- crs(substrate_folk5)
+#crs_slope <- crs(slope)
+#substrate_folk5 <- crop(substrate_folk5, extent(slope))
+#substrate_folk5 <- resample(substrate_folk5, slope, method = "bilinear")
+#writeRaster(substrate_folk5, "substrate_folk5.tif", format = "GTiff")
+
+substrate_folk5 <- raster(paste0(static_data, "/substrate_folk5.tif"))  # distance to shore
+substrate_folk5 <- substrate_folk5+0
+
 # prepare function for stack
 prepareGrid <- function(r, m, method, name){
   rc <- raster::crop(r, m)  # crop by extent
@@ -76,9 +84,9 @@ slp <- prepareGrid(slope, m, method="bilinear", name="slope")
 fishingEff <- prepareGrid(fishingEffort, m, method="bilinear", name="fishingEffort")
 SD_o2 <- prepareGrid(SD_o2, m, method="bilinear", name="SD_o2")
 SD_bottomT <- prepareGrid(SD_bottomT, m, method="bilinear", name="SD_bottomT")
+substrate_folk5 <- prepareGrid(substrate_folk5, m, method="bilinear", name="substrate")
 
-
-stack_static <- stack(dept, slp, fishingEff, SD_o2, SD_bottomT)
+stack_static <- stack(dept, slp, fishingEff, SD_o2, SD_bottomT, substrate_folk5) 
 
 
 
@@ -101,7 +109,9 @@ prepareStackForDay <- function(day_folder, variables, res, e, output_folder) {
     o2 = "bottom_oxygen",
     nppv = "bottom_nppv",
     so = "bottom_so",
-    po4 = "bottom_po4"
+    po4 = "bottom_po4",
+    uo = "bottom_uo",
+    eke = "bottom_eke"
   )
   
   for (variable in variables) {
@@ -232,7 +242,7 @@ base_folder <- "input/cmems_predict_3d/2021"
 # Select the dynamic variables to extract (same names as catalog):
 catalog <- read.csv2("input/catalog_stack.csv", sep=";")
 catalog$variable
-variables <- c("bottomT", "o2", "nppv", "so", "po4")
+variables <- c("bottomT", "o2", "nppv", "so", "po4", "eke", "uo", "vo")
 
 # Set the resolution and extent:
 res <- 0.0042

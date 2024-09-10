@@ -10,27 +10,25 @@ library(groupdata2)
 
 # As mentioned previously, I will use all data to fit the model and check the model using cross-validation,
 # instead of a training and testing data sets.
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #Load data
-file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
+#file <-  file.path(temp_data, paste0("train_test/", genus, "_training_testing/", genus,"_train_dataset.csv"))
+file <-  file.path(temp_data, paste0("data_subsets/", genus, "_dataset_log_pred.csv"))
 data <- read.csv2(file)
 
 names(data)
 str(data)
 
 # 1. Organise data -------------------------------------------------------------
+# Generate Random Number (from 1 to 100) and an ID column for each row (i.e. specimen)
+# RN will serve as an indicator for variables that have influence greater or less than 
+# random (Scales et al., 2017; Soykan, Eguchi, Kohin, & Dewar, 2014);
+# only variables with influence greater than the random number were included in the final models.
 # add a unique numerical value for each unique value of code (i.e. each tow)
 data <- data %>%
   mutate(Haul_N = as.numeric(factor(code)))
 
-# Generate Random Number (from 1 to 100) and an ID column for each row (i.e. tow)
-# RN will serve as an indicator for variables that have influence greater or less than 
-# random (Scales et al., 2017; Soykan, Eguchi, Kohin, & Dewar, 2014);
-# only variables with influence greater than the random number were included in the final models.
-
-# Set the seed for reproducibility
-set.seed(132)
 data$RN <- sample.int(100, size=nrow(data), replace=T, prob=NULL)
 data <- data %>%
   mutate(id = seq_along(RN))
@@ -39,8 +37,11 @@ head(data)
 # Set variables as their types:
 # Set categorical predictors as categories:
 data <- data %>% 
-  mutate(Haul_N = factor(data$Haul_N))
+  mutate(Vessel = factor(data$Vessel),
+         Haul_N = factor(data$Haul_N),
+         RN = factor(data$RN))
 str(data)
+
 
 # Prepare folds
 #* set number of folds
@@ -56,9 +57,9 @@ n.folds <- 5
 
 # Set the seed for reproducibility
 set.seed(123)
-
+data <- data %>% sample_frac(1) 
 #create folds
-f <- fold(data = data, id_col = "Haul_N", method = "n_dist", k = n.folds) 
+f <- fold(data = data, method = "n_dist", k = n.folds) 
 
 data <- f %>%
   dplyr::rename(fold = .folds) %>%
@@ -80,6 +81,7 @@ if (!file.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)}
 
 #Save data set:
-output_file <- paste0(output_dir, "/", genus, "_folds_dataset.csv")
+dataset <- "ALL" #ALL, train, test
+output_file <- paste0(output_dir, "/", genus, "_", dataset, "_folds_dataset.csv")
 write.csv2(data, file = output_file, row.names = FALSE)
 

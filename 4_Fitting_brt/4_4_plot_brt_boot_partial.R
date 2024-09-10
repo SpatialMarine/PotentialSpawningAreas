@@ -15,13 +15,10 @@ bootstrap <- T
 n_boot <- 100
 
 genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_vars" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-
-
-
-
+dataset <- "ALL" #ALL, train
 
 
 # 1. Set data repository-------------------------------------------------------
@@ -103,7 +100,7 @@ data2 <- filter(data, var %in% mod$contributions$var[1:n_plots])
 
 # plot: #orange for S canicula and #steelbluefor G melastomus
 p <- ggplot(data2, aes(x = xval)) +
-  geom_ribbon(aes(ymin = cil, ymax = ciu), fill="steelblue", alpha=.4, linetype=0) +
+  geom_ribbon(aes(ymin = cil, ymax = ciu), fill="steelblue", alpha=.2, linetype=0) +
   geom_line(aes(y = med), color="steelblue") +
   ylab("Fitted function") + xlab("") +
   facet_wrap(var~., scales = "free_x", ncol =2, strip.position = "bottom", labeller=labeller(var=labels)) +
@@ -114,6 +111,7 @@ p <- ggplot(data2, aes(x = xval)) +
     axis.title.y = element_text(margin = ggplot2::margin(t = 0, r = 20, b = 0, l = 0))
   )
 
+p
 
 # export plot
 outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "_response_boot_c.png")
