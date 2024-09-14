@@ -84,7 +84,7 @@ brt_models <- brt_models[1:10]
 
 # Create dates
 date_start <- as.Date("2021-11-13") #2021-11-13" Scy
-date_end <- as.Date("2021-12-31")
+date_end <- as.Date("2021-12-12")
 #dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 dates <- seq.Date(date_start, date_end, by="2 days")  # define sequence every 2 days
 

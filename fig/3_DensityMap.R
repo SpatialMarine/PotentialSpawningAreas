@@ -123,7 +123,7 @@ p <- ggplot() +
   geom_sf(data = mask) +
   
   # Add absences with cross shape and black color
-  geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 1, alpha = 0.6) +
+  geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 2, alpha = 0.6) +
   
   # add presence points
   geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#FFE4B2"), #"#8D6E63" for skates, "#FFE4B2" for catsharks
@@ -136,13 +136,13 @@ p <- ggplot() +
   coord_sf(xlim = c(-1.5, 4.5), ylim = c(37, 42.2), expand = TRUE) +
   
   # Add scale bar
-  annotation_scale(location = "bl", width_hint = 0.2) +  
+  #annotation_scale(location = "bl", width_hint = 0.2) +  
   
   # theme
   theme_bw() +
   # Directly map colors without scaling
   scale_fill_identity()+
-  scale_size(range = c(1.5, 8)) +
+  scale_size(range = c(1.5, 10)) +
   
   # Remove grids
   theme(panel.grid = element_blank(),
@@ -154,7 +154,7 @@ p <- ggplot() +
 # export plot
 outdir <- paste0(output_data, "/fig/Map/density")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", genus, "_density_Map.png")
+p_png <- paste0(outdir, "/", genus, "BIG_density_Map.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 # export plot

@@ -11,7 +11,7 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
@@ -168,7 +168,7 @@ p <- ggplot() +
   geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
   
   # Plot bathymetric contours
-  #geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
+  geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
   
   # Set spatial bounds (adjust these to fit your data)
   coord_sf(xlim = c(-1, 5.8), ylim = c(36.5, 42.2), expand = TRUE) +
@@ -194,7 +194,7 @@ p
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_habitat_Map_vars.png")
-ggsave(p_png, p, width=15, height=22, units="cm", dpi=1200)
+ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 
 
@@ -318,7 +318,7 @@ p
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_CIR_Map_scale_vars.png")
-ggsave(p_png, p, width=15, height=22, units="cm", dpi=1200)
+ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 
 
