@@ -14,12 +14,12 @@ library(egg)
 bootstrap <- T
 n_boot <- 100
 
+
 genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_Final_TEST" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 dataset <- "ALL" #ALL, train
-
 
 # 1. Set data repository-------------------------------------------------------
 brtDir <- paste(output_data, mod_code, paste0(genus, type, "_", family), sep="/")

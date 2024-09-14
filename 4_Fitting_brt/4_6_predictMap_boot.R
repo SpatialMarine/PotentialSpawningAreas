@@ -83,7 +83,7 @@ brt_models <- brt_models[1:10]
 # registerDoParallel(cl)
 
 # Create dates
-date_start <- as.Date("2021-06-08") 
+date_start <- as.Date("2021-11-13") #2021-11-13" Scy
 date_end <- as.Date("2021-12-31")
 #dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 dates <- seq.Date(date_start, date_end, by="2 days")  # define sequence every 2 days
@@ -152,6 +152,12 @@ for(i in 1:length(dates)) {
   pred_ciu <- raster::calc(pred_stack, fun = function(x){quantile(x, probs = c(0.975),na.rm=TRUE)})
   pred_cir <- pred_ciu - pred_cil
   
+  # Standard deviation (SD)
+  #pred_sd <- raster::calc(pred_stack, fun = sd, na.rm=TRUE)
+  
+  # Standard error (SE)
+  #pred_se <- pred_sd / sqrt(nlayers(pred_stack))
+  
   # set/create folder
   product_folder <- paste(outdir, YYYY, MM, sep="/")  # Set folder
   if (!dir.exists(product_folder)) dir.create(product_folder, recursive = TRUE)  # create output directory if does not exist
@@ -165,6 +171,14 @@ for(i in 1:length(dates)) {
   outfile <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred_cir.tif")
   writeRaster(pred_cir, filename=outfile, overwrite=TRUE)
   #plot(pred_cir)
+  
+  # store file
+  #outfile_sd <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred_sd.tif")
+  #writeRaster(pred_sd, filename=outfile_sd, overwrite=TRUE)
+  
+  # store file
+  #outfile_se <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred_se.tif")
+  #writeRaster(pred_se, filename=outfile_se, overwrite=TRUE)
   
   # export plot
   pngfile <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred.png")
@@ -184,6 +198,23 @@ for(i in 1:length(dates)) {
   box()
   dev.off()
   
+  # export plot
+  #png_sd <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred_sd.png")
+  #png(png_sd, width=560, height=600, res=100)
+  #plot(pred_sd, main = paste(genus, "   Model:", mod_code, "\n", date), col = viridis(100))
+  #plot(mask, col="grey80", border="grey60", add=TRUE)
+  #text(x = -3.5, y = 44, labels = date)
+  #box()
+  #dev.off()
+  
+  # export plot
+  #png_se <- paste0(product_folder, "/", format(date, "%Y%m%d"),"_", genus, "_", mod_code, "_pred_se.png")
+  #png(png_se, width=560, height=600, res=100)
+  #plot(pred_se, main = paste(genus, "   Model:", mod_code, "\n", date), col = viridis(100))
+  #plot(mask, col="grey80", border="grey60", add=TRUE)
+  #text(x = -3.5, y = 44, labels = date)
+  #box()
+  #dev.off()
 }
 
 #stopCluster(cl)

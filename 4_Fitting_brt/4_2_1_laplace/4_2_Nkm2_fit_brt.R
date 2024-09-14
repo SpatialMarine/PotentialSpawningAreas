@@ -19,7 +19,7 @@ library(fmsb)
 library(dplyr)
 
 genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_Final_TEST" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 dataset <- "ALL" #ALL, train
@@ -115,8 +115,8 @@ names(data)
 #           "bottom_so", "bottom_oxygen", "RN")
 
 vars  <- c("depth", "slope", "ln_fishingEffort", "substrate", "bottom_eke", 
-           #"bottom_oxygen", "SD_o2", "SD_bottomT", 
-           "bottom_temp", "bottom_so",  "RN") #"bottom_uo", "bottom_vo", 
+          "SD_o2", "SD_bottomT", 
+           "bottom_so",  "RN") #"bottom_uo", "bottom_vo",  "bottom_oxygen", "bottom_temp", 
            # "distFans", "distMounts","distCanyons", "bottom_nppv", 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
@@ -295,7 +295,7 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 30 #scyliorhinus 31 # raja 30
+select_model_id <- 32 #scyliorhinus 31 # raja 30
 
 # Scyliorhinus:
 # LN_gaussian - all: 33
@@ -475,18 +475,21 @@ registerDoParallel(cl)
 
 foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "stringr"), .combine = "c") %dopar% {
   
+  #library("splitstackshape")
+  #library("stringr")
   # sampled half the data (with replacement) to fit the model (Hindell et al. 2020)
-  idata <- stratified(data, c("fold"), 0.5, replace = TRUE) 
+  idata <- stratified(data, c("fold"), 0.9, replace = TRUE)
   
   # fit BRT
-  mod_boot <- dismo::gbm.fixed(data = idata,             # data.frame with data
-                               gbm.x = pred_list,          # predictor variables
-                               gbm.y = "ln_N_km2",            # response variable
-                               family = "laplace",  # the nature of error structure
-                               tree.complexity = tc,   # tree complexity
-                               learning.rate = lr,  # learning rate
-                               bag.fraction = bf,    # bag fraction
-                               n.trees = ntrees) 
+  mod_boot <- dismo::gbm.fixed(data = idata,              # data.frame with data
+                              gbm.x = pred_list,         # predictor variables
+                              gbm.y = "ln_N_km2",        # response variable
+                              family = "laplace",        # error distribution
+                              tree.complexity = tc,      # tree complexity
+                              learning.rate = lr,        # learning rate
+                              bag.fraction = bf,         # bag fraction
+                              n.trees = ntrees)              # cross-validation folds
+  
   # store model
   outfile <- paste0(outdir_bootstrap, "/", str_pad(i, 2, pad = "0"), "_", genus, "_", mod_code, "_boot_Nkm2.rds")
   saveRDS(mod_boot, file = outfile)  # save model
@@ -597,5 +600,13 @@ coordinates(data) <- ~lon+lat
 vario <- variogram(residuals ~ 1, data)
 
 # Plot the variogram
-plot(vario)
+p <- plot(vario)
+# export plot
+outdir_semi <- paste0(outdir, "/semivariograma", type, "_", family)
+if (!dir.exists(outdir_semi)) dir.create(outdir_semi, recursive = TRUE)
+pngfile <- paste0(outdir, "/", genus, "_semivariograma.png")
+png(pngfile, width=1500, height=1500, res=300)
+print(p)
+dev.off()
+
 

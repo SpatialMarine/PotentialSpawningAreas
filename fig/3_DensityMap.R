@@ -102,10 +102,18 @@ bathy_df$filling_color <- color_palette_bathy[color_indices_bathy]
 
 
 
-# 4. Make map ------------------------------------------------------
+# 4. Make map ------------------------------------------------------------------
+dataP <- data %>%
+  filter(presence_absence != 0)
+
+dataA <- data %>%
+  filter(presence_absence == 0)
 
 # Sort data by N_km2
-data <- data[order(data$N_km2), ]
+dataP <- dataP[order(-dataP$N_km2), ]
+
+
+
 
 # Create a ggplot object
 p <- ggplot() +
@@ -114,8 +122,11 @@ p <- ggplot() +
   # land mask
   geom_sf(data = mask) +
   
-  # add points
-  geom_jitter(data = data, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#FFE4B2"), #"#8D6E63" for skates, "#FFE4B2" for catsharks
+  # Add absences with cross shape and black color
+  geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 1, alpha = 0.6) +
+  
+  # add presence points
+  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#FFE4B2"), #"#8D6E63" for skates, "#FFE4B2" for catsharks
                                size = N_km2), shape = 21, color = "black", alpha = 0.6, stroke = 0.7, width = 0.02, height = 0.02) + 
   
   # Plot GSAs
@@ -125,7 +136,7 @@ p <- ggplot() +
   coord_sf(xlim = c(-1.5, 4.5), ylim = c(37, 42.2), expand = TRUE) +
   
   # Add scale bar
-  #annotation_scale(location = "bl", width_hint = 0.2) +  
+  annotation_scale(location = "bl", width_hint = 0.2) +  
   
   # theme
   theme_bw() +
@@ -138,13 +149,79 @@ p <- ggplot() +
       legend.position = "right",
       legend.box = "vertical",
       aspect.ratio = 1) 
- p
+ #p
 
 # export plot
 outdir <- paste0(output_data, "/fig/Map/density")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 p_png <- paste0(outdir, "/", genus, "_density_Map.png")
-ggsave(p_png, p, width=23, height=15, units="cm", dpi=300)
+ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
+
+# export plot
+#outdir <- paste0(output_data, "/fig/Map/density")
+#if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+#p_png <- paste0(outdir, "/", genus, "SCALE_density_Map.png")
+#ggsave(p_png, p, width=20, height=20, units="cm", dpi=300)
+
+
+# Plot enviromental variables --------------------------------------------------
+library(viridis)
+raster <- raster("input/emodnet/slope/slope.tif")
+raster <- raster("input/gfwr/summarydata/high_resolution/FishingEffort.tif")
+raster <- raster("input/")
+#plot(raster)
+raster <- log1p(raster)
+
+# Convert bathy raster to data frame
+raster_df <- as.data.frame(raster, xy = TRUE)
+head(raster_df)
+
+#Create colour ramp
+#color_palette_bathy <- colorRampPalette(c("lightblue", "white")) 
+#color_palette_raster <- colorRampPalette(rev(c('#e8f5e9','#a5d6a7','#66bb6a','#43a047','#2e7d32','#1b5e20')))(100)
+#cuts_raster <- cut(raster_df$FishingEffort, breaks = 100)
+#color_indices_raster <- as.numeric(cuts_raster) * 100 / length(levels(cuts_raster))
+#raster_df$filling_color <- color_palette_bathy[color_indices_raster]
+
+
+# Create a ggplot object
+p <- ggplot() +
+  geom_tile(data = raster_df, aes(x = x, y = y, fill = layer)) +  # Use the 'layer' for fill
+  
+  # land mask (if you have it, otherwise remove this line)
+  geom_sf(data = mask) +
+  
+  # Set spatial bounds
+  coord_sf(xlim = c(-1.5, 4.5), ylim = c(37, 42.2), expand = TRUE) +
+  
+  # Add scale bar
+  annotation_scale(location = "bl", width_hint = 0.2) +
+  
+  # Apply viridis color scale for fill
+  scale_fill_viridis(name = "Values", option = "D", na.value = "transparent") +  # Viridis palette
+  
+  # theme
+  theme_bw() +
+  
+  # Customize the plot
+  theme(panel.grid = element_blank(),
+        legend.position = "right",
+        legend.box = "vertical",
+        aspect.ratio = 1)
+
+#p
+
+# export plot
+enviro <- "fishingEffort" #slope, fishingEffort, 
+outdir <- paste0(output_data, "/fig/Map/enviro")
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+p_png <- paste0(outdir, "/", enviro, ".jpeg")
+ggsave(p_png, p, width=10, height=10, units="cm", dpi=1800)
+
+
+
+
+
 
 
 
@@ -224,6 +301,9 @@ g <- ggplot() +
 
 # adding other layers to the base shadow
 g2 <- g +
+  
+  # Add the ocean mask and fill with white
+  geom_sf(data = ocean, fill = "white", color = NA) +
   # add grid
   geom_sf(data = grid_crp, 
           colour = "grey85", 
@@ -243,7 +323,7 @@ print(g2)
 # export plot
 outdir <- paste0(output_data, "/fig/Map")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/_global_Map.jpeg")
+p_png <- paste0(outdir, "/_global_Map.png")
 ggsave(p_png, g2, width=17, height=17, units="cm", dpi=300)
 
 

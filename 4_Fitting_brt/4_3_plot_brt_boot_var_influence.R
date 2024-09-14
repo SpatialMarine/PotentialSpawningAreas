@@ -12,7 +12,7 @@ library(ggplot2)
 library(egg)
 
 genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
+family <- "LN_laplace_Final_TEST" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
 dataset <- "ALL" #ALL, train
@@ -81,6 +81,6 @@ p <- ggplot(data=data, mapping=aes(x=var, y=median, ymin=cil, ymax=ciu)) +
 p
 
 # export plot
-p_png <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "_var_influence_boot_c.png")
+p_png <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "PRUBA_var_influence_boot_c.png")
 ggsave(p_png, p, width=14, height=12, units="cm", dpi=300)
 
