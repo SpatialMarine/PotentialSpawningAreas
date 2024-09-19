@@ -19,12 +19,13 @@ library(fmsb)
 library(dplyr)
 
 genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_bernuilli_Final" #bernuilli #LN_laplace_sinO2
-type <- "_PA" #"_NKm2" "_PA" "only_P
+family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
+type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
+dataset <- "ALL" #ALL, train
 
 #Load data
-file <- paste0(temp_data, "/folds_dataset/", genus, "_folds_dataset.csv")
+file <- paste0(temp_data, "/folds_dataset/", genus, "_", dataset, "_folds_dataset.csv")
 data <- read.csv2(file)
 #data <- data %>% filter(presence_absence == 1)
 
@@ -56,7 +57,7 @@ summary(data$ln_N_km2)
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
-colnames(data) <- c("Vessel", "code", "Genus", "lat", "lon", "season", "depth", 
+colnames(data) <- c("code", "Vessel", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
@@ -64,7 +65,7 @@ colnames(data) <- c("Vessel", "code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
                     "bottom_eke", "SD_bottomT", "SD_o2",
-                    "ln_slope", "ln_fishingEffort", "RN", "id", "fold", "ln_N_km2")
+                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", "ln_N_km2")
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -113,7 +114,7 @@ names(data)
 #           "SD_bottomT", "SD_o2", "bottom_temp", 
 #           "bottom_so", "bottom_oxygen", "RN")
 
-vars  <- c("depth", "slope", "ln_fishingEffort", #"bottom_eke", "bottom_vo", "bottom_uo", "SD_bottomT",
+vars  <- c("depth", "slope", "ln_fishingEffort",
            "bottom_temp", "bottom_so",  "RN", "substrate") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
@@ -292,7 +293,7 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 1 #5
+select_model_id <- 25 #5
 
 # Scyliorhinus:
 # LN_gaussian - all: 33
@@ -308,11 +309,10 @@ select_model_id <- 1 #5
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", #"bottom_eke", "bottom_vo", "bottom_uo", "SD_bottomT",
+vars  <- c("depth", "slope", "ln_fishingEffort",
            "bottom_temp", "bottom_so",  "RN",  "substrate") 
 
-#"SD_bottomT", "SD_o2", "oxygen_sat_percent","bottom_oxygen",
-
+#"SD_bottomT", "SD_o2", "oxygen_sat_percent",
 #"bottom_nh4","bottom_oxygen","bottom_eke","bottom_ph", "season", "substrate", 
 # #"distMounts",  "distCanyons", "distFans","bottom_po4", "bottom_nppv", "distMounts",
 
@@ -390,8 +390,8 @@ dev.off()
 
 # 5.3. Make response curve plot
 # Plot response curves
-pngfile <- paste0(outdir, "/", genus, "_", mod_code, "_response", type, "_", family, ".png")
-png(pngfile, width=1000, height=2000, res=200)
+pngfile <- paste0(outdir, "/", genus, "_", mod_code, "PA_ALL_response", type, "_", family, ".png")
+png(pngfile, width=2000, height=2000, res=300)
 names(mod_full$gbm.call)[1] <- "dataframe"
 ggBRT::ggPD(mod_full, n.plots =13, smooth = F, rug = F, ncol=2, col.line = "skyblue3")
 dev.off()
@@ -493,3 +493,107 @@ foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "str
 ## stop clusters
 stopCluster(cl)
 
+
+# 8. R2 and RMSE calculation----------------------------------------------------
+#Load test data
+file <- paste0(temp_data, "/train_test/", genus, "_training_testing/", genus, "_test_dataset.csv")
+test_data <- read.csv2(file)
+summary(test_data)
+
+#Chose response variable distribution: 
+hist(test_data$N_km2)
+shapiro.test(test_data$N_km2)
+
+#transform response variable:
+test_data$ln_N_km2 <- log1p(test_data$N_km2)
+hist(test_data$ln_N_km2)
+shapiro.test(test_data$ln_N_km2)
+summary(test_data$ln_N_km2)
+#data$e_N_km2 <- exp(data$ln_N_km2) - 1
+
+# Change the name of some variables as you want them to appear in the figure for the paper:
+names(test_data)
+colnames(test_data) <- c("code", "Vessel", "Genus", "lat", "lon", "season", "depth", 
+                         "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
+                         "date_time", "bathy", "substrate", "slope", "roughness", 
+                         "fishingEffort", "distCanyons", "distMounts", "distFans", 
+                         "bottom_temp","bottom_oxygen", 
+                         "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
+                         "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
+                         "bottom_eke", "SD_bottomT", "SD_o2",
+                         "ln_slope", "ln_fishingEffort", "RN", "id", "ln_N_km2")
+
+
+summary(test_data)
+str(test_data)
+
+test_predictions <- predict(mod_full, newdata = test_data, n.trees = mod_full$n.trees)
+
+# 8.1. R-squared----------------------------------------------------------------
+library(caret)
+r_squared <- R2(test_predictions, test_data$ln_N_km2)
+print(paste("R-squared: ", r_squared)) # Scyliorhinus, ALL 31 = 0.77 # Raja ALL 30 = 0.65
+
+# 8.2. Calculate RMSE-----------------------------------------------------------
+rmse <- sqrt(mean((test_data$ln_N_km2 - test_predictions)^2))
+print(rmse) #Raja ALL 30 = 0.2814855; # Scyliorhinus, ALL 31 = 1.13661
+
+
+
+
+
+# 9. Check Spatial autocorrelation----------------------------------------------
+# To calculate Moran's I for spatial autocorrelation after fitting a model like 
+# the gradient-boosting model (gbm) you've described, follow these steps:
+# Predicted values from the model
+predictions <- predict(mod_full, newdata = data, n.trees = mod_full$n.trees)
+
+# Residuals (observed minus predicted)
+residuals <- data$presence_absence - predictions
+
+# Assuming 'data' contains longitude and latitude columns
+coords <- cbind(data$lon, data$lat)
+duplicated(data$lon)
+# Load the necessary package
+library(spdep)
+
+# Create a spatial weights matrix based on k-nearest neighbors (for example, k = 4)
+nb <- knn2nb(knearneigh(coords, k = 4))
+weights_matrix <- nb2listw(nb)
+
+# Moran's I for the residuals
+moran_test <- moran.test(residuals, weights_matrix)
+
+# Print results
+print(moran_test)
+# Compute the distance matrix
+distance_matrix <- as.matrix(dist(coords))
+
+# Convert distances to spatial weights (inverse distance)
+inv_distances <- 1 / distance_matrix
+diag(inv_distances) <- 0  # Set diagonal to 0 to avoid self-correlations
+
+# Compute Moran's I for residuals
+library(ape)
+moran_test <- Moran.I(residuals, inv_distances)
+print(moran_test)
+
+# Load necessary libraries
+library(gstat)
+library(sp)
+
+# Create spatial object from data (ensure 'data' has lat/lon as coordinates)
+coordinates(data) <- ~lon+lat
+
+# Create variogram of residuals
+vario <- variogram(residuals ~ 1, data)
+
+# Plot the variogram
+p <- plot(vario)
+# export plot
+outdir_semi <- paste0(outdir, "/semivariograma", type, "_", family)
+if (!dir.exists(outdir_semi)) dir.create(outdir_semi, recursive = TRUE)
+pngfile <- paste0(outdir, "/", genus, "_semivariograma.png")
+png(pngfile, width=1500, height=1500, res=300)
+print(p)
+dev.off()

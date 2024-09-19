@@ -58,7 +58,7 @@ summary(data$ln_N_km2)
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
-colnames(data) <- c("Vessel", "code", "Genus", "lat", "lon", "season", "depth", 
+colnames(data) <- c("code", "Vessel", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
@@ -66,7 +66,7 @@ colnames(data) <- c("Vessel", "code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
                     "bottom_eke", "SD_bottomT", "SD_o2",
-                    "ln_slope", "ln_fishingEffort", "RN", "id", "fold", "ln_N_km2")
+                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", "ln_N_km2")
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -111,11 +111,7 @@ str(data)
 names(data)
 
 # List the name of the predictor variables
-#vars  <- c("depth",  "ln_slope", "ln_fishingEffort", "substrate", 
-#           "SD_bottomT", "SD_o2", "bottom_temp", 
-#           "bottom_so", "bottom_oxygen", "RN")
-
-vars  <- c("depth", "slope", "ln_fishingEffort", #"bottom_eke", "bottom_vo", "bottom_uo", "SD_bottomT",
+vars  <- c("depth", "slope", "ln_fishingEffort",
            "bottom_temp", "bottom_so",  "RN", "substrate") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",

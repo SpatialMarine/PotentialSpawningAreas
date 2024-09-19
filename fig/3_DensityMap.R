@@ -11,10 +11,10 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 # 1. Set data repository and load rasters---------------------------------------
-file <- paste0(temp_data, "/folds_dataset/", genus, "_folds_dataset.csv")
+file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
 data <- read.csv2(file)
 
 #transform response variable:
@@ -55,7 +55,7 @@ print(mask)
 #
 ##Select the bathymetrical lines that you want to plot:
 #Bathy_cont1 <- Bathy_cont %>%
-#  filter(DEPTH %in% c(-750)) #-100, -200, 
+#  filter(DEPTH %in% c(-100, -200, -500)) # 
 #unique(Bathy_cont1$DEPTH)
 ## Set the CRS for the raster
 #st_crs(Bathy_cont1) <- st_crs(mask)
@@ -126,7 +126,7 @@ p <- ggplot() +
   geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 2, alpha = 0.6) +
   
   # add presence points
-  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#FFE4B2"), #"#8D6E63" for skates, "#FFE4B2" for catsharks
+  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#8D6E63"), #"#8D6E63" for skates, "#FFE4B2" for catsharks
                                size = N_km2), shape = 21, color = "black", alpha = 0.6, stroke = 0.7, width = 0.02, height = 0.02) + 
   
   # Plot GSAs
@@ -168,25 +168,41 @@ ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 library(viridis)
 raster <- raster("input/emodnet/slope/slope.tif")
 raster <- raster("input/gfwr/summarydata/high_resolution/FishingEffort.tif")
-raster <- raster("input/")
-#plot(raster)
-raster <- log1p(raster)
+raster <- raster("input/gebco/Bathy.tif")
+raster <- raster("input/Mean_enviro/2021bottomT_mean.tif")
+
+# plot(raster)
+# raster <- log1p(raster) #Only for fishingEffort
 
 # Convert bathy raster to data frame
 raster_df <- as.data.frame(raster, xy = TRUE)
 head(raster_df)
 
-#Create colour ramp
-#color_palette_bathy <- colorRampPalette(c("lightblue", "white")) 
-#color_palette_raster <- colorRampPalette(rev(c('#e8f5e9','#a5d6a7','#66bb6a','#43a047','#2e7d32','#1b5e20')))(100)
-#cuts_raster <- cut(raster_df$FishingEffort, breaks = 100)
-#color_indices_raster <- as.numeric(cuts_raster) * 100 / length(levels(cuts_raster))
-#raster_df$filling_color <- color_palette_bathy[color_indices_raster]
+# For bathymetry:
+# Create a mask if you dont want to plot all the bathymetric range
+# bathy_bb <-  raster_df$Bathy <= 5 #if you want to put a below limit: bathy_df$Bathy >= -800 &
+# Apply the mask
+# raster_df <- raster_df[bathy_bb, ]
+# print(raster_df)
 
+
+#Create colour ramp
+
+#Slope:
+# color_palette_raster <- colorRampPalette(c('#edf8fb','#ccece6','#99d8c9','#66c2a4','#41ae76','#238b45','#005824','#7f3b08'))(100)
+
+#Bathymetry:
+# color_palette_raster <- colorRampPalette(rev(c('#ecf9ff','#BFEFFF','#97C8EB','#4682B4','#264e76','#162e46')))(100)
+
+#bottomTemp:
+#color_palette_raster <- colorRampPalette(c('#6CA6CD','#B0E2FF','#FFFFE0','#FFFACD','#FFE4B5','#FFDAB9','#FF7F50','#FF6347','#FF4500','#8B3626'))(100)
 
 # Create a ggplot object
 p <- ggplot() +
-  geom_tile(data = raster_df, aes(x = x, y = y, fill = layer)) +  # Use the 'layer' for fill
+  geom_tile(data = raster_df, aes(x = x, y = y, fill = Bathy)) +  #X2021bottomT_mean, filling_color, Bathy, slope, layer; Use the 'layer' name for fill
+  
+  # depth contour
+  geom_sf(data = Bathy_cont1,  lwd = 0.05) +
   
   # land mask (if you have it, otherwise remove this line)
   geom_sf(data = mask) +
@@ -195,24 +211,27 @@ p <- ggplot() +
   coord_sf(xlim = c(-1.5, 4.5), ylim = c(37, 42.2), expand = TRUE) +
   
   # Add scale bar
-  annotation_scale(location = "bl", width_hint = 0.2) +
+  #annotation_scale(location = "bl", width_hint = 0.2) +
   
   # Apply viridis color scale for fill
-  scale_fill_viridis(name = "Values", option = "D", na.value = "transparent") +  # Viridis palette
+  #scale_fill_viridis(name = "Values", option = "D", na.value = "transparent") +  # Viridis palette
+  scale_fill_gradientn(name = "Bathymetry", colors = color_palette_raster, na.value = "transparent") +
   
   # theme
   theme_bw() +
+  # Directly map colors without scaling
+  #scale_fill_identity()+
   
-  # Customize the plot
+  # Remove grids
   theme(panel.grid = element_blank(),
         legend.position = "right",
         legend.box = "vertical",
-        aspect.ratio = 1)
+        aspect.ratio = 1) 
 
 #p
 
 # export plot
-enviro <- "fishingEffort" #slope, fishingEffort, 
+enviro <- "BathyCont" #slope, fishingEffort, 
 outdir <- paste0(output_data, "/fig/Map/enviro")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 p_png <- paste0(outdir, "/", enviro, ".jpeg")

@@ -27,6 +27,7 @@ data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
 data$date_time <- as.POSIXct(data$date_time, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 
 # Change the name of some variables as you want them to appear in the figure for the paper:
+names(data)
 colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
@@ -39,12 +40,11 @@ colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth",
 summary(data)
 
 # Select specific columns from the data dataset in which you want to assess correlation
-vars  <- c("depth", "roughness",  "SD_bottomT", "SD_o2", "bottom_oxygen",
-           "bottom_temp", "bottom_no3", "bottom_po4", "bottom_so", "bottom_nppv",
-           "ln_slope", "ln_fishingEffort", "distMounts", "bottom_eke") 
+vars  <- c("depth", "roughness", "bottom_temp", "bottom_no3", 
+           "bottom_po4", "bottom_so", "slope", "ln_fishingEffort", "bottom_eke") 
 
-#"slope", "fishingEffort", "bottom_nppv", "bottom_ph", 
-#"distCanyons", "distFans", "bottom_nh4"  
+#"fishingEffort", "bottom_nppv", "bottom_ph", "bottom_nppv", "distMounts", 
+#"distCanyons", "distFans", "bottom_nh4""SD_bottomT", "SD_o2", "bottom_oxygen",
 
 # calculate correlations using Pearson
 correlations <- cor(na.omit(dplyr::select(data, all_of(vars))), method="pearson")
@@ -80,13 +80,7 @@ dev.off()
 # VIF may be also only for linear relationships and Spearman for non-linear too, but we are not sure, should look for more info. But basically jut use Spearman.
 
 #Make a selection eliminating those that are harder to explain or make less sense:
-vars  <- c("depth", "SD_bottomT", "SD_o2", "bottom_oxygen", "bottom_nppv",
-           "bottom_temp",  "bottom_so", "ln_slope", "ln_fishingEffort", 
-           "distMounts", "bottom_eke") 
-
-#Removed:
-# "roughness", "bottom_no3", "bottom_po4",
-
+vars  <- c("depth", "bottom_temp",  "bottom_so", "slope", "ln_fishingEffort", "bottom_eke") 
 
 # calcualate correlations using Spearman and clustering analysis
 pngfile <- paste0(output_dir, "/", genus, "_eda_cluster_final.png")

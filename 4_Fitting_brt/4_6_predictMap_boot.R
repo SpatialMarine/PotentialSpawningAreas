@@ -229,7 +229,7 @@ beep()
 
 
 
-# 2. Merge bottomTemp maps to calculate Standard Deviation ----------------------------------------
+# 2. Merge bottomTemp maps to calculate SD or Mean ----------------------------------------
 
 # Prepare your date list and other necessary variables
 dates <- year_df #spring_df, winter_df, summer_df, autumn_df
@@ -333,7 +333,7 @@ for (i in 1:nrow(dates)) {
   DD <- sprintf("%02d", day(date))
   
   # Construct the file pattern
-  pat <- paste0(format(date, "%Y%m%d"), "_so_3d.nc")
+  pat <- paste0(format(date, "%Y%m%d"), "_bottomT_3d.nc")
   
   # Construct the path to the directory containing nc files
   stack_repo <- paste0("input/cmems_predict_3d/2021/", MM, "/", DD)
@@ -370,7 +370,7 @@ beep()
 
 # Identify which elements in the list are NULL
 null_indices <- which(sapply(stack_list, is.null))
-
+null_indices
 # After parallel processing, create a stack from the list of raster stacks
 pred_stack <- raster::stack(stack_list)
 
@@ -379,8 +379,8 @@ pred_med <- raster::calc(pred_stack, fun = mean)
 #plot(pred_med)
 
 # Define output paths
-tifffile <- paste0("input/cmems_predict_3d/", season, "so_mean.tif")
-pngfile <-  paste0("input/cmems_predict_3d/", season, "so_mean.png")
+tifffile <- paste0("input/cmems_predict_3d/", season, "bottomT_mean.tif")
+pngfile <-  paste0("input/cmems_predict_3d/", season, "bottomT_mean.png")
   
 # Save the median raster as TIFF
 writeRaster(pred_med, filename = tifffile, format = "GTiff", overwrite = TRUE)
