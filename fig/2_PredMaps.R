@@ -11,7 +11,7 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
@@ -94,7 +94,7 @@ st_crs(GSA_filtered) <- st_crs(mask)
 # 2. Crop habitat to bathy 800 m---------------------------------------------------
 # Filter the values between -50 and -600 and set values outside the range to NA
 bathy_filtered <- calc(bathy, function(x) {
-  x[x > -20 | x < -600] <- NA  # Set values outside the range to NA
+  x[x > -20 | x < -690] <- NA  # Set values outside the range to NA
   return(x)
 })
 
@@ -142,6 +142,9 @@ habitat_clipped_df <- as.data.frame(habitat_clipped_sf) %>%
 habitat_clipped_df <- habitat_clipped_df %>%
   filter(!is.na(habitat))
 
+# Revert the log1p() of the response variable
+habitat_clipped_df$habitat <- expm1(habitat_clipped_df$habitat)
+
 # Verify the result
 summary(habitat_clipped_df)
 
@@ -168,7 +171,7 @@ p <- ggplot() +
   geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
   
   # Plot bathymetric contours
-  geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
+  #geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
   
   # Set spatial bounds (adjust these to fit your data)
   coord_sf(xlim = c(-1, 5.8), ylim = c(36.5, 42.2), expand = TRUE) +
@@ -193,7 +196,7 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_habitat_Map_vars.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_EXP_habitat_Map_vars.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 
@@ -217,7 +220,7 @@ print(error)
 # 7. Crop error to bathy 800 m------------------------------------------------
 # Filter the values between -50 and -600 and set values outside the range to NA
 bathy_filtered <- calc(bathy, function(x) {
-  x[x > -20 | x < -600] <- NA  # Set values outside the range to NA
+  x[x > -20 | x < -690] <- NA  # Set values outside the range to NA
   return(x)
 })
 
@@ -263,6 +266,9 @@ error_clipped_df <- as.data.frame(error_clipped_sf) %>%
 # Check for any remaining NAs and clean up the data
 error_clipped_df <- error_clipped_df %>%
   filter(!is.na(error))
+
+# Revert the log1p() of the response variable
+error_clipped_df$error <- expm1(error_clipped_df$error)
 
 # Verify the result
 summary(error_clipped_df)
@@ -317,7 +323,7 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_CIR_Map_scale_vars.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_EXP_CIR_Map_scale_vars.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 

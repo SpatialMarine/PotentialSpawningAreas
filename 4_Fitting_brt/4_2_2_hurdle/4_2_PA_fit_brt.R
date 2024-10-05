@@ -19,10 +19,10 @@ library(fmsb)
 library(dplyr)
 
 genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+family <- "bernuilli_Final" #bernuilli #LN_laplace_sinO2
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-dataset <- "ALL" #ALL, train
+dataset <- "train" #ALL, train
 
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_", dataset, "_folds_dataset.csv")
@@ -57,7 +57,7 @@ summary(data$ln_N_km2)
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
-colnames(data) <- c("code", "Vessel", "Genus", "lat", "lon", "season", "depth", 
+colnames(data) <- c("Haul_N", "code", "Vessel", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
@@ -65,7 +65,7 @@ colnames(data) <- c("code", "Vessel", "Genus", "lat", "lon", "season", "depth",
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
                     "bottom_eke", "SD_bottomT", "SD_o2",
-                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", "ln_N_km2")
+                    "ln_slope", "ln_fishingEffort",  "RN", "id", "fold", "ln_N_km2")
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -544,49 +544,18 @@ print(rmse) #Raja ALL 30 = 0.2814855; # Scyliorhinus, ALL 31 = 1.13661
 
 # 9. Check Spatial autocorrelation----------------------------------------------
 # To calculate Moran's I for spatial autocorrelation after fitting a model like 
-# the gradient-boosting model (gbm) you've described, follow these steps:
-# Predicted values from the model
-predictions <- predict(mod_full, newdata = data, n.trees = mod_full$n.trees)
+# To calculate Moran's I for spatial autocorrelation after fitting a model 
+library(DHARMa)
+resid <- resid(mod_full)
+testSpatialAutocorrelation(resid, x = data$lon, y = data$lon, plot = FALSE) 
 
-# Residuals (observed minus predicted)
-residuals <- data$presence_absence - predictions
-
-# Assuming 'data' contains longitude and latitude columns
-coords <- cbind(data$lon, data$lat)
-duplicated(data$lon)
-# Load the necessary package
-library(spdep)
-
-# Create a spatial weights matrix based on k-nearest neighbors (for example, k = 4)
-nb <- knn2nb(knearneigh(coords, k = 4))
-weights_matrix <- nb2listw(nb)
-
-# Moran's I for the residuals
-moran_test <- moran.test(residuals, weights_matrix)
-
-# Print results
-print(moran_test)
-# Compute the distance matrix
-distance_matrix <- as.matrix(dist(coords))
-
-# Convert distances to spatial weights (inverse distance)
-inv_distances <- 1 / distance_matrix
-diag(inv_distances) <- 0  # Set diagonal to 0 to avoid self-correlations
-
-# Compute Moran's I for residuals
-library(ape)
-moran_test <- Moran.I(residuals, inv_distances)
-print(moran_test)
-
-# Load necessary libraries
+# Create variogram of residuals
 library(gstat)
 library(sp)
 
 # Create spatial object from data (ensure 'data' has lat/lon as coordinates)
 coordinates(data) <- ~lon+lat
-
-# Create variogram of residuals
-vario <- variogram(residuals ~ 1, data)
+vario <- variogram(resid ~ 1, data)
 
 # Plot the variogram
 p <- plot(vario)

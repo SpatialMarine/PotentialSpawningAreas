@@ -80,15 +80,15 @@ colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_temp","bottom_oxygen", 
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
-                    "bottom_eke", "SD_bottomT", "SD_o2",
-                    "ln_slope", "ln_fishingEffort", "Vessel", "Haul_N", "RN", "id", "fold", "ln_N_km2")
-
+                    "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
+                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", "ln_N_km2")
 
 #Set categorical predictors as categories:
 data <- data %>% 
   mutate(season = factor(season, c(1:4)),
          substrate = factor(substrate),
-         fold = factor(data$fold)) #Haul_N = factor(data$Haul_N),
+         fold = factor(data$fold),
+         BioSubs = factor(bioSubsFinal)) #Haul_N = factor(data$Haul_N),
 
 
 # Calculate oxygen saturation percentage:
@@ -99,7 +99,6 @@ data <- data %>%
 # saturation_concentration <- gas_satconc(S = data$bottom_so, 
 #                                         t = data$bottom_temp, 
 #                                         species = "O2")
-
 # Calculate the percentage of oxygen saturation
 # data$oxygen_sat_percent <- (data$bottom_oxygen / saturation_concentration) * 100
 
@@ -110,7 +109,7 @@ names(data)
 
 
 # List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", 
+vars  <- c("depth", "slope", "ln_fishingEffort", "BioSubs",
            "substrate", "bottom_eke", "bottom_so",  "RN") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
@@ -138,8 +137,6 @@ cores #if you use all of them you, your computer may crash (consumes all the CPU
 cores <- 8  
 cl <- makeCluster(cores)
 registerDoParallel(cl)
-
-
 
 
 
@@ -289,7 +286,7 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 27 #scyliorhinus 31 # raja 30
+select_model_id <- 11 #scyliorhinus 31 # raja 30
 
 # Scyliorhinus:
 # LN_gaussian - all: 33
@@ -305,9 +302,9 @@ select_model_id <- 27 #scyliorhinus 31 # raja 30
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", "bottom_eke", 
-           "bottom_oxygen", "SD_o2", "substrate","SD_bottomT",
-            "bottom_temp", "bottom_so",  "RN") 
+vars  <- c("depth", "slope", "ln_fishingEffort", "BioSubs",
+           "substrate", "bottom_eke", "bottom_so",  "RN") 
+
 
 tc <- mod_out$tc[select_model_id]
 lr <- mod_out$lr[select_model_id]

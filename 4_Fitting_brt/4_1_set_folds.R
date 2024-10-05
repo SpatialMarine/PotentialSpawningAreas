@@ -37,7 +37,7 @@ head(data)
 # Set variables as their types:
 # Set categorical predictors as categories:
 data <- data %>% 
-  mutate(Vessel = factor(data$Vessel),
+  mutate(#Vessel = factor(data$Vessel),
          Haul_N = factor(data$Haul_N),
          RN = factor(data$RN))
 str(data)
@@ -58,8 +58,10 @@ n.folds <- 5
 # Set the seed for reproducibility
 set.seed(123)
 data <- data %>% sample_frac(1) 
+
 #create folds
 f <- fold(data = data, method = "n_dist", k = n.folds) 
+#f <- fold(data = data, id_col = "Vessel", method = "n_dist", k = n.folds) 
 
 data <- f %>%
   dplyr::rename(fold = .folds) %>%

@@ -9,7 +9,7 @@ library(corrplot)
 library(Hmisc)
 library(dplyr)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 #Load data
 file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
@@ -35,7 +35,7 @@ colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_temp", "bottom_oxygen","bottom_nppv", "bottom_ph", 
                     "bottom_nh4", "bottom_no3", "bottom_po4", "bottom_so", 
                     "bottom_uo", "bottom_vo", "bottom_eke", "SD_bottomT", "SD_o2",
-                    "ln_slope", "ln_fishingEffort")
+                    "SubAll", "bioSubsFinal", "ln_slope", "ln_fishingEffort")
 
 summary(data)
 
