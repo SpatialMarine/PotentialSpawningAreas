@@ -10,6 +10,8 @@ library(sf)
 library(ggplot2)
 library(ggspatial)
 library(raster)
+library(sp)
+library(beepr)
 
 genus <- "Raja" #"Raja" #"Scyliorhinus"
 family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
@@ -118,8 +120,6 @@ colnames(habitat_df) <- c("x", "y", "habitat")
 summary(habitat_df)
 
 
-
-
 # 3. Crop habitat to GSA06 area ------------------------------------------------
 # Convert habitat_df to an sf object (using original x, y coordinates)
 habitat_sf <- st_as_sf(habitat_df, coords = c("x", "y"), crs = st_crs(mask), remove = FALSE)
@@ -148,6 +148,15 @@ habitat_clipped_df$habitat <- expm1(habitat_clipped_df$habitat)
 # Verify the result
 summary(habitat_clipped_df)
 
+# Step 1: Calculate the 75th percentile of the habitat values
+percentile_90 <- quantile(habitat_clipped_df$habitat, probs = 0.9, na.rm = TRUE)
+percentile_50 <- quantile(habitat_clipped_df$habitat, probs = 0.5, na.rm = TRUE)
+
+# or load them if already created:
+PSA_Raja <- st_read("output/shapefiles/Raja_outer_boundary.shp")
+PSA_Sca <- st_read("output/shapefiles/Scyliorhinus_outer_boundary.shp")
+plot(PSA_Sca)
+plot(PSA_Raja)
 
 
 # 4. Crop bathymetric contours to GSA06 ------------------------------------------
@@ -169,6 +178,17 @@ p <- ggplot() +
   
   # Plot GSAs
   geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
+  
+  # Add a white contour line for areas above the 75th percentile of habitat
+  #geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
+  #             breaks = percentile_90, color = "white", size = 0.4) +
+  # Add a grey contour line for areas above the 90th percentile of habitat
+  #geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
+  #             breaks = percentile_50, color = "grey", size = 0.4) +
+  
+  # Plot PSAs with bold color and solid lines
+  geom_sf(data = PSA_Raja, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
+  #geom_sf(data = PSA_Sca, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
   
   # Plot bathymetric contours
   #geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
@@ -196,11 +216,235 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_EXP_habitat_Map_vars.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "FINAL_SCALE_EXP_habitat_Map_vars.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 
+# 4. extract contour as a shapefile:
+# Adjustments to avoid not closing polygons (case specific)
+# Convert habitat data to a raster object
+#habitat_raster <- rasterFromXYZ(habitat_clipped_df[, c("x", "y", "habitat")])
+#
+#Save it:
+#output_path <- paste0("output/shapefiles/", genus, "/", genus, "_habitat_raster.tif")  # Windows with double backslashes
+#writeRaster(habitat_raster, filename = output_path, format = "GTiff", overwrite = TRUE)
 
+## Set the CRS to WGS 84 (EPSG:4326)
+#crs(habitat_raster) <- CRS("+proj=longlat +datum=WGS84 +no_defs")
+#
+## Define the bounding box coordinates (in the format of xmin, ymin, xmax, ymax)
+#bbox_coords <- c(0.827, 40.606, 0.891, 40.687)
+#
+## Create a polygon from the bounding box coordinates
+#bounding_box <- st_polygon(list(rbind(
+#  c(bbox_coords[1], bbox_coords[2]),  # Bottom left
+#  c(bbox_coords[3], bbox_coords[2]),  # Bottom right
+#  c(bbox_coords[3], bbox_coords[4]),  # Top right
+#  c(bbox_coords[1], bbox_coords[4]),  # Top left
+#  c(bbox_coords[1], bbox_coords[2])   # Closing the box
+#)))
+#
+## Convert to sf object
+#bbox_sf <- st_sfc(bounding_box, crs = 4326)  # Set CRS to WGS 84
+#
+## Transform the bounding box to match the raster's CRS
+## First, get the raster's CRS
+#raster_crs <- crs(habitat_raster)
+#
+## Transform the bounding box to the raster's CRS
+#bbox_transformed <- st_transform(bbox_sf, crs = raster_crs)
+#
+## Create a mask using the raster and the transformed bounding box
+## We need to create a raster mask
+#mask_raster <- mask(habitat_raster, as(raster::extent(st_bbox(bbox_transformed)), "SpatialPolygons"))
+#
+## Optionally, set masked areas to NA
+#masked_habitat_raster <- habitat_raster
+#masked_habitat_raster[mask_raster[] != 0] <- NA  # Set the areas within the mask to NA
+#
+#plot(masked_habitat_raster)
+
+
+# 4.1. Potential Spawning Areas:
+# convert habitat to raster (potential pre-adjustements needed)
+#habitat_raster <- rasterFromXYZ(habitat_clipped_df[, c("x", "y", "habitat")])
+
+# Extract the contour line for the 90th percentile using contourLines()
+#contour_90 <- rasterToContour(habitat_raster, levels = percentile_90)
+contour_90 <- rasterToContour(masked_habitat_raster, levels = percentile_90)
+
+# Convert the contour lines to spatial polygons
+contour_sf <- st_as_sf(contour_90)
+plot(contour_sf)
+
+# Save the contour polygon as a shapefile
+# Define the output shapefile path
+output_shapefile <- paste0("output/shapefiles/", genus, "_contour_90_percentile.shp")
+if (!dir.exists(output_shapefile)) dir.create(output_shapefile, recursive = TRUE)
+st_write(contour_sf, output_shapefile, append=FALSE)
+
+# 4.2. Raster of the potential spawning area:
+# Calculate the 90th percentile of the habitat values
+upper_90th_percentile <- quantile(habitat_clipped_df$habitat, 0.9, na.rm = TRUE)
+# Filter the DataFrame to keep values above the 90th percentile
+filtered_data <- habitat_clipped_df %>% 
+  filter(habitat > upper_90th_percentile)
+# Get the extent of the filtered data
+ext <- extent(min(filtered_data$x), max(filtered_data$x), min(filtered_data$y), max(filtered_data$y))
+# Create a raster with the specified resolution and the extent of the filtered data
+raster_output <- raster(ext, res = 0.042)  # Adjust the resolution as needed
+
+# Create a new column for values in filtered_data corresponding to raster cells
+# Assign values to the raster at corresponding coordinates
+values(raster_output) <- NA  # Initialize raster values to NA
+
+# Assign habitat values to raster cells
+coordinates(filtered_data) <- ~x + y
+raster_output <- rasterize(filtered_data, raster_output, field = "habitat", fun = mean)  # Using mean or another aggregation function
+plot(raster_output)
+
+# Make a mask:
+raster_output[!is.na(raster_output)] <- 1
+plot(raster_output)
+
+#Save it:
+output_path <- paste0("output/shapefiles/", genus, "MASK_habitat_raster.tif")  # Windows with double backslashes
+writeRaster(raster_output, filename = output_path, format = "GTiff", overwrite = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 5. Include it in a zoom out map ------------------------------------------------------
+pacman::p_load(dplyr, data.table, rnaturalearth, rnaturalearthdata, 
+               ggplot2, raster, terra, tidyr, stringr, gridExtra, 
+               plotly, sf, ggshadow, ggforce, giscoR, cowplot, install = FALSE)
+
+# Custom global ortohraphic proyection from Western-Mediterranean
+ortho_crs <-'+proj=ortho +lat_0=20 +lon_0=0.5 +x_0=0 +y_0=0 +R=6371000 +units=m +no_defs +type=crs'
+
+# world coastlines
+world_poly <- gisco_get_coastallines(year = "2016", epsg = "4326", resolution = "10")
+
+# global graticule
+grid <- st_graticule()
+
+# ocean mask 
+ocean <- st_point(x = c(0,0)) |>
+  st_buffer(dist = 6371000) |> # Planet earth radius (m)
+  st_sfc(crs = ortho_crs)
+# plot(ocean)
+
+# Select visible area and project
+world <- world_poly |>
+  st_intersection(st_transform(ocean, 4326)) |>
+  st_transform(crs = ortho_crs) # 
+# plot(world)
+
+# delete grid trough continents to create a clean grid
+grid_crp <- st_difference(grid, st_union(world_poly))
+
+# select visible area
+grid_crp <- st_intersection(grid_crp, st_transform(ocean, 4326)) |>
+  st_transform(crs = ortho_crs)
+# plot(grid_crp)
+
+# cover globe limit into df - datframe
+ocean_df <- st_cast(ocean, "LINESTRING") |> st_coordinates() |> as.data.frame()
+
+# build shadow 
+ggplot() + 
+  geom_glowpath(data = ocean_df, 
+                aes(X, Y, group = "L1"),
+                shadowcolor='grey90',
+                colour = "white",
+                alpha = .01,
+                shadowalpha=0.05,
+                shadowsize = 1.5) +
+  coord_sf() +
+  theme_void()
+
+# add more shadows
+g <- ggplot() +
+  geom_glowpath(data = ocean_df, 
+                aes(X, Y, group = "L1"),
+                shadowcolor='grey90',
+                colour = "white",
+                alpha = .01,
+                shadowalpha=0.06,
+                shadowsize = 1.5) +
+  geom_glowpath(data = ocean_df, 
+                aes(X, Y, group = "L1"),
+                shadowcolor='grey90',
+                colour = "white",
+                alpha = .01,
+                shadowalpha=0.02,
+                shadowsize = 1) +
+  geom_glowpath(data = ocean_df, 
+                aes(X, Y, group = "L1"),
+                shadowcolor='grey90',
+                colour = "white",
+                alpha = .01,
+                shadowalpha=0.01,
+                shadowsize = .5)
+
+# Convert habitat_clipped_df to an sf object
+habitat_clipped_sf <- st_as_sf(habitat_clipped_df, coords = c("x", "y"), crs = 4326)  # Assuming it's in WGS84 (EPSG:4326)
+
+# Transform to the orthographic CRS (ortho_crs)
+habitat_clipped_transformed <- st_transform(habitat_clipped_sf, crs = ortho_crs)
+
+# Get the bounding box of the habitat data
+bbox <- st_bbox(habitat_clipped_transformed)
+
+# Step 3: Modify the original 'g2' plot to include this habitat data
+g2 <- g + 
+  # Add ocean, world, and grid layers (same as before)
+  geom_sf(data = ocean, fill = "white", color = NA) +
+  geom_sf(data = grid_crp, colour = "grey85", linewidth = .15) +
+  geom_sf(data = world, colour = "grey35", linewidth = .2) +
+  
+  # Add the habitat raster as a tile layer
+  geom_raster(data = habitat_clipped_df, aes(x = x, y = y, fill = habitat)) +
+  
+  # Add the appropriate color scale for habitat
+  scale_fill_viridis_c(option = "viridis", name = "density (N/km2)") +
+  
+  # Add other layers (mask, GSA, contours, etc.)
+  geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
+  geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
+               breaks = percentile_75, color = "white", size = 0.4) +
+  
+  #Set the zoom level using the bounding box limits
+coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]), 
+         ylim = c(bbox["ymin"], bbox["ymax"]),
+         expand = TRUE) +
+  
+  # Final theme settings
+  theme_void()
+
+# Print the final map with the habitat data
+print(g2)
+
+
+# export plot
+outdir <- paste0(output_data, "/fig/Map")
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+p_png <- paste0(outdir, "/_global_Map.png")
+ggsave(p_png, g2, width=17, height=17, units="cm", dpi=300)
 
 
 
@@ -323,7 +567,7 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "_EXP_CIR_Map_scale_vars.png")
+p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "CoarseScale_EXP_CIR_Map_scale_vars.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 

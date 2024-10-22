@@ -11,7 +11,7 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
 
 # 1. Set data repository and load rasters---------------------------------------
 file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
@@ -126,7 +126,7 @@ p <- ggplot() +
   geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 2, alpha = 0.6) +
   
   # add presence points
-  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#8D6E63"), #"#8D6E63" for skates, "#FFE4B2" for catsharks
+  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "orange"), #"steelblue" for skates, "orange" for catsharks
                                size = N_km2), shape = 21, color = "black", alpha = 0.6, stroke = 0.7, width = 0.02, height = 0.02) + 
   
   # Plot GSAs
@@ -154,7 +154,7 @@ p <- ggplot() +
 # export plot
 outdir <- paste0(output_data, "/fig/Map/density")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", genus, "BIG_density_Map.png")
+p_png <- paste0(outdir, "/", genus, "COL_BIG_density_Map.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 # export plot
