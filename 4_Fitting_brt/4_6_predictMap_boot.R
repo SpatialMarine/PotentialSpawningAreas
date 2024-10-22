@@ -18,7 +18,7 @@ library(foreach)
 
 bootstrap <- T
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
@@ -74,7 +74,7 @@ boots_files <- list.files(outdir_bootstrap, full.names = T)
 # batch import of bootstrap models
 brt_models <- lapply(boots_files, readRDS)
 print(brt_models[1])
-brt_models <- brt_models[1:10]
+brt_models <- brt_models[1:50]
 
 # Prepare cluster
 # cores <-detectCores() #if you use all of them you, your computer may crash (consumes all the CPU).
@@ -83,8 +83,9 @@ brt_models <- brt_models[1:10]
 # registerDoParallel(cl)
 
 # Create dates
-date_start <- as.Date("2021-11-13") #2021-11-13" Scy
-date_end <- as.Date("2021-12-12")
+date_start <- as.Date("2021-01-01") 
+date_end <- as.Date("2021-12-31")
+date_end <- as.Date("2021-01-02")
 #dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 dates <- seq.Date(date_start, date_end, by="2 days")  # define sequence every 2 days
 

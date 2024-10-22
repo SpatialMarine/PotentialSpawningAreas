@@ -91,3 +91,4 @@ plot(varclus(v, similarity=c("spearman"),data=data),cex=.8) # plot cluster
 abline(a=0.30,0,col="grey70",lty=1,lwd=2)
 par(op)
 dev.off()
+

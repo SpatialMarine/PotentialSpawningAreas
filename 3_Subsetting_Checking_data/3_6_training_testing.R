@@ -10,7 +10,9 @@ library(dplyr)
 
 # It may not be interesting creating a training and testing if data is limited.
 # Especially when you will check the model using cross-validation and bootstrap. 
-# You can create and then decide whether you will use it or not.
+# You can create and then decide whether you will use it or not. 
+
+# IN OUR CASE WE DIDNT USE IT DUE TO DATA CONSTRAINTS.
 
 # 1. Add Vessel data -----------------------------------------------------------
 #Load data

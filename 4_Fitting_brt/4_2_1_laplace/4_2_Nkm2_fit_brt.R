@@ -2,8 +2,8 @@
 
 # Title:
 
-#Analysis objective 1:
-# Assessing the environmental and fishing human presures parameters affecting to 
+# Analysis objective 1:
+# Assessing the environmental and fishing human pressures parameters affecting to 
 # the distribution of elasmobranch egg cases
 
 #-------------------------------------------------------------------------------
@@ -27,7 +27,6 @@ dataset <- "ALL" #ALL, train
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_", dataset, "_folds_dataset.csv")
 data <- read.csv2(file)
-#data <- data %>% filter(presence_absence == 1)
 
 summary(data)
 str(data)
@@ -37,11 +36,6 @@ head(data)
 #Chose response variable distribution: 
 hist(data$N_km2)
 shapiro.test(data$N_km2)
-
-#filter non 0 values:
-#data <- data %>% filter(N_km2 > 0)
-#hist(data$N_km2)
-#shapiro.test(data$N_km2)
 
 #transform response variable:
 data$ln_N_km2 <- log1p(data$N_km2)
@@ -91,25 +85,13 @@ data <- data %>%
          BioSubs = factor(bioSubsFinal)) #Haul_N = factor(data$Haul_N),
 
 
-# Calculate oxygen saturation percentage:
-# Calculate pressure from depth (1 bar per 10m depth + 1 atmospheric pressure)
-# library(marelac)
-# Calculate the oxygen saturation concentration using the bottom temperature and salinity
-# `gas = "O2"` specifies that we are calculating oxygen saturation
-# saturation_concentration <- gas_satconc(S = data$bottom_so, 
-#                                         t = data$bottom_temp, 
-#                                         species = "O2")
-# Calculate the percentage of oxygen saturation
-# data$oxygen_sat_percent <- (data$bottom_oxygen / saturation_concentration) * 100
-
-
 summary(data)
 str(data)
 names(data)
 
 
 # List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", "BioSubs",
+vars  <- c("depth", "slope", "ln_fishingEffort", 
            "substrate", "bottom_eke", "bottom_so",  "RN") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
@@ -127,9 +109,7 @@ tree.list <- seq(ini.nt,max.nt,by=step.nt) #list of trees for evaluation
 
 # Define combination of hyper-parameters
 comb <- expand.grid(lr=c(0.001, 0.005, 0.01, 0.05), tc=c(1,3,5), bf=c(0.5, 0.6, 0.7)) #combination
-#comb <- expand.grid(lr=c(0.001, 0.004, 0.02, 0.05), tc=c(1,3,4), bf=c(0.4, 0.5, 0.6)) #combination
-#comb <- expand.grid(lr=c(0.001, 0.01, 0.02, 0.05), tc=c(1,2,3), bf=c(0.5, 0.6, 0.7)) #combination
-#comb <- expand.grid(lr=c(0.001, 0.01, 0.1, 0.0005), tc=c(5,7,10), bf=c(0.5, 0.6, 0.7)) #combination
+
 
 ## Prepare clusters
 cores <-detectCores()
@@ -284,25 +264,13 @@ plot(p)
 #' selection is based on parameters, criteria and checking curves (see appendix 1 for Elith et al. 2008 recommendations)
 #' But as summary:
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
-#' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
+#' 2) Then, if there are two or more very similar: the one with the largest nt, and lowest lr and tc.
 
-select_model_id <- 11 #scyliorhinus 31 # raja 30
-
-# Scyliorhinus:
-# LN_gaussian - all: 33
-# LN_laplace - all: 30 (sin O2, eke, ph, nppv, po4)
-# laplace - all: 25
-# bernoilli - PA: 9
-
-# Raja = 30
-# LN_gaussian - all: 25
-# LN_laplace - all: 31 (sin O2, eke, ph, nppv, po4)
-# laplace - P: 35
-# bernoilli - PA: 25
+select_model_id <- 30 #scyliorhinus 31 # raja 30
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", "BioSubs",
+vars  <- c("depth", "slope", "ln_fishingEffort", 
            "substrate", "bottom_eke", "bottom_so",  "RN") 
 
 
@@ -463,7 +431,7 @@ foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "str
   #library("splitstackshape")
   #library("stringr")
   # sampled half the data (with replacement) to fit the model (Hindell et al. 2020)
-  idata <- stratified(data, c("fold"), 0.9, replace = TRUE)
+  idata <- stratified(data, c("presence_absence"), 0.8, replace = TRUE)
   
   # fit BRT
   mod_boot <- dismo::gbm.fixed(data = idata,              # data.frame with data
@@ -491,6 +459,7 @@ stopCluster(cl)
 
 
 # 8. TSS and RMSE calculation----------------------------------------------------
+# ONLY IF YOU USE A TRAINING AND TESTING DATASET- NOT DONE IN OUR CASE
 #Load test data
 file <- paste0(temp_data, "/train_test/", genus, "_training_testing/", genus, "_test_dataset.csv")
 test_data <- read.csv2(file)
@@ -528,11 +497,11 @@ test_predictions <- predict(mod_full, newdata = test_data, n.trees = mod_full$n.
 # 8.1. R-squared----------------------------------------------------------------
 library(caret)
 r_squared <- R2(test_predictions, test_data$ln_N_km2)
-print(paste("R-squared: ", r_squared)) # Scyliorhinus, ALL 31 = 0.77 # Raja ALL 30 = 0.65
+print(paste("R-squared: ", r_squared)) 
 
 # 8.2. Calculate RMSE-----------------------------------------------------------
 rmse <- sqrt(mean((test_data$ln_N_km2 - test_predictions)^2))
-print(rmse) #Raja ALL 30 = 0.2814855; # Scyliorhinus, ALL 31 = 1.13661
+print(rmse) 
 
 # 8.3. True Skill Statistic (TSS (only for PA) ----------------------------------------------------------------
 # Convert probabilities to binary outcomes (assuming a threshold of 0.5)

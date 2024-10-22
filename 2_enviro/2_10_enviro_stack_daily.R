@@ -28,7 +28,7 @@ if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 # 2. Create oceanmask-----------------------------------------------------------
 # Set raster resolution and extent
-res <- 0.0042
+res <- 0.042
 e <- extent(-4, 8, 34, 45) 
 
 
@@ -84,7 +84,7 @@ slp <- prepareGrid(slope, m, method="bilinear", name="slope")
 fishingEff <- prepareGrid(fishingEffort, m, method="bilinear", name="fishingEffort")
 SD_o2 <- prepareGrid(SD_o2, m, method="bilinear", name="SD_o2")
 SD_bottomT <- prepareGrid(SD_bottomT, m, method="bilinear", name="SD_bottomT")
-substrate_folk5 <- prepareGrid(substrate_folk5, m, method="bilinear", name="substrate")
+substrate_folk5 <- prepareGrid(substrate_folk5, m, method="ngb", name="substrate")
 
 stack_static <- stack(dept, slp, fishingEff, SD_o2, SD_bottomT, substrate_folk5) 
 
@@ -245,7 +245,7 @@ catalog$variable
 variables <- c("bottomT", "o2", "nppv", "so", "po4", "eke", "uo", "vo")
 
 # Set the resolution and extent:
-res <- 0.0042
+res <- 0.042
 e <- extent(-4, 8, 34, 45)  
 
 

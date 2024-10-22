@@ -13,8 +13,7 @@ library(beepr)
 library(ncdf4)
 library(viridis)
 
-# It is interesting to evaluate the effect of variation in enviromental 
-# conditions over time
+# It is interesting to evaluate the effect of variation in environmental conditions over time
 
 # 1. Set data repository--------------------------------------------------------
 # Import landmask

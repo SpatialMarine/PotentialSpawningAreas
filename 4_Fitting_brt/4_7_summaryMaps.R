@@ -17,7 +17,7 @@ library(foreach)
 
 bootstrap <- T
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
@@ -46,7 +46,8 @@ print(mask)
 # Year:
 date_start <- as.Date("2021-01-01")
 date_end <- as.Date("2021-12-31")
-dates <- seq.Date(date_start, date_end, by="day")  # define sequence
+#date_end <- as.Date("2021-01-02")
+dates <- seq.Date(date_start, date_end, by="2 days")  # define sequence
 
 # Convert date sequences to dataframes
 year_df <- data.frame(date = dates)

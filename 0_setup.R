@@ -3,11 +3,9 @@
 #--------------------------------------------------------------------------------
 
 # 1. set computer
-#cpu <- "robe"
 cpu <- "david"  
 
 # Set main data paths
-if(cpu == "robe") main_dir <- "C:/Users/David/SML Dropbox/gitdata/EggCase_Distribution"
 if(cpu == "david") main_dir <- "C:/Users/david/SML Dropbox/gitdata/EggCase_Distribution"
 setwd(main_dir)
 
@@ -28,11 +26,3 @@ username <- paste(readLines(f, warn = FALSE), collapse = "")
 if(cpu == "david") f <- "C:/Users/david/OneDrive/Escritorio/chondrichthyan_habitat/psw.txt"
 password <- paste(readLines(f, warn = FALSE), collapse = "")
 
-if(cpu == "robe") f <- "C:/Users/David/Desktop/chondrichthyan_habitat/user.txt"
-username <- paste(readLines(f, warn = FALSE), collapse = "")
-if(cpu == "robe") f <- "C:/Users/David/Desktop/chondrichthyan_habitat/psw.txt"
-password <- paste(readLines(f, warn = FALSE), collapse = "")
-
-
-# 4. SML directory
-if(cpu == "david") SML  <- "C:/Users/david/SML Dropbox"
