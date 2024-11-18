@@ -14,12 +14,15 @@ library(egg)
 bootstrap <- T
 n_boot <- 100
 
-
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+genus <- "Raja" 
+family <- "LN_gaussian_Final2" 
+type <- "_NKm2" 
 mod_code <- "brt"
-dataset <- "ALL" #ALL, train
+
+#genus <- "Raja" 
+#family <- "LN_gaussian_Final2" 
+#type <- "_NKm2" 
+#mod_code <- "brt"
 
 
 # First species:
@@ -117,14 +120,22 @@ p_skates
 
 # export plot
 outfile <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "_response_boot_c.png")
-ggsave(outfile, p, width=17, height=13, units="cm", dpi=300)
+ggsave(outfile, p_skates, width=17, height=13, units="cm", dpi=300)
 
 
 
 
 
 # Second species:
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" 
+family <- "gaussian_Final2" 
+type <- "_PA" 
+mod_code <- "brt"
+
+#genus <- "Scyliorhinus" 
+#family <- "gaussian_Final2" 
+#type <- "_PA" 
+#mod_code <- "brt"
 
 # 1. Set data repository-------------------------------------------------------
 brtDir <- paste(output_data, mod_code, paste0(genus, type, "_", family), sep="/")

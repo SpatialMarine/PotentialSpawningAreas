@@ -245,7 +245,7 @@ ggsave(p_png, p, width=10, height=10, units="cm", dpi=1800)
 
 
 
-# 4. Make zoom out map ------------------------------------------------------
+# 5. Make zoom out map ------------------------------------------------------
 pacman::p_load(dplyr, data.table, rnaturalearth, rnaturalearthdata, 
                ggplot2, raster, terra, tidyr, stringr, gridExtra, 
                plotly, sf, ggshadow, ggforce, giscoR, install = FALSE)
@@ -344,6 +344,94 @@ outdir <- paste0(output_data, "/fig/Map")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 p_png <- paste0(outdir, "/_global_Map.png")
 ggsave(p_png, g2, width=17, height=17, units="cm", dpi=300)
+
+
+
+# 6. Make study map ------------------------------------------------------------------
+head(data)
+
+dataECEME <- data %>%
+  filter(substr(code, 3, 3) == "_")
+
+#dataICM<- data %>%
+#  filter(substr(code, 3, 3) != "_")
+
+# List of codes to exclude
+excluded_codes <- c(
+  "20200630_64500_ESP000026756_01", "20200630_64500_ESP000026756_01",
+  "20200630_64500_ESP000026756_01", "20200630_64500_ESP000026756_02", 
+  "20200630_64500_ESP000026756_02", "20200630_64500_ESP000026756_02", 
+  "20200630_64500_ESP000026756_03", "20200805_64500_ESP000026756_01", 
+  "20200805_64500_ESP000026756_01", "20200805_64500_ESP000026756_01", 
+  "20200805_64500_ESP000026756_01", "20200805_64500_ESP000026756_02", 
+  "20200805_64500_ESP000026756_02", "20200805_64500_ESP000026756_02", 
+  "20200805_64500_ESP000026756_03", "20200805_64500_ESP000026756_03", 
+  "20200805_64500_ESP000026756_03", "20200805_64500_ESP000026756_03", 
+  "20200805_64500_ESP000026756_03", "20201111_64500_ESP000026756_01", 
+  "20201111_64500_ESP000026756_01", "20201111_64500_ESP000026756_01", 
+  "20201111_64500_ESP000026756_02", "20201111_64500_ESP000026756_02", 
+  "20201111_64500_ESP000026756_03", "20201111_64500_ESP000026756_03", 
+  "20210324_64500_ESP000026756_01", "20210324_64500_ESP000026756_01", 
+  "20210324_64500_ESP000026756_01", "20210324_64500_ESP000026756_01", 
+  "20210324_64500_ESP000026756_01", "20210324_64500_ESP000026756_02", 
+  "20210324_64500_ESP000026756_02", "20210324_64500_ESP000026756_02", 
+  "20210324_64500_ESP000026756_03", "20210324_64500_ESP000026756_03", 
+  "20210527_64500_ESP000026756_01", "20210527_64500_ESP000026756_01", 
+  "20210527_64500_ESP000026756_02", "20210527_64500_ESP000026756_02", 
+  "20210527_64500_ESP000026756_03", "20210527_64500_ESP000026756_03"
+)
+
+# Filter data with both conditions
+dataICM <- data %>%
+  filter(substr(code, 3, 3) != "_" & !(code %in% excluded_codes))
+
+dataPalamos <- data %>%
+  filter(code %in% excluded_codes)
+
+# Create a ggplot object 
+p <- ggplot() +
+  geom_tile(data = bathy_df, aes(x = x, y = y, fill = filling_color)) +
+  
+  # land mask
+  geom_sf(data = mask) +
+  
+  # Add Palamos data
+  geom_point(data = dataPalamos, aes(x = lon, y = lat), fill = "#4cb8cf", shape = 22, color = "black", size = 1.5, alpha = 0.6) + ##f28d7c
+  
+  # Add ECEME data
+  geom_point(data = dataECEME, aes(x = lon, y = lat), fill = "#F9B233", shape = 21, color = "black", size = 1.5, alpha = 0.6) +
+  
+  # add ICM data
+  geom_point(data = dataICM, aes(x = lon, y = lat), fill = "#4cb8cf",  shape = 21, color = "black", size = 1.5, alpha = 0.6) +
+  
+  # Plot GSAs
+  #geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
+  
+  #Set spatial bounds
+  coord_sf(xlim = c(-1.5, 4.5), ylim = c(37, 42.2), expand = TRUE) +
+  
+  # Add scale bar
+  annotation_scale(location = "bl", width_hint = 0.2) +  
+  
+  # theme
+  theme_bw() +
+  # Directly map colors without scaling
+  scale_fill_identity()+
+  scale_size(range = c(1.5, 10)) +
+  
+  # Remove grids
+  theme(panel.grid = element_blank(),
+        legend.position = "right",
+        legend.box = "vertical",
+        aspect.ratio = 1) 
+p
+
+# export plot
+outdir <- paste0(output_data, "/fig/Map/density")
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+p_png <- paste0(outdir, "/SurveyType_ALL.png")
+ggsave(p_png, p, width=10, height=10, units="cm", dpi=300)
+
 
 
 

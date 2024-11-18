@@ -18,11 +18,11 @@ library(egg)
 library(fmsb)
 library(dplyr)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_gaussian_Final" #bernuilli #LN_laplace_sinO2
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "gaussian_Final2" #bernuilli #LN_laplace_sinO2
+type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-dataset <- "ALL" #ALL, train, test
+dataset <- "ALL" #ALL, train
 
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_", dataset, "_folds_dataset.csv")
@@ -58,15 +58,27 @@ summary(data$ln_N_km2)
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
-colnames(data) <- c("code", "Vessel", "Genus", "lat", "lon", "season", "depth", 
+#colnames(data) <- c("Vessel",  "code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
                     "bottom_temp","bottom_oxygen", 
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
-                    "bottom_eke", "SD_bottomT", "SD_o2",
-                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", "ln_N_km2")
+                    "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
+                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", 
+                    "ln_N_km2", "ln_N", "BioSubs", "SA_offset")
+
+colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth", 
+                    "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
+                    "date_time", "bathy", "substrate", "slope", "roughness", 
+                    "fishingEffort", "distCanyons", "distMounts", "distFans", 
+                    "bottom_temp","bottom_oxygen", 
+                    "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
+                    "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
+                    "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
+                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", 
+                    "ln_N_km2") #, "ln_N", "BioSubs", "SA_offset"
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -129,6 +141,8 @@ tree.list <- seq(ini.nt,max.nt,by=step.nt) #list of trees for evaluation
 
 # Define combination of hyper-parameters
 comb <- expand.grid(lr=c(0.001, 0.005, 0.01, 0.05), tc=c(1,3,5), bf=c(0.5, 0.6, 0.7)) #combination
+comb <- expand.grid(lr=c(0.0001, 0.0005, 0.001, 0.005), tc=c(3,4,5), bf=c(0.6, 0.7, 0.8)) #combination
+
 #comb <- expand.grid(lr=c(0.001, 0.004, 0.02, 0.05), tc=c(1,3,4), bf=c(0.4, 0.5, 0.6)) #combination
 #comb <- expand.grid(lr=c(0.001, 0.01, 0.02, 0.05), tc=c(1,2,3), bf=c(0.5, 0.6, 0.7)) #combination
 #comb <- expand.grid(lr=c(0.001, 0.01, 0.1, 0.0005), tc=c(5,7,10), bf=c(0.5, 0.6, 0.7)) #combination
@@ -151,8 +165,15 @@ outdir <- paste0(output_data, "/", mod_code, "/", genus, type, "_", family)
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 set.seed(131)
-names(data)
-str(data)
+#names(data)
+#str(data)
+
+# Add offset if you are using poisson family, i.e., N + offset
+data$SA_offset <- log(data$swept_area_km2)
+summary(data$SA_offset)
+
+hist(data$ln_N_km2)
+shapiro.test(data$ln_N_km2)
 
 all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar% {
   
@@ -163,6 +184,9 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
                     gbm.x = vars,          # predictor variables
                     gbm.y = "ln_N_km2",            # response variable
                     family = "gaussian",  # the nature of error structure
+                    #gbm.y = "N",            # response variable
+                    #family = "poisson",  # the nature of error structure
+                    #offset = data$SA_offset,
                     tree.complexity = comb$tc[i],   # tree complexity
                     learning.rate = comb$lr[i],  # learning rate
                     bag.fraction = comb$bf[i],    # bag fraction
@@ -290,29 +314,15 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 27 #5
+select_model_id <- 11 #5
 
 # Scyliorhinus:
-# LN_gaussian - all: 33
-# LN_laplace - all: 30 (sin O2, eke, ph, nppv, po4)
-# laplace - all: 25
-# bernoilli - PA: 9
+# LN_gaussian - all: 1
+
 
 # Raja = 30
-# LN_gaussian - all: 25
-# LN_laplace - all: 31 (sin O2, eke, ph, nppv, po4)
-# laplace - P: 35
-# bernoilli - PA: 25
+# LN_gaussian - all: 27
 
-
-#List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", #"bottom_eke", "bottom_vo", "bottom_uo", "SD_bottomT",
-           "bottom_temp", "bottom_so",  "RN",  "substrate") 
-
-#"SD_bottomT", "SD_o2", "oxygen_sat_percent","bottom_oxygen",
-
-#"bottom_nh4","bottom_oxygen","bottom_eke","bottom_ph", "season", "substrate", 
-# #"distMounts",  "distCanyons", "distFans","bottom_po4", "bottom_nppv", "distMounts",
 
 tc <- mod_out$tc[select_model_id]
 lr <- mod_out$lr[select_model_id]
@@ -469,7 +479,12 @@ registerDoParallel(cl)
 foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "stringr"), .combine = "c") %dopar% {
   
   # sampled half the data (with replacement) to fit the model (Hindell et al. 2020)
-  idata <- stratified(data, c("presence_absence", "Vessel"), 0.7, replace = TRUE) 
+  #idata <- stratified(data, c("presence_absence", "Vessel"), 0.7, replace = TRUE) 
+  idata <- data %>%
+    #group_by(Vessel) %>%
+    sample_n(size = n(), replace = TRUE) %>%
+    #ungroup() %>%
+    as.data.frame()  # Convert grouped data back to a data frame if needed
   
   # fit BRT
   mod_boot <- dismo::gbm.fixed(data = idata,             # data.frame with data
@@ -491,3 +506,29 @@ foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "str
 ## stop clusters
 stopCluster(cl)
 
+# 9. Check Spatial autocorrelation----------------------------------------------
+# To calculate Moran's I for spatial autocorrelation after fitting a model like 
+# To calculate Moran's I for spatial autocorrelation after fitting a model 
+library(DHARMa)
+resid <- resid(mod_full)
+testSpatialAutocorrelation(resid, x = data$lon, y = data$lon, plot = FALSE) 
+
+# Create variogram of residuals
+library(gstat)
+library(sp)
+
+# Create spatial object from data (ensure 'data' has lat/lon as coordinates)
+coordinates(data) <- ~lon+lat
+vario <- variogram(resid ~ 1, data)
+
+# Plot the variogram
+p <- plot(vario)
+p
+
+# export plot
+outdir_semi <- paste0(outdir, "/semivariograma", type, "_", family)
+if (!dir.exists(outdir_semi)) dir.create(outdir_semi, recursive = TRUE)
+pngfile <- paste0(outdir, "/", genus, "_semivariograma.png")
+png(pngfile, width=1500, height=1500, res=300)
+print(p)
+dev.off()

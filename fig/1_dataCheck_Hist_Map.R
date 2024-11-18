@@ -23,7 +23,7 @@ print(mask)
 mask <- st_transform(mask, crs = 4326)
 
 #Load data
-data <- read.csv("temp/data_2D_3D_dist.csv", sep = ";") 
+data <- read.csv2("temp/data_2D_3D_dist.csv", sep = ",") 
 names(data)
 data <- data %>%
   mutate(lon = as.numeric(gsub(",", ".", lon)),
@@ -217,3 +217,51 @@ print(final_counts)
 
 output_file <- file.path(temp_data, "pres_abs.csv")
 write.csv2(final_counts, file = output_file, row.names = FALSE)
+
+
+# 4. Frequency of occurence ----------------------------------------------------
+head(data)
+
+# Determine if for wach tow there is any egg case:
+PA <- data %>%
+  group_by(code) %>%
+  summarize(
+    Genus = first(Genus),         # Keeps the first occurrence for other columns
+    lat = first(lat),
+    lon = first(lon),
+    season = first(season),
+    depth = first(depth),
+    swept_area_km2 = first(swept_area_km2),
+    N = first(N),
+    N_km2 = first(N_km2),
+    presence_absence = max(presence_absence),  # Sets to 1 if any row has presence, else 0
+    date = first(date)
+  )
+
+# View the resulting dataframe
+head(PA)
+
+# Calculate the percentage of 0s and 1s in presence_absence
+PA_summary <- PA %>%
+  count(presence_absence) %>%
+PA_summary
+
+# Calculate percentage of 0 and 1 in presence_absence for depth < 200
+PA_summary_lt200 <- PA %>%
+  filter(depth < 200) %>%
+  count(presence_absence) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  mutate(depth_range = "< 200 m")
+
+# Calculate percentage of 0 and 1 in presence_absence for depth >= 200
+PA_summary_gt200 <- PA %>%
+  filter(depth >= 200) %>%
+  count(presence_absence) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  mutate(depth_range = ">= 200 m")
+
+# Combine both summaries
+PA_summary <- bind_rows(PA_summary_lt200, PA_summary_gt200)
+
+# Display the result
+PA_summary

@@ -61,19 +61,35 @@ data <- data %>% sample_frac(1)
 
 #create folds
 #f <- fold(data = data, method = "n_dist", k = n.folds) # random grouping
-f <- fold(data = data, id_col = "Vessel", method = "n_dist", k = n.folds) #grouping based on vessels
+#f <- fold(data = data, id_col = "Vessel", method = "n_dist", k = n.folds) #grouping based on vessels
+#data <- f %>%
+#  dplyr::rename(fold = .folds) %>%
+#  dplyr::mutate(fold = as.numeric(fold)) %>%
+#  as.data.frame()
+#data %>%
+#  group_by(id, fold) %>%
+#  dplyr::summarize(n = n())
 
-data <- f %>%
-  dplyr::rename(fold = .folds) %>%
-  dplyr::mutate(fold = as.numeric(fold)) %>%
-  as.data.frame()
+f <- createFolds(data$Vessel, k = n.folds, list = TRUE)
+sapply(f, length)
+
+# Add the fold information back to the original data
+data$fold <- NA  # Initialize the fold column
+
+# Loop through each fold and assign the fold number to the data
+for (i in seq_along(folds)) {
+  data$fold[folds[[i]]] <- i
+}
+
 
 #Check that each fold has a similar number of samples/specimens (rows)
 table(data$fold)
 
-data %>%
-  group_by(id, fold) %>%
-  dplyr::summarize(n = n())
+# Summarize the number of specimens per 'id' in each fold
+data_summary <- data %>%
+  group_by(Vessel, fold) %>%
+  dplyr::summarize(n = n(), .groups = 'drop')
+print(data_summary)
 
 head(data)
 
@@ -83,7 +99,7 @@ if (!file.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)}
 
 #Save data set:
-dataset <- "ALL" #ALL, train, test
+dataset <- "ALL2" #ALL, train, test
 output_file <- paste0(output_dir, "/", genus, "_", dataset, "_folds_dataset.csv")
 write.csv2(data, file = output_file, row.names = FALSE)
 

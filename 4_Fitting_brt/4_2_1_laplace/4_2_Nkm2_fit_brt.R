@@ -18,11 +18,11 @@ library(egg)
 library(fmsb)
 library(dplyr)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
+genus <- "Raja" #"Raja" #"Scyliorhinus"
+family <- "LN_POISSON_Final" #bernuilli #LN_laplace_sinO2
 type <- "_NKm2" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-dataset <- "ALL" #ALL, train
+dataset <- "ALL2" #ALL, train
 
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_", dataset, "_folds_dataset.csv")
@@ -37,12 +37,21 @@ head(data)
 hist(data$N_km2)
 shapiro.test(data$N_km2)
 
+hist(data$N)
+shapiro.test(data$N)
+
 #transform response variable:
 data$ln_N_km2 <- log1p(data$N_km2)
 hist(data$ln_N_km2)
 shapiro.test(data$ln_N_km2)
 summary(data$ln_N_km2)
-#data$e_N_km2 <- exp(data$ln_N_km2) - 1
+
+#transform response variable:
+data$ln_N <- log1p(data$N)
+hist(data$ln_N)
+shapiro.test(data$ln_N)
+summary(data$ln_N)
+
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
@@ -67,7 +76,7 @@ data$season <- case_when(
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
-colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth", 
+colnames(data) <- c("Vessel", "code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
@@ -75,7 +84,8 @@ colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth",
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
                     "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
-                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", "ln_N_km2")
+                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", 
+                    "ln_N_km2", "ln_N") #, "BioSubs", "SA_offset"
 
 #Set categorical predictors as categories:
 data <- data %>% 
@@ -91,8 +101,8 @@ names(data)
 
 
 # List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", 
-           "substrate", "bottom_eke", "bottom_so",  "RN") 
+vars  <- c("depth", "slope", "ln_fishingEffort", "substrate", #"distCanyons", "SD_bottomT", #"SD_o2", "bottom_oxygen",
+           "bottom_eke", "bottom_so",  "RN") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
 # "bottom_nh4", ,"bottom_eke","bottom_ph", "distMounts","oxygen_sat_percent",
@@ -109,6 +119,8 @@ tree.list <- seq(ini.nt,max.nt,by=step.nt) #list of trees for evaluation
 
 # Define combination of hyper-parameters
 comb <- expand.grid(lr=c(0.001, 0.005, 0.01, 0.05), tc=c(1,3,5), bf=c(0.5, 0.6, 0.7)) #combination
+comb <- expand.grid(lr=c(0.0005, 0.001, 0.005, 0.01), tc=c(3,5,6), bf=c(0.3, 0.4, 0.5)) #combination
+
 
 
 ## Prepare clusters
@@ -126,9 +138,48 @@ registerDoParallel(cl)
 outdir <- paste0(output_data, "/", mod_code, "/", genus, type, "_", family)
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
+# Check the variables are correct in format:
 set.seed(131)
 names(data)
 str(data)
+
+# Add offset if you are using poisson family, i.e., N + offset
+data$SA_offset <- log(data$swept_area_km2)
+summary(data$SA_offset)
+
+# Check the distribution of your response variable:
+# Summary statistics for ln_N_km2
+#summary(data$ln_N_km2)
+
+# Calculate skewness and kurtosis
+#library(moments)
+#skewness_value <- skewness(data$ln_N_km2)
+#kurtosis_value <- kurtosis(data$ln_N_km2)
+
+# Print skewness and kurtosis
+#cat("Skewness:", skewness_value, "\n") 
+#> 0.5 or < -0.5 and kurtosis_value is high, choose "laplace" for robustness.
+#is near 0 and the histogram is bell-shaped with few outliers, go with "gaussian".
+
+#cat("Kurtosis:", kurtosis_value, "\n")
+# Histogram with density plot
+#hist(data$ln_N_km2, breaks = 30, main = "Histogram of ln_N_km2", col = "lightblue", xlab = "ln_N_km2")
+#lines(density(data$ln_N_km2), col = "red", lwd = 2)
+
+# Boxplot for outlier detection
+#boxplot(data$ln_N_km2, main = "Boxplot of ln_N_km2", col = "lightgreen")
+# Calculate IQR and bounds for outlier detection
+#quantiles <- quantile(data$ln_N_km2, probs = c(0.25, 0.75))
+#IQR_value <- IQR(data$ln_N_km2)
+#lower_bound <- quantiles[1] - 1.5 * IQR_value
+#upper_bound <- quantiles[2] + 1.5 * IQR_value
+
+# Identify outliers
+#outliers <- data$ln_N_km2[data$ln_N_km2 < lower_bound | data$ln_N_km2 > upper_bound]
+
+# Print the number of outliers
+#cat("Number of outliers:", length(outliers), "\n")
+
 
 all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar% {
   
@@ -137,8 +188,11 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
   # faster learning rate means larger values
   mod <- dismo::gbm.step(data = data,             # data.frame with data
                     gbm.x = vars,          # predictor variables
-                    gbm.y = "ln_N_km2",            # response variable
-                    family = "laplace",  # the nature of error structure
+                    #gbm.y = "ln_N_km2",            # response variable
+                    #family = "laplace",  # the nature of error structure
+                    gbm.y = "N",            # response variable
+                    family = "poisson",  # the nature of error structure
+                    offset = data$SA_offset,
                     tree.complexity = comb$tc[i],   # tree complexity
                     learning.rate = comb$lr[i],  # learning rate
                     bag.fraction = comb$bf[i],    # bag fraction
@@ -160,8 +214,7 @@ all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar
       deviance = mod$self.statistics$mean.resid,
       cv.deviance = mod$cv.statistics$deviance.mean,
       PER = (1-mod$self.statistics$mean.resid/mod$self.statistics$mean.null)*100,
-      cv.PER = (1-mod$cv.statistics$deviance.mean/mod$self.statistics$mean.null)*100
-    ) 
+      cv.PER = (1-mod$cv.statistics$deviance.mean/mod$self.statistics$mean.null)*100) 
     
     # keep deviance values for all trees
     cv_deviance <- mod$cv.values
@@ -266,13 +319,14 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, and lowest lr and tc.
 
-select_model_id <- 30 #scyliorhinus 31 # raja 30
+select_model_id <- 29 #scyliorhinus 27 (7) # raja 30 (29)
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort", 
-           "substrate", "bottom_eke", "bottom_so",  "RN") 
+#vars  <- c("depth", "slope", "ln_fishingEffort", "bottom_temp",
+#           "substrate", "bottom_eke", "bottom_so",  "RN") 
 
+#str(data)
 
 tc <- mod_out$tc[select_model_id]
 lr <- mod_out$lr[select_model_id]
@@ -280,18 +334,43 @@ bf <- mod_out$bf[select_model_id]
 ntrees <- mod_out$n.trees[select_model_id]
 pred_list <- vars[vars %in% predict_list[[select_model_id]]]
 
-# remove variables not selected
+# off set:
+mod_full <- dismo::gbm.step(data = data,             # data.frame with data
+                       gbm.x = pred_list,          # predictor variables
+                       gbm.y = "N",            # response variable
+                       family = "poisson",  # the nature of error structure
+                       offset = data$SA_offset,
+                       tree.complexity = tc,   # tree complexity
+                       learning.rate = lr,  # learning rate
+                       bag.fraction = bf,    # bag fraction
+                       fold.vector = data$fold,
+                       n.folds = length(unique(data$fold)),
+                       n.trees = ini.nt, 
+                       step.size = step.nt, 
+                       max.trees = max.nt)   
+mod_full$n.trees
+
+#mod_full <- gbm::gbm(N ~ slope + depth + ln_fishingEffort + offset(SA_offset), 
+#                     data = data, 
+#                     distribution = "poisson", 
+#                     n.trees = ntrees, 
+#                    interaction.depth = tc, 
+#                     shrinkage = lr, 
+#                     bag.fraction = bf)
+#summary(mod_full)
+
+
+#No offset:
 # fir BRT with selected parameters
 mod_full <- dismo::gbm.fixed(data = data,             # data.frame with data
                              gbm.x = pred_list,          # predictor variables
-                             gbm.y = "ln_N_km2",            # response variable
+                             gbm.y = "ln_N_km2",             # response variable
                              family = "laplace",  # the nature of errror structure
                              tree.complexity = tc,   # tree complexity
                              learning.rate = lr,  # learning rate
                              bag.fraction = bf,    # bag fraction
                              n.trees = ntrees) 
 summary(mod_full)
-
 
 # Save model
 saveRDS(mod_full, file = paste0(outdir, "/", genus, "_Nkm2.rds"))  # save model
@@ -385,7 +464,7 @@ phi <- 20    # Adjust the polar angle as desired
 #Plot:
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 1, 4, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 1, 3, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #*# Set the angle for the 3D plot
@@ -457,8 +536,109 @@ stopCluster(cl)
 
 
 
+# 8. Check model traits --------------------------------------------------------
+# 8.1. OVERDIPSERION
+# Calculate predicted values
+pred_values <- predict(mod_full, newdata = data, type = "response")
 
-# 8. TSS and RMSE calculation----------------------------------------------------
+# Ensure there are no zero or negative values in predictions to avoid log issues
+pred_values[pred_values <= 0] <- 1e-10  # Small positive value to replace zero
+
+# Compute residuals
+observed_values <- data$N
+residuals <- observed_values - pred_values
+
+# Calculate deviance residuals for Poisson
+deviance_residuals <- 2 * (observed_values * log(observed_values / pred_values) - (observed_values - pred_values))
+deviance_residuals[is.nan(deviance_residuals)] <- 0  # Handle NaNs from log(0)
+
+# Total deviance (sum of all deviance residuals)
+deviance <- sum(deviance_residuals, na.rm = TRUE)
+
+# Calculate residual degrees of freedom (approximation)
+df_residual <- nrow(data) - length(mod_full$var.names)
+
+# Deviance per degree of freedom (to check overdispersion)
+deviance_per_df <- deviance / df_residual
+
+# Print result
+print(paste("Deviance per degree of freedom:", round(deviance_per_df, 2)))
+if (deviance_per_df > 1) {
+  print("The model suggests overdispersion.")
+} else {
+  print("The model does not suggest overdispersion.")
+}
+
+
+
+
+# 8.2. RESIDUAL CHECK 
+# Generate predicted values using the model
+predicted_values <- predict(mod_full, newdata = data, n.trees = mod_full$n.trees, type = "response")
+
+# LAPLACE:
+# Calculate residuals (observed - predicted)
+residuals <- data$ln_N_km2 - predicted_values
+
+# POISSON:
+# Calculate residuals
+# For Poisson model, calculate residuals (observed - predicted)
+residuals_poisson <- data$N - predicted_values
+
+# Create a residual plot
+ggplot(data.frame(predicted = predicted_values, residuals = residuals), aes(x = predicted, y = residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Predicted Values", x = "Predicted Values", y = "Residuals") +
+  theme_minimal() #+
+  #ylim(NA, 100)  # Set the upper limit of the x-axis to 25
+
+#Residuals vs. Predicted Values Plot:
+#A well-behaved model will have residuals that appear randomly scattered around zero. If you see systematic patterns, this could indicate model misspecification or the presence of heteroscedasticity.
+
+# Histogram of residuals
+ggplot(data.frame(residuals = residuals), aes(x = residuals)) +
+  geom_histogram(binwidth = 0.2, fill = "blue", color = "black", alpha = 0.7) +
+  labs(title = "Distribution of Residuals", x = "Residuals", y = "Frequency") +
+  theme_minimal()
+
+
+# Optional: Add a density plot overlay
+ggplot(data.frame(residuals = residuals), aes(x = residuals)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(title = "Density Plot of Residuals", x = "Residuals", y = "Density") +
+  theme_minimal()
+  #xlim(NA, 6)  # Set the upper limit of the x-axis to 25
+
+#Distribution of Residuals:
+#Ideally, residuals should be symmetric and centered around zero. A significant skew or a distribution with extreme outliers may suggest issues with model fit or data preprocessing needs.
+
+# Generate a Q-Q plot for the residuals
+qqnorm(residuals)
+qqline(residuals, col = "red")  # Add a reference line for better visualization
+
+# Q-Q plot of deviance residuals against the Poisson distribution
+qqplot(residuals_poisson, qpois, lambda = mean(residuals_poisson), 
+       main = "Q-Q Plot of Poisson Residuals", 
+       xlab = "Theoretical Quantiles", ylab = "Sample Quantiles")
+abline(a = 0, b = 1, col = "red")  # Reference line
+
+# Generate a Q-Q plot against a Laplace distribution
+library(VGAM) 
+#residuals <- residuals[residuals != max(residuals)]
+qqplot(qlaplace(ppoints(length(residuals))), 
+       residuals,
+       main = "Q-Q Plot of Residuals Against Laplace Distribution",
+       xlab = "Theoretical Quantiles (Laplace)",
+       ylab = "Sample Quantiles (Residuals)")
+abline(0, 1, col = "red")  # Add a 45-degree reference line
+#If the points fall along the 45-degree line, your residuals align well with a Laplace distribution.
+#Deviations from the line indicate that the residuals might not perfectly follow a Laplace distribution, suggesting potential model or data issues.
+
+
+
+
+# 9. TSS and RMSE calculation----------------------------------------------------
 # ONLY IF YOU USE A TRAINING AND TESTING DATASET- NOT DONE IN OUR CASE
 #Load test data
 file <- paste0(temp_data, "/train_test/", genus, "_training_testing/", genus, "_test_dataset.csv")
@@ -494,16 +674,16 @@ str(test_data)
 
 test_predictions <- predict(mod_full, newdata = test_data, n.trees = mod_full$n.trees)
 
-# 8.1. R-squared----------------------------------------------------------------
+# 9.1. R-squared----------------------------------------------------------------
 library(caret)
 r_squared <- R2(test_predictions, test_data$ln_N_km2)
 print(paste("R-squared: ", r_squared)) 
 
-# 8.2. Calculate RMSE-----------------------------------------------------------
+# 9.2. Calculate RMSE-----------------------------------------------------------
 rmse <- sqrt(mean((test_data$ln_N_km2 - test_predictions)^2))
 print(rmse) 
 
-# 8.3. True Skill Statistic (TSS (only for PA) ----------------------------------------------------------------
+# 9.3. True Skill Statistic (TSS (only for PA) ----------------------------------------------------------------
 # Convert probabilities to binary outcomes (assuming a threshold of 0.5)
 predicted_class <- ifelse(test_predictions > 0.5, 1, 0)
 #  Extract the actual values (assuming the target variable is 'presence_absence')
@@ -526,7 +706,7 @@ TSS
 
 
 
-# 9. Check Spatial autocorrelation----------------------------------------------
+# 10. Check Spatial autocorrelation----------------------------------------------
 # To calculate Moran's I for spatial autocorrelation after fitting a model 
 library(DHARMa)
 resid <- resid(mod_full)
@@ -542,6 +722,8 @@ vario <- variogram(resid ~ 1, data)
 
 # Plot the variogram
 p <- plot(vario)
+p
+
 # export plot
 outdir_semi <- paste0(outdir, "/semivariograma", type, "_", family)
 if (!dir.exists(outdir_semi)) dir.create(outdir_semi, recursive = TRUE)

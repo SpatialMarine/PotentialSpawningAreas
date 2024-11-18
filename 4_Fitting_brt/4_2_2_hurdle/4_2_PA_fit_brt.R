@@ -18,11 +18,11 @@ library(egg)
 library(fmsb)
 library(dplyr)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "bernuilli_Final" #bernuilli #LN_laplace_sinO2
+genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+family <- "bernuilli_Final2" #bernuilli #LN_laplace_sinO2
 type <- "_PA" #"_NKm2" "_PA" "only_P
 mod_code <- "brt"
-dataset <- "train" #ALL, train
+dataset <- "ALL" #ALL, train
 
 #Load data
 file <- paste0(temp_data, "/folds_dataset/", genus, "_", dataset, "_folds_dataset.csv")
@@ -57,65 +57,63 @@ summary(data$ln_N_km2)
 #2. Organise dataset -----------------------------------------------------------
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
-colnames(data) <- c("Haul_N", "code", "Vessel", "Genus", "lat", "lon", "season", "depth", 
+# colnames(data) <- c("Vessel",  "code", "Genus", "lat", "lon", "season", "depth", 
+#                    "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
+#                    "date_time", "bathy", "substrate", "slope", "roughness", 
+#                    "fishingEffort", "distCanyons", "distMounts", "distFans", 
+#                    "bottom_temp","bottom_oxygen", 
+#                    "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
+#                    "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
+#                    "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
+#                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", 
+#                   "ln_N_km2", "ln_N", "BioSubs", "SA_offset") #
+
+colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
                     "date_time", "bathy", "substrate", "slope", "roughness", 
                     "fishingEffort", "distCanyons", "distMounts", "distFans", 
                     "bottom_temp","bottom_oxygen", 
                     "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
                     "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
-                    "bottom_eke", "SD_bottomT", "SD_o2",
-                    "ln_slope", "ln_fishingEffort",  "RN", "id", "fold", "ln_N_km2")
+                    "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
+                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", 
+                    "ln_N_km2") #, "ln_N", "BioSubs", "SA_offset"
+
 
 # Convert the 'time' column to Date format if needed 
 data$date <- as.Date(data$date) #, format = "%Y-%m-%d"
 data$date_time <- as.POSIXct(data$date_time, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 
 # Create a season column:
-data$season <- case_when(
-  (month(data$date) == 12 & day(data$date) >= 21) | (month(data$date) %in% c(1, 2)) | 
-    (month(data$date) == 3 & day(data$date) < 21) ~ 1,  # Winter: Dec 21 - Mar 20
+#data$season <- case_when(
+#  (month(data$date) == 12 & day(data$date) >= 21) | (month(data$date) %in% c(1, 2)) | 
+#    (month(data$date) == 3 & day(data$date) < 21) ~ 1,  # Winter: Dec 21 - Mar 20
   
-  (month(data$date) == 3 & day(data$date) >= 21) | (month(data$date) %in% c(4, 5)) | 
-    (month(data$date) == 6 & day(data$date) < 21) ~ 2,  # Spring: Mar 21 - Jun 20
+#  (month(data$date) == 3 & day(data$date) >= 21) | (month(data$date) %in% c(4, 5)) | 
+#    (month(data$date) == 6 & day(data$date) < 21) ~ 2,  # Spring: Mar 21 - Jun 20
   
-  (month(data$date) == 6 & day(data$date) >= 21) | (month(data$date) %in% c(7, 8)) | 
-    (month(data$date) == 9 & day(data$date) < 21) ~ 3,  # Summer: Jun 21 - Sep 20
+#  (month(data$date) == 6 & day(data$date) >= 21) | (month(data$date) %in% c(7, 8)) | 
+#    (month(data$date) == 9 & day(data$date) < 21) ~ 3,  # Summer: Jun 21 - Sep 20
   
-  (month(data$date) == 9 & day(data$date) >= 21) | (month(data$date) %in% c(10, 11)) | 
-    (month(data$date) == 12 & day(data$date) < 21) ~ 4 )  # Autumn: Sep 21 - Dec 20
+#  (month(data$date) == 9 & day(data$date) >= 21) | (month(data$date) %in% c(10, 11)) | 
+#    (month(data$date) == 12 & day(data$date) < 21) ~ 4 )  # Autumn: Sep 21 - Dec 20
 
 #Set categorical predictors as categories:
 data <- data %>% 
   mutate(season = factor(season, c(1:4)),
          substrate = factor(substrate),
-         fold = factor(data$fold)) #Haul_N = factor(data$Haul_N),
+         fold = factor(data$fold),
+         presence_absence = as.numeric(data$presence_absence)) #Haul_N = factor(data$Haul_N),
 
 
-# Calculate oxygen saturation percentage:
-# Calculate pressure from depth (1 bar per 10m depth + 1 atmospheric pressure)
-# library(marelac)
-# Calculate the oxygen saturation concentration using the bottom temperature and salinity
-# `gas = "O2"` specifies that we are calculating oxygen saturation
-# saturation_concentration <- gas_satconc(S = data$bottom_so, 
-#                                         t = data$bottom_temp, 
-#                                         species = "O2")
-
-# Calculate the percentage of oxygen saturation
-# data$oxygen_sat_percent <- (data$bottom_oxygen / saturation_concentration) * 100
-
-
-summary(data)
-str(data)
-names(data)
+ summary(data)
+# str(data)
+# names(data)
 
 # List the name of the predictor variables
-#vars  <- c("depth",  "ln_slope", "ln_fishingEffort", "substrate", 
-#           "SD_bottomT", "SD_o2", "bottom_temp", 
-#           "bottom_so", "bottom_oxygen", "RN")
 
-vars  <- c("depth", "slope", "ln_fishingEffort",
-           "bottom_temp", "bottom_so",  "RN", "substrate") 
+vars  <- c("depth", "slope", "ln_fishingEffort", "substrate",
+           "bottom_temp", "bottom_so",  "RN") 
 
 # "distMounts","distCanyons", "distFans", "bottom_nppv",
 # "bottom_nh4", ,"bottom_eke","bottom_ph", "distMounts","oxygen_sat_percent",
@@ -127,14 +125,12 @@ vars  <- c("depth", "slope", "ln_fishingEffort",
 # Define number of trees
 ini.nt = 50
 max.nt = 10000
-step.nt = 50 #des pas de 50
+step.nt = 50 # 50
 tree.list <- seq(ini.nt,max.nt,by=step.nt) #list of trees for evaluation
 
 # Define combination of hyper-parameters
 comb <- expand.grid(lr=c(0.001, 0.005, 0.01, 0.05), tc=c(1,3,5), bf=c(0.5, 0.6, 0.7)) #combination
-#comb <- expand.grid(lr=c(0.001, 0.004, 0.02, 0.05), tc=c(1,3,4), bf=c(0.4, 0.5, 0.6)) #combination
-#comb <- expand.grid(lr=c(0.001, 0.01, 0.02, 0.05), tc=c(1,2,3), bf=c(0.5, 0.6, 0.7)) #combination
-#comb <- expand.grid(lr=c(0.001, 0.01, 0.1, 0.0005), tc=c(5,7,10), bf=c(0.5, 0.6, 0.7)) #combination
+comb <- expand.grid(lr=c(0.0001, 0.0005, 0.001, 0.005), tc=c(3,4,5), bf=c(0.6, 0.7, 0.8)) #combination
 
 ## Prepare clusters
 cores <-detectCores()
@@ -144,9 +140,6 @@ cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 
-
-
-
 #3. Build presence_absence model -----------------------------------------------
 
 #  Create output data repository
@@ -154,14 +147,16 @@ outdir <- paste0(output_data, "/", mod_code, "/", genus, type, "_", family)
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 
 set.seed(131)
-names(data)
-str(data)
+hist(data$presence_absence)
+# names(data)
+# str(data)
 
 all_list <- foreach(i=1:nrow(comb), .packages=c("dismo", "gbm", "dplyr")) %dopar% {
   
   # Fit model
   # Uses a block cross-validation
   # faster learning rate means larger values
+  # i=1
   mod <- dismo::gbm.step(data = data,             # data.frame with data
                     gbm.x = vars,          # predictor variables
                     gbm.y = "presence_absence",            # response variable
@@ -293,24 +288,18 @@ plot(p)
 #' 1) The model with the lowest cv_deviance which n.trees is >1000
 #' 2) Then, if there are two or more very similar: the one with the largest nt, lt and tc.
 
-select_model_id <- 25 #5
+select_model_id <- 35
 
 # Scyliorhinus:
-# LN_gaussian - all: 33
-# LN_laplace - all: 30 (sin O2, eke, ph, nppv, po4)
-# laplace - all: 25
-# bernoilli - PA: 9
+# bernoilli - PA: 33
 
-# Raja = 30
-# LN_gaussian - all: 25
-# LN_laplace - all: 31 (sin O2, eke, ph, nppv, po4)
-# laplace - P: 35
-# bernoilli - PA: 25
+# Raja:
+# bernoilli - PA: 31
 
 
 #List the name of the predictor variables
-vars  <- c("depth", "slope", "ln_fishingEffort",
-           "bottom_temp", "bottom_so",  "RN",  "substrate") 
+# vars  <- c("depth", "slope", "ln_fishingEffort",
+#            "bottom_temp", "bottom_so",  "RN",  "substrate") 
 
 #"SD_bottomT", "SD_o2", "oxygen_sat_percent",
 #"bottom_nh4","bottom_oxygen","bottom_eke","bottom_ph", "season", "substrate", 
@@ -427,7 +416,7 @@ phi <- 20    # Adjust the polar angle as desired
 #Plot:
 pngfile <- paste0(outdir_interaction, "/", genus, "_", mod_code, "_interaction_1_Nkm2.png")
 png(pngfile, width=1500, height=1500, res=200)
-dismo::gbm.perspec(mod_full, 2, 3, theta = theta, phi = phi, smooth = 0.5)
+dismo::gbm.perspec(mod_full, 1, 3, theta = theta, phi = phi, smooth = 0.5)
 dev.off()
 
 #*# Set the angle for the 3D plot
@@ -471,7 +460,13 @@ registerDoParallel(cl)
 foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "stringr"), .combine = "c") %dopar% {
   
   # sampled half the data (with replacement) to fit the model (Hindell et al. 2020)
-  idata <- stratified(data, c("presence_absence", "Vessel"), 0.7, replace = TRUE) 
+  #idata <- stratified(data, c("presence_absence", "Vessel"), 0.7, replace = TRUE) 
+  # Ensure `presence_absence` is not a list and is of the correct type
+  idata <- data %>%
+    group_by(presence_absence) %>%
+    sample_n(size = n(), replace = TRUE) %>%
+    ungroup() %>%
+    as.data.frame()  # Convert grouped data back to a data frame if needed
   
   # fit BRT
   mod_boot <- dismo::gbm.fixed(data = idata,             # data.frame with data
@@ -559,6 +554,8 @@ vario <- variogram(resid ~ 1, data)
 
 # Plot the variogram
 p <- plot(vario)
+p
+
 # export plot
 outdir_semi <- paste0(outdir, "/semivariograma", type, "_", family)
 if (!dir.exists(outdir_semi)) dir.create(outdir_semi, recursive = TRUE)

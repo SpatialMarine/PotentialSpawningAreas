@@ -22,15 +22,15 @@ season <- "2021"
 # 1. Load areas:
 
 # 1.1. PSAs:
-path <- paste0("output/shapefiles/", genus, "/", genus, "MASK_habitat_raster.tif")
+path <- paste0("output/shapefiles/", genus, "/", genus, "hurdle_MASK_habitat_raster.tif")
 PSA_maks <- raster(path)
 plot(PSA_maks)
 print(PSA_maks)
 
 #1.2. All area:
 # 1.5. Predicted habitat
-#path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_pred_median.tif")
-path <- paste0("output/shapefiles/", genus, "/", genus, "_habitat_raster.tif") 
+path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "hurdle_pred_median.tif")
+#path <- paste0("output/shapefiles/", genus, "/", genus, "hurdle_habitat_raster.tif") 
 habitat <- raster(path)
 #habitat <- calc(habitat, function(x) 10^x)
 print(habitat)
@@ -48,18 +48,18 @@ cropped_habitat[!is.na(cropped_habitat)] <- 1
 plot(cropped_habitat)
 
 #Save it:
-output_path <- paste0("output/shapefiles/", genus, "/", genus, "_MASK_rest_habitat_raster.tif")  # Windows with double backslashes
+output_path <- paste0("output/shapefiles/", genus, "/", genus, "hurdle_MASK_rest_habitat_raster.tif")  # Windows with double backslashes
 writeRaster(cropped_habitat, filename = output_path, format = "GTiff", overwrite = TRUE)
 
 
 
 # 3. Obtain data from within and outside the PSAs-------------------------------
 # Load areas:
-path <- paste0("output/shapefiles/", genus, "/", genus, "_MASK_rest_habitat_raster.tif")
+path <- paste0("output/shapefiles/", genus, "/", genus, "hurdle_MASK_rest_habitat_raster.tif")
 nonPSA <- raster(path)
 plot(nonPSA)
 
-path <- paste0("output/shapefiles/", genus, "/", genus, "MASK_habitat_raster.tif")
+path <- paste0("output/shapefiles/", genus, "/", genus, "hurdle_MASK_habitat_raster.tif")
 PSA <- raster(path)
 plot(PSA)
 

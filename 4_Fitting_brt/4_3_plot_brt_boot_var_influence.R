@@ -11,14 +11,15 @@ library(dplyr)
 library(ggplot2)
 library(egg)
 
-
-# Raja
-genus <- "Raja" #"Raja" #"Scyliorhinus"
-family <- "LN_laplace_Final" #bernuilli #LN_laplace_sinO2
-type <- "_NKm2" #"_NKm2" "_PA" "only_P
+genus <- "Raja" 
+family <- "LN_gaussian_Final2" 
+type <- "_NKm2" 
 mod_code <- "brt"
-dataset <- "ALL" #ALL, train
 
+#genus <- "Raja" 
+#family <- "LN_gaussian_Final2" 
+#type <- "_NKm2" 
+#mod_code <- "brt"
 
 #---------------------------------------------------------------
 # 1. Set data repository
@@ -85,15 +86,22 @@ p_skates
 
 # export plot
 p_png <- paste0(outdir, "/", genus, "_", mod_code, "_", family, "_var_influence_boot_c.png")
-ggsave(p_png, p, width=14, height=12, units="cm", dpi=300)
+ggsave(p_png, p_skates, width=14, height=12, units="cm", dpi=300)
 
 
 
 
 #-------------------------------------------------------------------------------
 # Repeat for Scyliorhinus
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Scyliorhinus" 
+family <- "gaussian_Final2" 
+type <- "_PA" 
+mod_code <- "brt"
 
+#genus <- "Scyliorhinus" 
+#family <- "gaussian_Final2" 
+#type <- "_PA" 
+#mod_code <- "brt"
 
 #---------------------------------------------------------------
 # 1. Set data repository
