@@ -15,18 +15,18 @@ library(foreach)
 bootstrap <- T
 
 # Raja
-#genus <- "Raja" 
-#family <- "LN_gaussian_Final2" 
-#type <- "_NKm2" 
-#mod_code <- "brt"
-#dataset <- "ALL" 
-
-# Scyliorhinus
-genus <- "Scyliorhinus" 
-family <- "bernuilli_Final2" 
-type <- "_PA" 
+genus <- "Raja" 
+family <- "LN_gaussian_Final2" 
+type <- "_NKm2" 
 mod_code <- "brt"
 dataset <- "ALL" 
+
+## Scyliorhinus
+#genus <- "Scyliorhinus" 
+#family <- "bernuilli_Final2" 
+#type <- "_PA" 
+#mod_code <- "brt"
+#dataset <- "ALL" 
 
 
 # 1. Set data repository--------------------------------------------------------
@@ -51,12 +51,47 @@ print(mask)
 date_start <- as.Date("2021-01-01")
 date_end <- as.Date("2021-12-31")
 #date_end <- as.Date("2021-01-02")
-dates <- seq.Date(date_start, date_end, by="2 days")  # define sequence
+dates <- seq.Date(date_start, date_end, by="day")  # define sequence
 
 # Convert date sequences to dataframes
 year_df <- data.frame(date = dates)
+head(year_df)
 
+# Define a function to assign seasons based on the date
+get_season <- function(date) {
+  # Extract the month and day
+  month <- as.numeric(format(date, "%m"))
+  day <- as.numeric(format(date, "%d"))
+  
+  # Assign seasons based on month and day
+  if ((month == 12 && day >= 21) || (month %in% c(1, 2)) || (month == 3 && day < 21)) {
+    return("Winter")
+  } else if ((month == 3 && day >= 21) || (month %in% c(4, 5)) || (month == 6 && day < 21)) {
+    return("Spring")
+  } else if ((month == 6 && day >= 21) || (month %in% c(7, 8)) || (month == 9 && day < 21)) {
+    return("Summer")
+  } else {
+    return("Fall")
+  }
+}
 
+# Apply the function to all dates
+seasons <- sapply(dates, get_season)
+
+# Combine dates and their corresponding seasons into a data frame
+season_data <- data.frame(date = dates, season = seasons)
+
+# Create separate data frames for each season
+winter_df <- subset(season_data, season == "Winter")
+spring_df <- subset(season_data, season == "Spring")
+summer_df <- subset(season_data, season == "Summer")
+fall_df <- subset(season_data, season == "Fall")
+
+# View a sample from each season
+head(winter_df)
+head(spring_df)
+head(summer_df)
+head(fall_df)
 
 
 
@@ -64,9 +99,9 @@ year_df <- data.frame(date = dates)
 # 2. Merge HABITAT maps to create seasonal means----------------------------------------
 
 # Prepare your date list and other necessary variables
-dates <- year_df #spring_df, winter_df, summer_df, autumn_df
+dates <- fall_df #spring_df, winter_df, summer_df, fall_df
 stack_list <- vector("list", nrow(dates))  # Pre-allocate list
-season <- "2021"
+season <- "fall" #2021, spring, winter, summer, autumn
 
 
 # Loop through each date
@@ -126,8 +161,8 @@ pred_med <- raster::calc(pred_stack, fun = median)
 beep()
 
 # Define output paths
-tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "hurdle_pred_median.tif")
-pngfile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "hurdle_pred_median.png")
+tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_hurdle_pred_median.tif")
+pngfile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_hurdle_pred_median.png")
 
 # Save the median raster as TIFF
 writeRaster(pred_med, filename = tifffile, format = "GTiff", overwrite = TRUE)
@@ -148,9 +183,9 @@ dev.off()
 
 # 3. Merge 95% CI maps to create seasonal means----------------------------------------
 # Prepare your date list and other necessary variables
-dates <- year_df #spring_df, winter_df, summer_df, autumn_df
-stack_list <- vector("list", nrow(dates))  # Pre-allocate list
-season <- "2021"
+#dates <- year_df #spring_df, winter_df, summer_df, autumn_df
+#stack_list <- vector("list", nrow(dates))  # Pre-allocate list
+#season <- "2021"
 
 
 # Loop through each date
@@ -210,8 +245,8 @@ pred_med <- raster::calc(pred_stack, fun = median)
 beep()
 
 # Define output paths
-tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "hurdle_pred_CIR_median.tif")
-pngfile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "hurdle_pred_CIR_median.png")
+tifffile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_hurdle_pred_CIR_median.tif")
+pngfile <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_hurdle_pred_CIR_median.png")
 
 # Save the median raster as TIFF
 writeRaster(pred_med, filename = tifffile, format = "GTiff", overwrite = TRUE)

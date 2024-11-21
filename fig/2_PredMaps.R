@@ -14,21 +14,21 @@ library(raster)
 library(sp)
 library(beepr)
 
-season <- 2021
+season <- "fall" #2021, spring, winter, summer, fall
 
-## Raja
-#genus <- "Raja" 
-#family <- "LN_gaussian_Final2" 
-#type <- "_NKm2" 
-#mod_code <- "brt"
-#dataset <- "ALL" 
-
-# Scyliorhinus
-genus <- "Scyliorhinus" 
-family <- "bernuilli_Final2" 
-type <- "_PA" 
+# Raja
+genus <- "Raja" 
+family <- "LN_gaussian_Final2" 
+type <- "_NKm2" 
 mod_code <- "brt"
 dataset <- "ALL" 
+
+# Scyliorhinus
+#genus <- "Scyliorhinus" 
+#family <- "bernuilli_Final2" 
+#type <- "_PA" 
+#mod_code <- "brt"
+#dataset <- "ALL" 
 
 # 1. Set data repository and load rasters---------------------------------------
 
@@ -88,7 +88,7 @@ print(GSA_filtered)
 
 
 # 1.5. Predicted habitat--------------------------------------------------------
-path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "hurdle_pred_median.tif")
+path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/", season, "_hurdle_pred_median.tif")
 #path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/01/20210101_Scyliorhinus_brt_pred.tif")
 habitat <- raster(path)
 #habitat <- calc(habitat, function(x) 10^x)
@@ -190,12 +190,8 @@ p <- ggplot() +
   geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
   
   # Add a white contour line for areas above the 90th percentile of habitat
-  geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
-               breaks = percentile_90, color = "white", linewidth = 0.4) +
-    
-  # Add a grey contour line for areas above the 50th percentile of habitat
   #geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
-  #             breaks = percentile_50, color = "grey", size = 0.4) +
+  #             breaks = percentile_90, color = "white", linewidth = 0.4) +
   
   # Plot PSAs with bold color and solid lines
   #geom_sf(data = PSA_Raja, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
@@ -227,7 +223,7 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "line_hurdle_habitat_Map_vars.png")
+p_png <- paste0(outdir, "/", season, "_", mod_code, "_", paste0(genus, type, "_", family), "_hurdle_habitat_Map_vars.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 

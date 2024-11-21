@@ -59,15 +59,15 @@ summary(data$ln_N_km2)
 # Change the name of some variables as you want them to appear in the figure for the paper:
 names(data)
 #colnames(data) <- c("Vessel",  "code", "Genus", "lat", "lon", "season", "depth", 
-                    "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
-                    "date_time", "bathy", "substrate", "slope", "roughness", 
-                    "fishingEffort", "distCanyons", "distMounts", "distFans", 
-                    "bottom_temp","bottom_oxygen", 
-                    "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
-                    "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
-                    "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
-                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", 
-                    "ln_N_km2", "ln_N", "BioSubs", "SA_offset")
+#                    "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
+#                    "date_time", "bathy", "substrate", "slope", "roughness", 
+#                   "fishingEffort", "distCanyons", "distMounts", "distFans", 
+#                   "bottom_temp","bottom_oxygen", 
+#                    "bottom_nppv", "bottom_ph", "bottom_nh4", "bottom_no3", 
+#                    "bottom_po4", "bottom_so", "bottom_uo", "bottom_vo", 
+#                    "bottom_eke", "SD_bottomT", "SD_o2", "SubAll", "bioSubsFinal", 
+#                    "ln_slope", "ln_fishingEffort", "Haul_N", "RN", "id", "fold", 
+#                    "ln_N_km2", "ln_N", "BioSubs", "SA_offset")
 
 colnames(data) <- c("code", "Genus", "lat", "lon", "season", "depth", 
                     "swept_area_km2", "N", "N_km2", "presence_absence", "date", 
@@ -481,9 +481,9 @@ foreach(i=1:n.boot, .packages=c("dismo", "gbm", "dplyr", "splitstackshape", "str
   # sampled half the data (with replacement) to fit the model (Hindell et al. 2020)
   #idata <- stratified(data, c("presence_absence", "Vessel"), 0.7, replace = TRUE) 
   idata <- data %>%
-    #group_by(Vessel) %>%
+    group_by(presence_absence) %>%
     sample_n(size = n(), replace = TRUE) %>%
-    #ungroup() %>%
+    ungroup() %>%
     as.data.frame()  # Convert grouped data back to a data frame if needed
   
   # fit BRT

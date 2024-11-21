@@ -11,7 +11,7 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-genus <- "Scyliorhinus" #"Raja" #"Scyliorhinus"
+genus <- "Raja" #"Raja" #"Scyliorhinus"
 
 # 1. Set data repository and load rasters---------------------------------------
 file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
@@ -47,19 +47,19 @@ print(mask)
 
 
 # 1.3. Bathymetric contour
-#Bathy_cont<- st_read("input/gebco/cont/gebco_contours4osm.shp")
-#print(Bathy_cont)
-#
-#Bathy_cont$DEPTH <- as.numeric(Bathy_cont$DEPTH)
-#unique(Bathy_cont$DEPTH)
-#
-##Select the bathymetrical lines that you want to plot:
-#Bathy_cont1 <- Bathy_cont %>%
-#  filter(DEPTH %in% c(-100, -200, -500)) # 
-#unique(Bathy_cont1$DEPTH)
-## Set the CRS for the raster
-#st_crs(Bathy_cont1) <- st_crs(mask)
-#print(Bathy_cont1)
+Bathy_cont<- st_read("input/gebco/cont/gebco_contours4osm.shp")
+print(Bathy_cont)
+
+Bathy_cont$DEPTH <- as.numeric(Bathy_cont$DEPTH)
+unique(Bathy_cont$DEPTH)
+
+#Select the bathymetrical lines that you want to plot:
+Bathy_cont1 <- Bathy_cont %>%
+  filter(DEPTH %in% c(-100, -200, -750)) # 
+unique(Bathy_cont1$DEPTH)
+# Set the CRS for the raster
+st_crs(Bathy_cont1) <- st_crs(mask)
+print(Bathy_cont1)
 
 
 # 1.4. GSAs
@@ -74,7 +74,7 @@ print(GSA_filtered)
 # Ensure CRS matches for all spatial data
 st_crs(mask) <- 4326
 st_crs(GSA_filtered) <- st_crs(mask)
-#st_crs(Bathy_cont1) <- st_crs(mask)
+st_crs(Bathy_cont1) <- st_crs(mask)
 
 
 
@@ -119,15 +119,18 @@ dataP <- dataP[order(-dataP$N_km2), ]
 p <- ggplot() +
   geom_tile(data = bathy_df, aes(x = x, y = y, fill = filling_color)) +
   
+  # depth contour
+  geom_sf(data = Bathy_cont1,  lwd = 0.05) +
+  
   # land mask
   geom_sf(data = mask) +
   
   # Add absences with cross shape and black color
-  geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 2, alpha = 0.6) +
+  geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 0.45, alpha = 0.6) +
   
   # add presence points
-  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "orange"), #"steelblue" for skates, "orange" for catsharks
-                               size = N_km2), shape = 21, color = "black", alpha = 0.6, stroke = 0.7, width = 0.02, height = 0.02) + 
+  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "steelblue"), #"steelblue" for skates, "orange" for catsharks
+                               size = N_km2), shape = 21, color = "black", alpha = 0.6, stroke = 0.3, width = 0.02, height = 0.02) + 
   
   # Plot GSAs
   #geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
@@ -142,20 +145,20 @@ p <- ggplot() +
   theme_bw() +
   # Directly map colors without scaling
   scale_fill_identity()+
-  scale_size(range = c(1.5, 10)) +
+  scale_size(range = c(0.5, 4)) +
   
   # Remove grids
   theme(panel.grid = element_blank(),
       legend.position = "right",
       legend.box = "vertical",
       aspect.ratio = 1) 
- #p
+ p
 
 # export plot
 outdir <- paste0(output_data, "/fig/Map/density")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", genus, "COL_BIG_density_Map.png")
-ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
+p_png <- paste0(outdir, "/", genus, "CONT_density_Map.png")
+ggsave(p_png, p, width=10, height=10, units="cm", dpi=300)
 
 # export plot
 #outdir <- paste0(output_data, "/fig/Map/density")
@@ -392,11 +395,14 @@ dataPalamos <- data %>%
 p <- ggplot() +
   geom_tile(data = bathy_df, aes(x = x, y = y, fill = filling_color)) +
   
+  # depth contour
+  geom_sf(data = Bathy_cont1,  lwd = 0.1) +
+  
   # land mask
   geom_sf(data = mask) +
   
   # Add Palamos data
-  geom_point(data = dataPalamos, aes(x = lon, y = lat), fill = "#4cb8cf", shape = 22, color = "black", size = 1.5, alpha = 0.6) + ##f28d7c
+  geom_point(data = dataPalamos, aes(x = lon, y = lat), fill = "#4cb8cf", shape = 24, color = "black", size = 1.5, alpha = 0.6) + ##f28d7c
   
   # Add ECEME data
   geom_point(data = dataECEME, aes(x = lon, y = lat), fill = "#F9B233", shape = 21, color = "black", size = 1.5, alpha = 0.6) +
@@ -429,10 +435,47 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/density")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/SurveyType_ALL.png")
+p_png <- paste0(outdir, "/SurveyType_ALL_cont2.png")
 ggsave(p_png, p, width=10, height=10, units="cm", dpi=300)
 
 
 
+# 7. Zoomed out map ------------------------------------------------------------
+# Create a ggplot object
+p <- ggplot() +
+  #geom_tile(data = raster_df, aes(x = x, y = y, fill = Bathy)) +  #X2021bottomT_mean, filling_color, Bathy, slope, layer; Use the 'layer' name for fill
+  
+  # depth contour
+  #geom_sf(data = Bathy_cont1,  lwd = 0.05) +
+  
+  # land mask (if you have it, otherwise remove this line)
+  geom_sf(data = mask) +
+  
+  # Set spatial bounds
+  coord_sf(xlim = c(-4, 35), ylim = c(45.5, 30.5), expand = TRUE) +
+  
+  # Add scale bar
+  #annotation_scale(location = "bl", width_hint = 0.2) +
+  
+  # Apply viridis color scale for fill
+  #scale_fill_viridis(name = "Values", option = "D", na.value = "transparent") +  # Viridis palette
+  #scale_fill_gradientn(name = "Bathymetry", colors = color_palette_raster, na.value = "transparent") +
+  
+  # theme
+  theme_bw() +
+  # Directly map colors without scaling
+  #scale_fill_identity()+
+  
+  # Remove grids
+  theme(panel.grid = element_blank(),
+        legend.position = "right",
+        legend.box = "vertical") 
 
+p
+
+# export plot
+outdir <- paste0(output_data, "/fig/Map/density")
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+p_png <- paste0(outdir, "/Mediterranean.jpeg")
+ggsave(p_png, p, width=10, height=10, units="cm", dpi=300)
 
