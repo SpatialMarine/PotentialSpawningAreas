@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title:  Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 5. Enviromental variables
+# 6. Enviromental variables
 #-------------------------------------------------------------------------------
 library(dplyr)
 library(sf)

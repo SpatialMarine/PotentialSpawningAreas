@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title: CORTAR MPAS Y FE TO 20 700 M Y REPETIR TODOS MAPAS...
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 2. Fit prediction Map
+# 4. Fit prediction Map
 #-------------------------------------------------------------------------------
 library(dplyr)
 library(sf)

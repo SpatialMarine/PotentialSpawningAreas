@@ -1,12 +1,9 @@
 # -----------------------------------------------------------------------------
 
-# Title:
-
-
-
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 01. Plot data spatial distribution and amount of data per year - data checks
+# 1. Plot data spatial distribution and amount of data per year - data checks
 #-------------------------------------------------------------------------------
 library(ggplot2)
 library(dplyr)
