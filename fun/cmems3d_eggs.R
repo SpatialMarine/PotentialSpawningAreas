@@ -1,4 +1,7 @@
-# create new extract function
+# -----------------------------------------------------------------------------
+
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
+
 #--------------------------------------------------------------------------------------
 # cmems3dmat       Extract vertical profiles into matrix from 3D ROMS numerical models netcdfs along the path
 #--------------------------------------------------------------------------------------
