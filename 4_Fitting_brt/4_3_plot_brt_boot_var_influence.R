@@ -361,7 +361,7 @@ p_combined <- ggplot(data=data_combined,
   coord_flip() +
   scale_color_manual(values = 
                        c("Skates_PA" = "#4cb8cf", "Catsharks_PA" = "#F9B233",
-                         "Skates_den" = "#3fbf8c", "Catsharks_den" = "#f28d7c")) + 
+                         "Skates_den" = "#3492a3", "Catsharks_den" = "#C98F29")) + #"#3fbf8c", "#f28d7c"
   ylab("Relative influence (%)") + xlab("") +
   theme_article(base_size = 14) +
   theme(
@@ -375,6 +375,6 @@ p_combined
 
 
 # export plot
-p_png <- paste0(outdir, "/combined_", mod_code, "_", family, "_var_influence_boot_c.png")
+p_png <- paste0(outdir, "/combined_", mod_code, "_", family, "_var_influence_boot_col.png")
 ggsave(p_png, p_combined, width=17, height=20, units="cm", dpi=300)
 

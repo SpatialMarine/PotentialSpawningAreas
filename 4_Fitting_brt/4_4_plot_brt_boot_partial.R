@@ -517,12 +517,12 @@ combined_plot <- ggplot(combined_data, aes(x = xval, y = med, color = species)) 
   ) +
   
   # Define colors for species
-  scale_color_manual(values = c("Skates_PA" = "#4cb8cf", "Catsharks_PA" = "#F9B233", "Skates_den" = "#3fbf8c", "Catsharks_den" = "#f28d7c")) + 
-  scale_fill_manual(values = c("Skates_PA" = "#4cb8cf", "Catsharks_PA" = "#F9B233", "Skates_den" = "#3fbf8c", "Catsharks_den" = "#f28d7c")) #"#3CB371", #2E8B57
+  scale_color_manual(values = c("Skates_PA" = "#4cb8cf", "Catsharks_PA" = "#F9B233", "Skates_den" = "#3492a3", "Catsharks_den" = "#C98F29")) + 
+  scale_fill_manual(values = c("Skates_PA" = "#4cb8cf", "Catsharks_PA" = "#F9B233", "Skates_den" = "#3492a3", "Catsharks_den" = "#C98F29")) #"#3CB371", #2E8B57
 
 # Step 3: Print the combined plot
 print(combined_plot)
 
 # export plot
-outfile <- paste0(outdir, "/combinedALL_", mod_code, "_", family, "_response_boot_c.png")
+outfile <- paste0(outdir, "/combinedALL_", mod_code, "_", family, "_response_boot_col.png")
 ggsave(outfile, combined_plot, width=17, height=20, units="cm", dpi=300)

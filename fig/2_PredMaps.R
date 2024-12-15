@@ -14,7 +14,7 @@ library(raster)
 library(sp)
 library(beepr)
 
-season <- "fall" #2021, spring, winter, summer, fall
+season <- "2021" #2021, spring, winter, summer, fall
 
 # Raja
 genus <- "Raja" 
@@ -23,7 +23,7 @@ type <- "_NKm2"
 mod_code <- "brt"
 dataset <- "ALL" 
 
-# Scyliorhinus
+## Scyliorhinus
 #genus <- "Scyliorhinus" 
 #family <- "bernuilli_Final2" 
 #type <- "_PA" 
@@ -190,8 +190,8 @@ p <- ggplot() +
   geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
   
   # Add a white contour line for areas above the 90th percentile of habitat
-  #geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
-  #             breaks = percentile_90, color = "white", linewidth = 0.4) +
+  geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
+               breaks = percentile_90, color = "white", linewidth = 0.4) +
   
   # Plot PSAs with bold color and solid lines
   #geom_sf(data = PSA_Raja, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
@@ -223,7 +223,7 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", season, "_", mod_code, "_", paste0(genus, type, "_", family), "_hurdle_habitat_Map_vars.png")
+p_png <- paste0(outdir, "/", season, "_", mod_code, "_", paste0(genus, type, "_", family), "PSA_hurdle_habitat_Map_vars.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 
@@ -235,7 +235,7 @@ crs(habitat_raster) <- st_crs(habitat_raster)$proj4string
 plot(habitat_raster)
 
 #Save it:
-output_path <- paste0("output/shapefiles/", genus, "/", genus, "_hurdle_habitat_raster.tif")  # Windows with double backslashes
+output_path <- paste0("output/shapefiles/", genus, "/", season, "_", genus,  "_hurdle_habitat_raster.tif")  # Windows with double backslashes
 writeRaster(habitat_raster, filename = output_path, format = "GTiff", overwrite = TRUE)
 
 # Set the CRS to WGS 84 (EPSG:4326)
@@ -332,7 +332,7 @@ crs(raster_output) <- st_crs(raster_output)$proj4string
 plot(raster_output)
 
 #Save it:
-output_path <- paste0("output/shapefiles/", genus, "/", genus, "hurdle_MASK_habitat_raster.tif")  # Windows with double backslashes
+output_path <- paste0("output/shapefiles/", genus, "/", season, "_", genus, "_hurdle_MASK_habitat_raster.tif")  # Windows with double backslashes
 writeRaster(raster_output, filename = output_path, format = "GTiff", overwrite = TRUE)
 
 
@@ -351,7 +351,7 @@ plot(polygon_sf)
 # Calculate the area of each polygon in the original coordinate system's units (square degrees)
 polygon_sf <- polygon_sf %>% 
   mutate(area_native_units = as.numeric(st_area(.)))  # Area in square degrees if using EPSG:4326
-View(polygon_sf)
+# View(polygon_sf)
 # Approximate area threshold for filtering (change as needed based on CRS)
 area_threshold_native_units <- 0.003  # Approximate 70 km² in square degrees
 
@@ -363,22 +363,32 @@ polygon_sf_filtered <- polygon_sf %>%
 plot(st_geometry(polygon_sf_filtered))
 polygon_sf_filtered <- st_set_crs(polygon_sf_filtered, 4326)  # Assume it's WGS 84
 
+# Step 4: Smooth
+library(rmapshaper)  # Optional for simplification
+library(smoothr)     # For smoothing
+
+# Method 1:
+outer_boundary <- st_as_sf(polygon_sf_filtered)
+smoothed_boundary <- smooth(outer_boundary, method = "ksmooth", smoothness = 1)
+plot(smoothed_boundary)
+
+# Method 2:
 # Apply smoothing to the polygon shape (e.g., using the 'chaikin' method)
 p_smooth_chaikin <- smooth(polygon_sf_filtered, method = "chaikin", refinements = 1) #
 plot(st_geometry(p_smooth_chaikin))
 
 # Buffer the polygons with a small distance (e.g., 0.001)
-p_smooth_chaikin_proj <- st_transform(p_smooth_chaikin, crs = 32631)  # Example for UTM zone 31N
-p_buffered_proj <- st_buffer(p_smooth_chaikin_proj, dist = 1000)  # 1000 meters
-merged_polygons_proj <- st_union(p_buffered_proj)
-merged_polygons_final <- st_transform(merged_polygons_proj, crs = 4326)
-plot(merged_polygons_final, col = 'lightgreen', main = 'Final Merged Polygons')
+#p_smooth_chaikin_proj <- st_transform(smoothed_boundary, crs = 32631)  # Example for UTM zone 31N
+#p_buffered_proj <- st_buffer(p_smooth_chaikin_proj, dist = 1000)  # 1000 meters
+#merged_polygons_proj <- st_union(p_buffered_proj)
+#merged_polygons_final <- st_transform(merged_polygons_proj, crs = 4326)
+#plot(merged_polygons_final, col = 'lightgreen', main = 'Final Merged Polygons')
 
 
-# Step 6: Save the filtered polygons as a shapefile
-output_shapefile <- paste0("output/shapefiles/", genus, "hurdle_contour_90_percentile_filtered.shp")
+# Step 5: Save the filtered polygons as a shapefile
+output_shapefile <- paste0("output/shapefiles/", season, "_", genus, "_ksmooth_hurdle_contour_90_percentile_filtered.shp")
 if (!dir.exists(dirname(output_shapefile))) dir.create(dirname(output_shapefile), recursive = TRUE)
-st_write(merged_polygons_final, output_shapefile, append = FALSE)
+st_write(smoothed_boundary, output_shapefile, append = FALSE)
 
 
 # 7. repeat HABITAT zoomed in map---------------------------------------------------------
@@ -394,17 +404,9 @@ p <- ggplot() +
   # Plot GSAs
   geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
   
-  # Add a white contour line for areas above the 90th percentile of habitat
-  #geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
-  #             breaks = percentile_90, color = "white", linewidth = 0.4) +
-  
-  # Add a grey contour line for areas above the 50th percentile of habitat
-  #geom_contour(data = habitat_clipped_df, aes(x = x, y = y, z = habitat), 
-  #             breaks = percentile_50, color = "grey", size = 0.4) +
-  
   # Plot PSAs with bold color and solid lines
-  #geom_sf(data = PSA_Raja, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
-  geom_sf(data = merged_polygons_final, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
+  #geom_sf(data = p_smooth_chaikin, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
+  geom_sf(data = smoothed_boundary, fill = NA, color = "white", linewidth = 0.4, linetype = "solid", alpha = 1) +
   
   # Plot bathymetric contours
   #geom_sf(data = Bathy_cropped, color = "black", size = 0.1, alpha = 0.5) +
@@ -432,11 +434,11 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", mod_code, "_", paste0(genus, type, "_", family), "PSA_hurdle_habitat_Map_vars.png")
+p_png <- paste0(outdir, "/", season, "_", mod_code, "_", paste0(genus, type, "_", family), "PSA_hurdle_habitat_Map_vars.png")
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
-
-
+# save dataframe:
+write.csv2(habitat_clipped_df, paste0("output/fig/Map/", genus, type, "_", family, "/", season, ".csv"), row.names = FALSE)
 
 
 # 9. Load error map ------------------------------------------------------------

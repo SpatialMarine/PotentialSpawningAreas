@@ -53,8 +53,9 @@ destination_folder <- paste0(input_data, "/cmems_predict_3d")
 
 catalog <- read.csv2("input/Catalog_pred.csv", sep=";")
 cat <- catalog %>%
-  filter(variable %in% c("o2"), product_type %in% c("Reanalysis")) 
+  filter(variable %in% c("so"), product_type %in% c("Reanalysis")) 
 var <- cat$variable[1]
+var
 
 # Loop through each date
 for (i in 1:nrow(dates)) {
@@ -109,21 +110,27 @@ null_indices
 pred_stack <- raster::stack(stack_list)
 
 # Calculate the median of the raster stack
-pred_med <- raster::calc(pred_stack, fun = sd)
+pred_med <- raster::calc(pred_stack, fun = mean) 
+#pred_med <- raster::calc(pred_stack, fun = sd) #sd for O2
+beep()
 
 # Define output paths
-path <- paste0("input/SD_enviro")
+path <- paste0("input/Mean_enviro")
 if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+#path <- paste0("input/SD_enviro")
+#if (!dir.exists(path)) dir.create(path, recursive = TRUE)
 
-tifffile <- paste0(path, "/SD_", var, ".tif")
-pngfile <- paste0(path, "/SD_", var, ".png")
+tifffile <- paste0(path, "/2021", var, "_mean.tif")
+pngfile <- paste0(path, "/2021", var, "_mean.png")
+#tifffile <- paste0(path, "/SD_", var, ".tif")
+#pngfile <- paste0(path, "/SD_", var, ".png")
 
 # Save the median raster as TIFF
 writeRaster(pred_med, filename = tifffile, format = "GTiff", overwrite = TRUE)
 
 # Save the median raster as PNG
 png(pngfile, width = 560, height = 600, res = 100)
-plot(pred_med, main = paste("bottomT_SD"), col = viridis(100))
+plot(pred_med, main = var, col = viridis(100))
 plot(mask, col = "grey80", border = "grey60", add = TRUE)
 text(x = -3.5, y = 44, labels = format(date, "%Y-%m-%d"))
 box()
