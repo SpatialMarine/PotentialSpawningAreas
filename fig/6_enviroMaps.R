@@ -336,24 +336,58 @@ ggsave(p_png, p, width=10, height=10, units="cm", dpi=1800)
 
 
 # 2.5. Fishing effort-----------------------------------------------------------
-raster <- raster("input/gfwr/summarydata/high_resolution/FishingEffort.tif")
-raster <- log1p(raster) #Only for fishingEffort
+fishingEffort <- raster("input/gfwr/summarydata/high_resolution/FishingEffort.tif")
+fishingEffort
 
-# Crop raster to the bounding box of the vector layer
-cropped_raster <- crop(raster, extent(GSA_filtered))
+# Create a new raster with the desired resolution (0.042 degrees)
+res <- 0.042
+fishingEffort_resampled <- raster(extent(fishingEffort), resolution = res, crs = crs(fishingEffort))
 
-# Mask the cropped raster to the exact geometry of the vector layer
-masked_raster <- mask(cropped_raster, GSA_filtered)
+# Resample using bilinear interpolation
+fishingEffort <- resample(fishingEffort, fishingEffort_resampled, method = "bilinear")
 
-# Convert bathy raster to data frame
-raster_df <- as.data.frame(masked_raster, xy = TRUE)
-head(raster_df)
+# resample:
+masked_raster_resampled <- resample(masked_raster, fishingEffort, method = "bilinear")
+
+# Crop using the mask:
+fishingEffort_cropped <- raster::mask(fishingEffort, masked_raster_resampled)
+plot(fishingEffort_cropped)
+
+# Ensure that we retain the original x and y coordinates
+FE_df <- as.data.frame(fishingEffort_cropped, xy = TRUE)
+
+# Convert habitat_df to an sf object (using original x, y coordinates)
+fishingEffort_sf <- st_as_sf(FE_df, coords = c("x", "y"), crs = st_crs(mask), remove = FALSE)
+#plot(fishingEffort_sf)
+
+# Ensure CRS compatibility between habitat_sf and GSA_filtered
+if (st_crs(fishingEffort_sf) != st_crs(GSA_filtered)) {
+  fishingEffort_sf <- st_transform(fishingEffort_sf, crs = st_crs(GSA_filtered))
+}
+
+# Perform the intersection
+fishingEffort_clipped_sf <- st_intersection(fishingEffort_sf, GSA_filtered)
+#plot(fishingEffort_clipped_sf)
+
+# convert to df
+fishingEffort_df <- as.data.frame(fishingEffort_clipped_sf, xy = TRUE)
+
+# Replace NA values in the 'FishingEffort' column with 0
+library(tidyr)
+FE_withinGSA_df <- fishingEffort_clipped_sf %>%
+  mutate(FishingEffort = replace_na(FishingEffort, 0))
+
+# Revert the log1p() of the response variable
+fishingEffort_df$ln_FishingEffort <- log1p(fishingEffort_df$FishingEffort)
+
+# Verify the result
+summary(fishingEffort_df)
+
 
 # colour map: viridis
 # Create a ggplot object
 p <- ggplot() +
-  geom_tile(data = raster_df, aes(x = x, y = y, fill = layer)) +  #X2021bottomT_mean, filling_color, Bathy, slope, layer; Use the 'layer' name for fill
-  
+  geom_tile(data = fishingEffort_df, aes(x = x, y = y, fill = ln_FishingEffort)) +  
   
   # land mask (if you have it, otherwise remove this line)
   geom_sf(data = mask) +
@@ -381,7 +415,7 @@ p <- ggplot() +
         legend.box = "vertical",
         aspect.ratio = 1) 
 
-#p
+p
 
 # export plot
 enviro <- "fishingEffort_crop" 
