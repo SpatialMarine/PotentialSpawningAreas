@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 4.8. Predict BRT bootstrap maps
+# 4.7. Predict BRT bootstrap maps
 #-------------------------------------------------------------------------------
 library(beepr)
 library(lubridate)

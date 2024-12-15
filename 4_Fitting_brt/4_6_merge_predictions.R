@@ -1,7 +1,6 @@
 # ------------------------------------------------------------------------------
 
-# Title:
-
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
 # 4.6. merge hurdle prediction          Merge predictions

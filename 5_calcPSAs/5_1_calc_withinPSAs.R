@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
 # 5.1. Calculate parameters within and outised potensial spawining areas (PSAs)

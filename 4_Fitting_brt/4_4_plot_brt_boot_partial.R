@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 4.5. plot_brt_boot_partial          Plot BRT partial effects using bootstrap
+# 4.4. Plot BRT partial effects using bootstrap
 #-------------------------------------------------------------------------------
 library(gbm)
 library(data.table)

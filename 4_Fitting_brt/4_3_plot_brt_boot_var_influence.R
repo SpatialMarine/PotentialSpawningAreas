@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------#---------------------------------------------------------------------------------------------------
-# plot_brt_boot_var_influence          Plot BRT variable relative incluence using bootstrap
+# 4.3. Plot BRT variable relative incluence using bootstrap
 #---------------------------------------------------------------------------------------------------
 library(gbm)
 library(data.table)
