@@ -1,12 +1,10 @@
 # ------------------------------------------------------------------------------
 
-# Title:
-
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 # This script generates a daily multiband raster to then make model predictions.
-
 #-------------------------------------------------------------------------------
-# 2.9. Stack environmental data for predict
+# 2.10. Stack environmental data for predict
 #-------------------------------------------------------------------------------
 library(sf)
 library(doParallel)

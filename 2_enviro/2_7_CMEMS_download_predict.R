@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 2.6. Download environmental data from CMEMS for predict
+# 2.7. Download environmental data from CMEMS for predict
 #-------------------------------------------------------------------------------
 library(reticulate)
 library(lubridate)

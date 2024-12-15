@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 2.3. Calculate variation in enviro files
+# 2.4. Calculate variation in enviro files
 #-------------------------------------------------------------------------------
 library(raster)
 library(sf)

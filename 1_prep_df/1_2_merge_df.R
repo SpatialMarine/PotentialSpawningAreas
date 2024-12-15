@@ -1,9 +1,9 @@
 # -----------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #--------------------------------------------------------------------------------
-# 1_2_merge_df: merging dataframes and adding spatio-temporal references
+# 1.2. Merging dataframes and adding spatio-temporal references
 #--------------------------------------------------------------------------------
 library(dplyr)
 

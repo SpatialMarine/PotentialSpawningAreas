@@ -1,17 +1,15 @@
 # ------------------------------------------------------------------------------
 
-# Title:
-
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 # This script transforms 4D rasters (lon, lat, depth, time) to 3D rasters (lon, lat, time)
 # by keeping the deepest layer of each location (latest non-NA value)
 
 #-------------------------------------------------------------------------------
-# 2.7. Transform 4D to 3D
+# 2.8. Transform 4D to 3D
 #-------------------------------------------------------------------------------
 library(raster)
 library(beepr)
-
 
 
 # 1. Create function for conversion --------------------------------------------

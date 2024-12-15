@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 2.4. Extract 2D data from raster to points 
+# 2.5. Extract 2D data from raster to points 
 #-------------------------------------------------------------------------------
 library(raster)
 library(ncdf4)

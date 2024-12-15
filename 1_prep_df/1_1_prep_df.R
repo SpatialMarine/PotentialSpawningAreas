@@ -1,9 +1,9 @@
 # -----------------------------------------------------------------------------
 
-# Title:
+# Title:Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #--------------------------------------------------------------------------------
-# 1_1_prep_df: cleaning and organising datasets
+# 1.1. Cleaning and organizing datasets
 #--------------------------------------------------------------------------------
 library(dplyr)
 
