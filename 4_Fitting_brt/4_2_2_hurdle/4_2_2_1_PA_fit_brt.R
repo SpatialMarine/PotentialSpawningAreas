@@ -1,13 +1,13 @@
 # ------------------------------------------------------------------------------
 
-# Title:
+# Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
-#Analysis objective 1:
+# Analysis objective 1:
 # Assessing the environmental and fishing human presures parameters affecting to 
 # the distribution of elasmobranch egg cases
 
 #-------------------------------------------------------------------------------
-# 4.3. Fit Boosted Regression Tree model for density data (N/km2)
+# 4.2.2.1. Fit Boosted Regression Tree model for occurrence (presence/absence) using binomial distribution
 #-------------------------------------------------------------------------------
 
 library(doParallel)
