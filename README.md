@@ -15,6 +15,8 @@ Cite using the following doi:
 
 *5_calcPSAs*:  Analyse the overlap of PSAs with fishing effort, marine protected areas (MPAs), trawling exclusion zones (TEZs), and important shark and ray areas (ISRAs); determine significance of seasonal changes in predicted bycatch CPUE and PSAs. 
 
+*PSA_polygon*: resulting overall PSA polygon as a shapefile.
+
 *fig*: Create data checking plots; study area map; predicted bycatch CPUE weighted by occurrence maps; egg case density maps; plotting overlap between PSAs and MPAs, TEZs or ISRAs; and maps of enviromental predictors.
 
 *fun*: Generate a new function to extract enviromental data from 4D rasters (lon, lat, depth, time) or 3D (lon, lat, depth) to a certain depth value.
