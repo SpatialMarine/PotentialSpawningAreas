@@ -103,8 +103,8 @@ st_crs(GSA_filtered) <- st_crs(mask)
 
 
 
-# 2. Crop habitat to bathy 800 m---------------------------------------------------
-# Filter the values between -50 and -600 and set values outside the range to NA
+# 2. Crop habitat to bathy 700 m---------------------------------------------------
+# Filter the values between -20 and -700 and set values outside the range to NA
 bathy_filtered <- calc(bathy, function(x) {
   x[x > -20 | x < -700] <- NA  # Set values outside the range to NA
   return(x)

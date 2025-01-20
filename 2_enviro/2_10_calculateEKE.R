@@ -3,7 +3,7 @@
 # Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 2.9. Derive Eddy kinetic energy
+# 2.10. Derive Eddy kinetic energy
 #-------------------------------------------------------------------------------
 
 # Load libraries

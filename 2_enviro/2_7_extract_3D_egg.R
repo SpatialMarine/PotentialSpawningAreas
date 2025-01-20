@@ -3,7 +3,7 @@
 # Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 2.6. Extract 3D data from raster to points 
+# 2.7. Extract 3D data from raster to points 
 #-------------------------------------------------------------------------------
 library(dplyr)
 

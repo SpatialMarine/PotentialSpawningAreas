@@ -6,7 +6,7 @@
 # by keeping the deepest layer of each location (latest non-NA value)
 
 #-------------------------------------------------------------------------------
-# 2.8. Transform 4D to 3D
+# 2.9. Transform 4D to 3D
 #-------------------------------------------------------------------------------
 library(raster)
 library(beepr)

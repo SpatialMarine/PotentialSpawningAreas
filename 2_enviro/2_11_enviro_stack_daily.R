@@ -4,7 +4,7 @@
 
 # This script generates a daily multiband raster to then make model predictions.
 #-------------------------------------------------------------------------------
-# 2.10. Stack environmental data for predict
+# 2.11. Stack environmental data for predict
 #-------------------------------------------------------------------------------
 library(sf)
 library(doParallel)

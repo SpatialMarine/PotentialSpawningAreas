@@ -3,7 +3,7 @@
 # Title: Predicting Potential Spawning Areas: a novel framework for elasmobranch conservation and spatial management 
 
 #-------------------------------------------------------------------------------
-# 2.3. Calculate distances from features to study points
+# 2.4. Calculate distances from features to study points
 #-------------------------------------------------------------------------------
 library(geosphere)
 library(sf)

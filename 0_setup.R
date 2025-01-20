@@ -26,3 +26,8 @@ username <- paste(readLines(f, warn = FALSE), collapse = "")
 if(cpu == "david") f <- "C:/Users/david/OneDrive/Escritorio/chondrichthyan_habitat/psw.txt"
 password <- paste(readLines(f, warn = FALSE), collapse = "")
 
+# 4. load GFW API key ----------------------------------------------------------
+# The use of GFWr requires a GFW API token, which users can request from the GFW API Portal (https://globalfishingwatch.org/our-apis/tokens). Mine is next:
+if(cpu == "david") f <- "C:/Users/david/OneDrive/Escritorio/chondrichthyan_habitat/gfwrKey2.txt"
+key <- paste(readLines(f, warn = FALSE), collapse = "")
+

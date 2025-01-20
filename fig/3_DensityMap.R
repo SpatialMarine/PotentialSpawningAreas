@@ -11,7 +11,7 @@ library(ggplot2)
 library(ggspatial)
 library(raster)
 
-genus <- "Raja" #"Raja" #"Scyliorhinus"
+genus <- "Dipturus" #"Raja" #"Scyliorhinus" #"Dipturus"
 
 # 1. Set data repository and load rasters---------------------------------------
 file <- paste0(temp_data, "/data_subsets/", genus, "_dataset_log_pred.csv")
@@ -113,8 +113,6 @@ dataA <- data %>%
 dataP <- dataP[order(-dataP$N_km2), ]
 
 
-
-
 # Create a ggplot object
 p <- ggplot() +
   geom_tile(data = bathy_df, aes(x = x, y = y, fill = filling_color)) +
@@ -129,7 +127,7 @@ p <- ggplot() +
   geom_point(data = dataA, aes(x = lon, y = lat), shape = 4, color = "black", size = 0.45, alpha = 0.6) +
   
   # add presence points
-  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "steelblue"), #"steelblue" for skates, "orange" for catsharks
+  geom_jitter(data = dataP, aes(x = lon, y = lat, fill = ifelse(N_km2 == 0, NA, "#6B8E23"), #"steelblue" for skates, "orange" for catsharks "green" for Dipturus
                                size = N_km2), shape = 21, color = "black", alpha = 0.6, stroke = 0.3, width = 0.02, height = 0.02) + 
   
   # Plot GSAs

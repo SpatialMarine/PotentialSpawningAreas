@@ -674,7 +674,7 @@ MPA_merged <- MPA_merged %>%
   arrange(factor(new_bottom_trawl, levels = c(1, 2, 0)))
 head(MPA_merged)
 
-MPA_colors <- c("#FF7961","#A5D6A7", "#FFF176") "#F44336" "#FF9800" "#FFEB3B", "#4CAF50", "#003DA5"
+MPA_colors <- c("#FF7961","#A5D6A7", "#FFF176") #"#F44336" "#FF9800" "#FFEB3B", "#4CAF50", "#003DA5"
 # value 0: red: Bottom trawling is allowed
 # value 1: green: Not allowed bottom trawling (either <50 m deep, <3 nautical miles to cost, or bottom trawling is prohibited in the regulatory plan)
 # value 2: yellow: Bottom trawling is not allowed in part of it (either because part of it occurs at <50 m, <3 nautical miles from coast, or is prohibitted in part of  the MPA)
@@ -687,9 +687,9 @@ MPA_colors <- c("#FF7961","#A5D6A7", "#FFF176") "#F44336" "#FF9800" "#FFEB3B", "
 p <- ggplot() +
 
   # Plot MPAs with varying transparency and colors to indicate restriction levels
-  geom_sf(data = MPA_0, fill = MPA_colors[1], color = "#F44336", size = 0.8, alpha = 0.9) +
-  geom_sf(data = MPA_2, fill = MPA_colors[3], color = "#FFEB3B", size = 0.8, alpha = 0.9) +
-  geom_sf(data = MPA_1, fill = MPA_colors[2], color = "#4CAF50", size = 0.8, alpha = 0.9) +
+  geom_sf(data = MPA_0, fill = MPA_colors[1], color = "#F44336", size = 0.8, alpha = 1) +
+  geom_sf(data = MPA_2, fill = MPA_colors[3], color = "#FFEB3B", size = 0.8, alpha = 1) +
+  geom_sf(data = MPA_1, fill = MPA_colors[2], color = "#4CAF50", size = 0.8, alpha = 1) +
   
   # Plot area < 3 nautical miles:
   geom_sf(data = coast_buffer, fill = MPA_colors[2], color = "#4CAF50", size = 0.8, alpha = 0.9) +
@@ -725,7 +725,7 @@ p
 enviro <- "ISRA_MPAs_PSAs" #slope, fishingEffort, 
 outdir <- paste0(output_data, "/fig/Map/overlapFE_PSA")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", enviro, "2.jpeg")
+p_png <- paste0(outdir, "/", enviro, "2_transp.jpeg")
 ggsave(p_png, p, width=10, height=10, units="cm", dpi=1800)
 
 
