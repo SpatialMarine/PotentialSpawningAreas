@@ -13,7 +13,9 @@ Cite using the following doi:
 
 *4_Fitting_brt*: Enables fitting a brt models to predict egg case bycatch ocurrence and abundance; use bootstrap methods to deal with stochasticity; make spatial predictions; determine PSAs
 
-*5_calcPSAs*:  Analyse the overlap of PSAs with fishing effort, marine protected areas (MPAs), trawling exclusion zones (TEZs), and important shark and ray areas (ISRAs); determine significance of seasonal changes in predicted bycatch CPUE and PSAs. 
+*5_calcPSAs*: Analyse the overlap of PSAs with fishing effort, marine protected areas (MPAs), trawling exclusion zones (TEZs), and important shark and ray areas (ISRAs); determine significance of seasonal changes in predicted bycatch CPUE and PSAs. 
+
+*6_bycatchEstimate*: Estimate total bycatch of egg cases per year based on daily BPUE prediction and fishing effort maps (GFW). 
 
 *PSA_polygon*: resulting overall PSA polygon as a shapefile.
 
