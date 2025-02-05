@@ -41,8 +41,9 @@ dataset <- "ALL"
 
 # List all the .tif files in the directory (you can adjust the pattern if needed)
 input_dir <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/hurdle_crop")
-#bpue_list <- list.files(input_dir, pattern = "*.tif", full.names = TRUE)
-bpue_list <- list.files(input_dir, pattern = "^raster_cir.*\\.tif$", full.names = TRUE)
+bpue_list <- list.files(input_dir, pattern = "*.tif", full.names = TRUE)
+bpue_list <- bpue_list[!grepl("cir", bpue_list)]
+#bpue_list <- list.files(input_dir, pattern = "^raster_cir.*\\.tif$", full.names = TRUE)
 summary(bpue_list)
 
 
@@ -411,14 +412,15 @@ process_raster <- function(i) {
     #plot(bpue_with_depth$total_bycatch)
     #plot(bpue_with_depth$trawled_area_hake)
     #plot(bpue_with_depth$bycatch_hake)
+    #plot(bpue_with_depth$total_bycatch)
       }
     }
     
     # Save the updated BPUE with depth and bycatch as a GeoTIFF file
     path <- paste0("output/", mod_code, "/hurdle_stacks/", genus, "/total_bycatch/processed")
     if (!dir.exists(path)) dir.create(path, recursive = TRUE)
-    #output_file <- paste0("total_bycatch_", raster_date, ".tif")
-    output_file <- paste0("total_bycatch_cir_", raster_date, ".tif")
+    output_file <- paste0("total_bycatch_", raster_date, ".tif")
+    #output_file <- paste0("total_bycatch_cir_", raster_date, ".tif")
     writeRaster(bpue_with_depth, file.path(path, output_file), format = "GTiff", overwrite = TRUE)
     
     # Calculate total bycatch for this raster and update bycatchdata
@@ -466,8 +468,8 @@ write.csv(bycatchdata, bycatch_csv_file, row.names = FALSE)
     
 # 6. Overall egg case bycatch for 2021------------------------------------------
 path <- paste0("output/", mod_code, "/hurdle_stacks/", genus, "/total_bycatch/")
-#bycatch_csv_file <- file.path(path, "bycatch_summary.csv")
-bycatch_csv_file <- file.path(path, "bycatch_summary_cir.csv")
+bycatch_csv_file <- file.path(path, "bycatch_summary.csv")
+#bycatch_csv_file <- file.path(path, "bycatch_summary_cir.csv")
 bycatch <- read.csv(bycatch_csv_file)
 head(bycatch)
 

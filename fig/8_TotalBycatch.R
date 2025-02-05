@@ -61,64 +61,9 @@ mod_code <- "brt"
 dataset <- "ALL" 
 
 # Load total bycatch files
-path <- paste0("output/", mod_code, "/hurdle_stacks/", genus, "/total_bycatch/processed")
-
-bycatch_list <- list.files(path, pattern = "*.tif", full.names = TRUE)
-summary(bycatch_list)
-reference <- raster(bycatch_list[1])
-summary(reference)
-
-
-# Inicializar un objeto para almacenar el resultado
-aggregated_df <- NULL
-
-for (i in seq_along(bycatch_list)) {
-  # i=2
-  file <- bycatch_list[i]
-  cat("Procesando archivo", i, "de", length(bycatch_list), ":", file, "\n")
-  
-  
-  # Leer archivo raster
-  current_raster <- raster(file)
-  
-  # dataframe
-  current_df <- as.data.frame(current_raster, xy = TRUE)
-  # Dynamically get the name of the third column
-  value_col <- colnames(current_df)[3]
-  #head(current_df)
-  
-  # Rename the third column to a consistent name temporarily
-  current_df <- current_df %>%
-    rename(total_bycatch = all_of(value_col))
-  head(current_df)
-  
-  # If it's the first file, initialize the aggregated dataframe
-  if (is.null(aggregated_df)) {
-    aggregated_df <- current_df
-    #head(aggregated_df)
-  } else {
-    # Merge dataframes on coordinates and sum up the "total_bycatch" values
-    aggregated_df <- full_join(aggregated_df, current_df, by = c("x", "y")) %>%
-      mutate(total_bycatch = coalesce(total_bycatch.x, 0) + coalesce(total_bycatch.y, 0)) %>%
-      select(x, y, total_bycatch)
-    #head(aggregated_df)
-  }
-}
-
-# Verificar resultado final
-cat("Procesamiento completado. Resumen del resultado final:\n")
-print(summary(aggregated_df))
-beep()
-
-# Save df objects:
-path <- paste0("output/", mod_code, "/hurdle_stacks/", genus, "/total_bycatch/sum")
-if (!dir.exists(path)) dir.create(path , recursive = TRUE)
-
-#df:
-output_file <- paste0(path, "/aggregated_bycatch_map.csv")
-write.csv(aggregated_df, output_file, row.names = FALSE)
-totalbycatch_df <- read.csv2(output_file)
-head(totalbycatch_df)
+path <- paste0("output/", mod_code, "/hurdle_stacks/", genus, "/total_bycatch/processed/bycatch_sum.tif")
+bycatch <- raster(path)
+plot(bycatch)
 
 
 # 3. Prepare raster-------------------------------------------------------------
@@ -140,35 +85,20 @@ bathy_mask <- calc(bathy_filtered, function(x) {
 })
 
 # Resample bathy_mask to match the resolution of habitat
-path <- paste0("output/", mod_code, "/", paste0(genus, type, "_", family), "/predict_boost/2021/2021_hurdle_pred_median.tif")
-yBPUE <- raster(path)
-print(yBPUE)
-bathy_mask_resampled <- resample(bathy_mask, yBPUE, method = "bilinear")
+bathy_mask_resampled <- resample(bathy_mask, bycatch, method = "bilinear")
 
 # Apply the mask to the habitat raster
 print(bathy_mask_resampled)
-head(aggregated_df)
-
-# rasterize:
-coordinates <- aggregated_df[, c("x", "y")]
-values <- aggregated_df$total_bycatch
-aggregated_raster <- rasterize(
-  x = coordinates,
-  y = raster_template,
-  field = values,
-  fun = sum, # Adjust as needed (e.g., mean, max, min, etc.)
-  background = NA # Set background values for empty cells
-)
-plot(aggregated_raster)
+#head(aggregated_df)
 
 
 # Inspect the cropped dataframe
-bathy_resampled <- resample(x = bathy_mask_resampled, y = aggregated_raster, method = "bilinear")
-crs(aggregated_raster) <- crs(bathy_mask_resampled)
+bathy_resampled <- resample(x = bathy_mask_resampled, y = bycatch, method = "bilinear")
+crs(bycatch) <- crs(bathy_mask_resampled)
 crs(bathy_resampled) <- crs(bathy_mask_resampled)
-print(aggregated_raster)
+print(bycatch)
 print(bathy_resampled)
-aggregated_raster_cropped <- raster::mask(aggregated_raster, bathy_resampled)
+aggregated_raster_cropped <- raster::mask(bycatch, bathy_resampled)
 #plot(aggregated_raster_cropped)
 
 # Convert raster to data frame
@@ -200,13 +130,13 @@ habitat_clipped_df <- habitat_clipped_df %>%
 
 # Verify the result
 summary(habitat_clipped_df)
-
+#habitat_clipped_df$LNbycatch <- log1p(habitat_clipped_df$bycatch)
 
 
 # 4. Plot results---------------------------------------------------------------
 p <- ggplot() +
   # Plot habitat raster
-  geom_tile(data = habitat_clipped_df, aes(x = x, y = y, fill = bycatch)) +
+  geom_tile(data = habitat_clipped_df, aes(x = x, y = y, fill = bycatch)) + #LN
   scale_fill_viridis_c(option = "viridis", name = "N") +
   
   # Plot land mask
@@ -233,7 +163,7 @@ p
 # export plot
 outdir <- paste0(output_data, "/fig/Map/", paste0(genus, type, "_", family))
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/total_bycatch_dailyOverall_scale.png")
+p_png <- paste0(outdir, "/total_bycatch_dailyOverall_scale_final.png") #LN
 ggsave(p_png, p, width=20, height=20, units="cm", dpi=1800)
 
 

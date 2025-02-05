@@ -106,7 +106,7 @@ mask <- resample(mask, stack_scy, method = "ngb")  # Use "ngb" for nearest neigh
 # unsamp2 - Calculate unsampled cells, but differentiate between undersampled(1) and unsampled(2)
 # Define the unsamp2 function
 unsamp2 <- function(r, mask) {
-  # Calculate the 20th percentile
+  # Calculate the 90th percentile
   q90 <- quantile(r, probs = 0.90, type = 7, na.rm = TRUE, names = FALSE)
   
   # Get raster values and identify undersampled cells
