@@ -411,6 +411,55 @@ head(MPA_merged)
 # Merge the dataframes by SITE_NA
 MPA_merged <- merge(MPA_merged, regu[, c("SITE_NA", "new_bottom_trawl")], by = "SITE_NA", all.x = TRUE)
 
+#Load FRAs:
+FRAs <- st_read("input/NoTake/no_take_areas.gpkg")
+print(FRAs)
+#plot(FRAs)
+
+library(sf)
+# Select only geometry from FRAs and add new_bottom_trawl == 2
+FRAs_simplified <- FRAs %>%
+  dplyr::mutate(
+    new_bottom_trawl = dplyr::case_when(
+      grepl("^Permanente$", closed, ignore.case = TRUE) ~ 1,
+      grepl("^Temporal$", closed, ignore.case = TRUE) ~ 3,
+      TRUE ~ NA_real_
+    )) %>%
+  dplyr::select(new_bottom_trawl, geometry = !!attr(FRAs, "sf_column"))   # This keeps the geometry implicitly
+#names(FRAs_simplified)[names(FRAs_simplified) == "geom"] <- "geometry"
+
+# Add all missing columns with NA values
+empty_template <- MPA_merged[0, ]
+FRAs_ready <- empty_template[rep(1, nrow(FRAs_simplified)), ]
+
+FRAs_ready$new_bottom_trawl <- FRAs_simplified$new_bottom_trawl
+st_geometry(FRAs_ready) <- st_geometry(FRAs_simplified)
+st_crs(FRAs_ready) <- st_crs(MPA_merged)
+
+
+missing_cols <- setdiff(names(MPA_merged), names(FRAs_simplified))
+FRAs_ready <- FRAs_simplified
+
+for (col in missing_cols) {
+  FRAs_ready[[col]] <- NA
+}
+
+
+# Bind together
+setdiff(names(MPA_merged), names(FRAs_ready))
+setdiff(names(FRAs_ready), names(MPA_merged))
+
+# Bind FRAs into MPA_merged
+MPA_merged <- rbind(MPA_merged, FRAs_ready)
+plot(MPA_merged)
+
+# Crop to GSA again:
+MPA_merged <- st_intersection(MPA_merged, GSA_filtered)
+beep()
+#plot(MPA_merged)
+
+
+
 
 # 1.6.4. Filter the MPAs types--------------------------------------------------
 #fishing_mpas <- MPA_merged #if you want them all
@@ -671,13 +720,15 @@ head(ISRA)
 
 # Arrange rows based on new_bottom_trawl in the specified order
 MPA_merged <- MPA_merged %>%
-  arrange(factor(new_bottom_trawl, levels = c(1, 2, 0)))
+  arrange(factor(new_bottom_trawl, levels = c(1, 2, 3, 0)))
 head(MPA_merged)
 
-MPA_colors <- c("#FF7961","#A5D6A7", "#FFF176") #"#F44336" "#FF9800" "#FFEB3B", "#4CAF50", "#003DA5"
+#MPA_colors <- c("#FF7961","#A5D6A7", "#FFF176") #"#F44336" "#FF9800" "#FFEB3B", "#4CAF50", "#003DA5"
+MPA_colors <- c("#FF7961", "#A5D6A7", "#B39DDB","#FFF176")
 # value 0: red: Bottom trawling is allowed
 # value 1: green: Not allowed bottom trawling (either <50 m deep, <3 nautical miles to cost, or bottom trawling is prohibited in the regulatory plan)
 # value 2: yellow: Bottom trawling is not allowed in part of it (either because part of it occurs at <50 m, <3 nautical miles from coast, or is prohibitted in part of  the MPA)
+# value 3: purple: Bottom trawling in not allowed during certain period
 
 #PSA_Rajac <- "steelblue"  # Dark Teal for PSA_Rajac
 #PSA_Scac <- "orange"   # Coral for PSA_Scac
@@ -688,8 +739,10 @@ p <- ggplot() +
 
   # Plot MPAs with varying transparency and colors to indicate restriction levels
   geom_sf(data = MPA_0, fill = MPA_colors[1], color = "#F44336", size = 0.8, alpha = 1) +
-  geom_sf(data = MPA_2, fill = MPA_colors[3], color = "#FFEB3B", size = 0.8, alpha = 1) +
+  geom_sf(data = MPA_2, fill = MPA_colors[3], color = "#7E57C2", size = 0.8, alpha = 1) +
+  geom_sf(data = MPA_3, fill = MPA_colors[4], color = "#FBC02D", size = 0.8, alpha = 1) +
   geom_sf(data = MPA_1, fill = MPA_colors[2], color = "#4CAF50", size = 0.8, alpha = 1) +
+  
   
   # Plot area < 3 nautical miles:
   geom_sf(data = coast_buffer, fill = MPA_colors[2], color = "#4CAF50", size = 0.8, alpha = 0.9) +
@@ -725,7 +778,7 @@ p
 enviro <- "ISRA_MPAs_PSAs" #slope, fishingEffort, 
 outdir <- paste0(output_data, "/fig/Map/overlapFE_PSA")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
-p_png <- paste0(outdir, "/", enviro, "2_transp.jpeg")
+p_png <- paste0(outdir, "/", enviro, "2_transp_FINAL.jpeg")
 ggsave(p_png, p, width=10, height=10, units="cm", dpi=1800)
 
 

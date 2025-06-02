@@ -403,6 +403,7 @@ atributes <- read.csv("input/MPAs/ProtectedSeas/ProtectedSeas_Navigator_Attribut
 MPA_merged <- MPA_cropped_clipped %>%
   left_join(atributes, by = c("SITE_ID" = "site_id"))
 print(MPA_merged)
+#plot(MPA_merged)
 
 # remove not real MPAs:
 summary(MPA_merged)
@@ -417,9 +418,54 @@ head(MPA_merged)
 
 # Merge the dataframes by SITE_NA
 MPA_merged <- merge(MPA_merged, regu[, c("SITE_NA", "new_bottom_trawl")], by = "SITE_NA", all.x = TRUE)
+summary(MPA_merged)
 
 
-# 5.2. Calculate overlap -------------------------------------------------------
+# 5.2. Load FRAs shapefile -----------------------------------------------------
+#Load FRAs:
+FRAs <- st_read("input/NoTake/no_take_areas.gpkg")
+print(FRAs)
+#plot(FRAs)
+
+library(sf)
+# Select only geometry from FRAs and add new_bottom_trawl == 2
+FRAs_simplified <- FRAs %>%
+  dplyr::mutate(
+    new_bottom_trawl = dplyr::case_when(
+      grepl("^Permanente$", closed, ignore.case = TRUE) ~ 1,
+      grepl("^Temporal$", closed, ignore.case = TRUE) ~ 3,
+      TRUE ~ NA_real_
+    )) %>%
+  dplyr::select(new_bottom_trawl, geometry = !!attr(FRAs, "sf_column"))   # This keeps the geometry implicitly
+#names(FRAs_simplified)[names(FRAs_simplified) == "geom"] <- "geometry"
+
+# Add all missing columns with NA values
+empty_template <- MPA_merged[0, ]
+FRAs_ready <- empty_template[rep(1, nrow(FRAs_simplified)), ]
+
+FRAs_ready$new_bottom_trawl <- FRAs_simplified$new_bottom_trawl
+st_geometry(FRAs_ready) <- st_geometry(FRAs_simplified)
+st_crs(FRAs_ready) <- st_crs(MPA_merged)
+
+
+missing_cols <- setdiff(names(MPA_merged), names(FRAs_simplified))
+FRAs_ready <- FRAs_simplified
+
+for (col in missing_cols) {
+  FRAs_ready[[col]] <- NA
+}
+
+
+# Bind together
+setdiff(names(MPA_merged), names(FRAs_ready))
+setdiff(names(FRAs_ready), names(MPA_merged))
+
+# Bind FRAs into MPA_merged
+MPA_merged <- rbind(MPA_merged, FRAs_ready)
+plot(MPA_merged)
+
+
+# 5.3. Calculate overlap -------------------------------------------------------
 # List of unique values for new_bottom_trawl
 MPA_levels <- unique(MPA_merged$new_bottom_trawl)
 
@@ -487,27 +533,27 @@ print(overlap_results)
 
 
 
-# 5.3. Plot particular Marine Protected Areas ----------------------------------
+# 5.4. Plot particular Marine Protected Areas ----------------------------------
 fishing_mpas <- MPA_merged %>%
-  filter(new_bottom_trawl == 1) #!=
+  filter(new_bottom_trawl == 3) #!=
 print(fishing_mpas)
 
 ggplot(data = fishing_mpas) +
   geom_sf(fill = "skyblue", color = "darkblue") +  # Fill color and border color
   labs(title = "Distribution of Marine Protected Areas",
-       subtitle = "Marine MPAs where MARINE == 1",
+       subtitle = "Marine MPAs where MARINE == 2",
        caption = "Source: Protected Seas") +
   theme_minimal()  # Use a minimal theme
 
 
-# 5.4. Make a bar chart --------------------------------------------------------
-overlap_results$MPA_level <- factor(overlap_results$MPA_level, levels = rev(c(0, 1, 2)))
+# 5.5. Make a bar chart --------------------------------------------------------
+overlap_results$MPA_level <- factor(overlap_results$MPA_level, levels = rev(c(0, 1, 2, 3)))
 levels(overlap_results$MPA_level)
 
 # Now, create the bar plot
 p_MPA <- ggplot(overlap_results, aes(x = "", y = percent_overlap, fill = MPA_level)) + 
   geom_bar(stat = "identity", width = 0.5) +  # Use stat = "identity" for exact values
-  scale_fill_manual(values = c("0" = "blue", "1" = "green", "2" = "yellow")) + #"1" = "blue", "2" = "green", "3" = "yellow", "4" = "orange", "5" = "red"
+  scale_fill_manual(values = c("0" = "blue", "1" = "green", "2" = "yellow", "3" = "red")) + #"1" = "blue", "2" = "green", "3" = "yellow", "4" = "orange", "5" = "red"
   coord_flip() +  # Flip the bar to make it horizontal
   labs(
     title = "Bar Plot with Color Breaks",

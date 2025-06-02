@@ -54,8 +54,10 @@ Bathy_cont$DEPTH <- as.numeric(Bathy_cont$DEPTH)
 unique(Bathy_cont$DEPTH)
 
 #Select the bathymetrical lines that you want to plot:
+#Bathy_cont1 <- Bathy_cont %>%
+#  filter(DEPTH %in% c(-100, -200, -750)) # 
 Bathy_cont1 <- Bathy_cont %>%
-  filter(DEPTH %in% c(-100, -200, -750)) # 
+  filter(DEPTH %in% c(-50, -100, -200, -750, -1000)) # 
 unique(Bathy_cont1$DEPTH)
 # Set the CRS for the raster
 st_crs(Bathy_cont1) <- st_crs(mask)
@@ -71,10 +73,17 @@ GSA_filtered <- GSA %>%
 print(GSA_filtered)
 
 
+# 1.5. ISRAs
+ISRA <- st_read("input/isra_allregions/isra_allregions.shp")
+ISRA <- st_zm(ISRA, drop = TRUE, what = "ZM")
+print(ISRA)
+
+
 # Ensure CRS matches for all spatial data
 st_crs(mask) <- 4326
 st_crs(GSA_filtered) <- st_crs(mask)
 st_crs(Bathy_cont1) <- st_crs(mask)
+st_crs(ISRA) <- st_crs(mask)
 
 
 
@@ -87,7 +96,8 @@ st_crs(Bathy_cont1) <- st_crs(mask)
 
 # 3. Colour for bathymetry -----------------------------------------------------
 # Create a mask if you dont want to plot all the bathymetricla range
-bathy_bb <-  bathy_df$Bathy <= 5 #if you want to put a below limit: bathy_df$Bathy >= -800 &
+#bathy_bb <-  bathy_df$Bathy <= 5 #if you want to put a below limit: bathy_df$Bathy >= -800 &
+bathy_bb <- bathy_df$Bathy >= -3500 & bathy_df$Bathy <= 5
 # Apply the mask
 bathy_df <- bathy_df[bathy_bb, ]
 print(bathy_df)
@@ -252,6 +262,116 @@ p
 outdir <- paste0(output_data, "/fig/Map/density")
 if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 p_png <- paste0(outdir, "/SurveyType_ALL_cont2.png")
+ggsave(p_png, p, width=10, height=10, units="cm", dpi=300)
+
+
+# Map without points and within GSA---------------------------------------------
+
+# Crop:
+
+## 1. Bathy:
+## Crop raster to the bounding box of the vector layer
+#cropped_bathy <- crop(bathy, extent(GSA_filtered))
+## Mask the cropped raster to the exact geometry of the vector layer
+#masked_bathy <- mask(cropped_bathy, GSA_filtered)
+## Convert bathy raster to data frame
+#bathy_df <- as.data.frame(masked_bathy, xy = TRUE)
+#head(bathy_df)
+##bathy_bb <-  bathy_df$Bathy <= 5 #if you want to put a below limit: bathy_df$Bathy >= -800 &
+#bathy_bb <- bathy_df$Bathy >= -3500 & bathy_df$Bathy <= 5
+## Apply the mask
+#bathy_df <- bathy_df[bathy_bb, ]
+#print(bathy_df)
+##Create colour ramp
+#color_palette_bathy <- colorRampPalette(rev(c('#ecf9ff','#BFEFFF','#97C8EB','#4682B4','#264e76','#162e46')))(100)
+#cuts_bathy <- cut(bathy_df$Bathy, breaks = 100)
+#color_indices_bathy <- as.numeric(cuts_bathy) * 100 / length(levels(cuts_bathy))
+#bathy_df$filling_color <- color_palette_bathy[color_indices_bathy]
+#
+## 2. ISRAs:
+#ISRA <- st_make_valid(ISRA)
+## Identify invalid geometries
+#invalid_geometries <- !st_is_valid(ISRA)
+#sum(invalid_geometries)
+## Filter out invalid geometries
+#ISRA_clean <- ISRA[!invalid_geometries, ]
+#beep()
+## Keep only ISRAs that intersect with GSA_filtered
+#ISRA_cropped <- st_intersection(ISRA_clean, GSA_filtered)
+#beep()
+##plot(ISRA_cropped)
+#ggplot() +
+#  geom_sf(data = ISRA_cropped, fill = "lightblue", color = "darkblue") +
+#  theme_minimal() +
+#  ggtitle("ISRA Cropped Areas") +
+#  theme(plot.title = element_text(hjust = 0.5))
+###Save
+##st_write(ISRA_cropped, "path.../ISRAs.shp", append=FALSE)
+##beep()
+#
+## 3. Bathy count:
+#Bathy_cont1 <- st_make_valid(Bathy_cont1)
+## Identify invalid geometries
+#invalid_geometries <- !st_is_valid(Bathy_cont1)
+#sum(invalid_geometries)
+## Filter out invalid geometries
+#Bathy_cont1_clean <- Bathy_cont1[!invalid_geometries, ]
+#beep()
+#
+## Keep only ISRAs that intersect with GSA_filtered
+#Bathy_cont1_cropped <- st_intersection(Bathy_cont1_clean, GSA_filtered)
+#beep()
+##plot(ISRA_cropped)
+#
+#ggplot() +
+#  geom_sf(data = Bathy_cont1_cropped, fill = "lightblue", color = "darkblue") +
+#  theme_minimal() +
+#  ggtitle("ISRA Cropped Areas") +
+#  theme(plot.title = element_text(hjust = 0.5))
+###Save
+##st_write(Bathy_cont1_cropped, "path.../Bathy_cont1.shp", append=FALSE)
+##beep()
+
+# Create a ggplot object 
+p <- ggplot() +
+  # Plot bathy
+  geom_tile(data = bathy_df, aes(x = x, y = y, fill = filling_color)) +
+  
+  # Plot ISRAs
+  geom_sf(data = ISRA, fill = "#D98E93", color = "#B86D71", alpha = 0.6, size = 0.3) + #_cropped
+  
+  # depth contour
+  geom_sf(data = Bathy_cont1,  lwd = 0.1) + #_cropped
+  
+  # land mask
+  geom_sf(data = mask) +
+  
+  # Plot GSAs
+  geom_sf(data = GSA_filtered, fill = NA, color = "black", size = 0.8, linetype = "dashed") +
+  
+  #Set spatial bounds
+  coord_sf(xlim = c(-1.5, 4.5), ylim = c(37, 42.2), expand = TRUE) +
+  
+  # Add scale bar
+  #annotation_scale(location = "br", width_hint = 0.2) +  
+  
+  # theme
+  theme_bw() +
+  # Directly map colors without scaling
+  scale_fill_identity()+
+  scale_size(range = c(1.5, 10)) +
+  
+  # Remove grids
+  theme(panel.grid = element_blank(),
+        legend.position = "right",
+        legend.box = "vertical",
+        aspect.ratio = 1) 
+#p
+
+# export plot
+outdir <- paste0(output_data, "/fig/Map/density")
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+p_png <- paste0(outdir, "/Context_scale.png")
 ggsave(p_png, p, width=10, height=10, units="cm", dpi=300)
 
 

@@ -40,6 +40,11 @@ print(mask)
 GSA <- st_read("input/GSAs/GSAs_simplified.shp")
 
 
+# 1.4. ISRAs
+ISRA <- st_read("input/isra_allregions/isra_allregions.shp")
+ISRA <- st_zm(ISRA, drop = TRUE, what = "ZM")
+print(ISRA)
+
 # 2. Colour for bathymetry -----------------------------------------------------
 # Filter bathymetry values (e.g., focus on values <= 5m if needed)
 bathy_df <- bathy_df[bathy_df$Bathy <= 5, ]
@@ -57,11 +62,14 @@ bathy_df$filling_color <- color_palette_bathy[color_indices_bathy]
 # Ensure CRS matches for all spatial data
 st_crs(mask) <- 4326
 st_crs(GSA) <- st_crs(mask)
+st_crs(ISRA) <- st_crs(mask)
+
 
 # 3. Zoomed out map ------------------------------------------------------------
 # Create a ggplot object
 p <- ggplot() +
   #geom_tile(data = bathy_df, aes(x = x, y = y, fill = Bathymetry)) +
+  #geom_sf(data = ISRA, fill = "#D98E93", color = "#B86D71", alpha = 0.8, size = 0.3) +
   
   # land mask (if you have it, otherwise remove this line)
   geom_sf(data = mask, color = "black", size = 3) +
