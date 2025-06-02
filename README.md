@@ -1,22 +1,42 @@
 # EggCase_Distribution
 
-Here is a series of scripts to extract enviromental variables, select depth layers from 4D netCDFs, fit BRT models, predict bycatch accurrence and abundance and define Potential Spawning Areas (PSAs).
-Cite using the following doi:
+This repository contains a series of scripts designed to extract environmental variables, process 4D netCDF data, fit Boosted Regression Tree (BRT) models, predict egg case bycatch occurrence and abundance, identify Potential Spawning Areas (PSAs) and estimate total bycatch in overlap with fishing effort.
+
+If you use this repository, please cite it using the following DOI:
 [![DOI](https://zenodo.org/...)](https://zenodo.org/doi/...)
 
-### Scripts available
-*1_prep_df*: Data organising.
+### Available Scripts:
+*1_prep_df*: Organizes and prepares data for analysis.
 
-*2_enviro*: Enables downloading data from CMEMS; extracting the enviromental data to the surveyed points; select depth layers in 4D enviro rasters; and generating stacks.
+*2_enviro*: 
+- Download environmental data from CMEMS.
+- Extract environmental variables at surveyed points.
+- Select depth layers from 4D environmental rasters.
+- Generate raster stacks for later predictions.
+  
+*3_Subsetting_Checking_data*: Performs data validation and pre-modeling checks.
 
-*3_Subsetting_Checking_data*: Conduct pre-fitting checks on data.
+*4_Fitting_brt*: 
+- Fit BRT models to predict egg case bycatch occurrence and abundance.
+- Implement bootstrap methods to handle stochasticity.
+- Generate spatial predictions.
+- Identify Potential Spawning Areas (PSAs).
 
-*4_Fitting_brt*: Enables fitting a brt models to predict egg case bycatch ocurrence and abundance; use bootstrap methods to deal with stochasticity; make spatial predictions; determine PSAs
+*5_calcPSAs*: 
+- Analyze PSA overlap with fishing effort, marine protected areas (MPAs), trawling exclusion zones (TEZs), and important shark and ray areas (ISRAs).
+- Assesses seasonal variations in predicted BPUE.
+- Assess presistence in PSA distribution.
 
-*5_calcPSAs*:  Analyse the overlap of PSAs with fishing effort, marine protected areas (MPAs), trawling exclusion zones (TEZs), and important shark and ray areas (ISRAs); determine significance of seasonal changes in predicted bycatch CPUE and PSAs. 
+*6_bycatchEstimate*: Estimates annual total bycatch of egg cases based on daily BPUE predictions and fishing effort maps from Global Fishing Watch (GFW).
 
-*PSA_polygon*: resulting overall PSA polygon as a shapefile.
+*PSA_polygon*: Contains the final PSA polygon as a shapefile.
 
-*fig*: Create data checking plots; study area map; predicted bycatch CPUE weighted by occurrence maps; egg case density maps; plotting overlap between PSAs and MPAs, TEZs or ISRAs; and maps of enviromental predictors.
+*fig*: Generates various visual outputs, including:
+- Data validation plots.
+- Study area maps.
+- Predicted BPUE maps weighted by occurrence.
+- Egg case density maps.
+- PSA overlap maps with MPAs, TEZs, and ISRAs.
+- Maps of environmental predictor variables.
 
-*fun*: Generate a new function to extract enviromental data from 4D rasters (lon, lat, depth, time) or 3D (lon, lat, depth) to a certain depth value.
+*fun*: Provides a function to extract environmental data from 4D (lon, lat, depth, time) or 3D (lon, lat, depth) rasters at a specified depth value.
